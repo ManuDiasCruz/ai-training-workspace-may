@@ -6,12 +6,10 @@ export interface Song {
     youtubeLink: string;
 };
 
-export function createRandomSong() {
-  const randomUrlGen = require("random-youtube-music-video");
-  const youtubeUrl = randomUrlGen.getRandomMusicVideoUrl();
-
-  const name = faker.name.findName();
-  const youtubeLink = youtubeUrl;
+export function createRandomSong(): Song {
+  const slug = faker.random.alphaNumeric(11);
+  const name = `${faker.name.findName()} ${faker.datatype.uuid()}`;
+  const youtubeLink = `https://www.youtube.com/watch?v=${slug}`;
 
   return { name, youtubeLink };
 };

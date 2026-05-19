@@ -1,10 +1,18 @@
 {
   "compilerOptions": {
-    "esModuleInterop": true,
-    "module": "es6",
+    "target": "es2020",
+    "module": "es2020",
     "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "strict": false,
     "outDir": "dist"
   },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "tests"],
   "ts-node": {
     "esm": true
   }

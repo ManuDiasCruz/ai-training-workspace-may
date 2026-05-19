@@ -1,4 +1,8 @@
-import pkg from "@prisma/client";
+import * as PrismaPkg from "@prisma/client";
 
-const { PrismaClient } = pkg;
+const pkgWithDefault = PrismaPkg as typeof PrismaPkg & { default?: typeof PrismaPkg };
+const { PrismaClient } = pkgWithDefault.PrismaClient
+  ? pkgWithDefault
+  : (pkgWithDefault.default as typeof PrismaPkg);
+
 export const prisma = new PrismaClient();
