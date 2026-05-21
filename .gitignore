@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+.coverage
+
+# Local SQLite DB built from the CSV importer
+shopping.db
+shopping.db-journal
