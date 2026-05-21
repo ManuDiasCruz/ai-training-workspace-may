@@ -1,39 +1,39 @@
-from typing import List, Optional
+from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
-
-
-class CustomerBase(BaseModel):
-    customer_code: str = Field(..., min_length=1, max_length=8)
-    gender: str = Field(..., pattern="^(Male|Female)$")
-    age: int = Field(..., ge=0, le=130)
-    annual_income_k: int = Field(..., ge=0)
-    spending_score: int = Field(..., ge=1, le=100)
+from pydantic import BaseModel, Field
 
 
-class CustomerCreate(CustomerBase):
-    pass
+class CustomerOut(BaseModel):
+    customer_id: str
+    genre: str
+    age: int
+    annual_income_k: int
+    spending_score: int
 
 
-class CustomerOut(CustomerBase):
-    id: int
-    model_config = ConfigDict(from_attributes=True)
-
-
-class PaginatedCustomers(BaseModel):
+class PaginationMeta(BaseModel):
     total: int
-    page: int
-    page_size: int
-    items: List[CustomerOut]
+    page: int = Field(ge=1)
+    page_size: int = Field(ge=1)
+    pages: int = Field(ge=0)
 
 
-class StatsOut(BaseModel):
+class CustomerListResponse(BaseModel):
+    meta: PaginationMeta
+    items: list[CustomerOut]
+
+
+class GenreBreakdown(BaseModel):
+    genre: str
+    count: int
+    average_age: float
+    average_annual_income_k: float
+    average_spending_score: float
+
+
+class SummaryResponse(BaseModel):
     total_customers: int
-    by_gender: dict
-    avg_age: float
-    avg_annual_income_k: float
-    avg_spending_score: float
-
-
-class ErrorOut(BaseModel):
-    detail: str
+    average_age: float
+    average_annual_income_k: float
+    average_spending_score: float
+    by_genre: list[GenreBreakdown]
