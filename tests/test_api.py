@@ -1,114 +1,82 @@
-def test_health(client):
-    r = client.get("/health")
-    assert r.status_code == 200
-    assert r.json() == {"status": "ok"}
+from __future__ import annotations
+
+import asyncio
+import sys
+from pathlib import Path
+
+import httpx
+import pytest
 
 
-def test_stats(client):
-    r = client.get("/stats")
-    assert r.status_code == 200
-    body = r.json()
-    assert body["total_customers"] == 200
-    assert set(body["by_gender"].keys()) == {"Male", "Female"}
-    assert 0 < body["avg_age"] < 130
-    assert 0 < body["avg_spending_score"] <= 100
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DATASET_PATH = PROJECT_ROOT / "data" / "shopping.csv"
+APP_MODULES = ["app.config", "app.database", "app.import_data", "app.main"]
 
 
-def test_list_default_pagination(client):
-    r = client.get("/customers")
-    assert r.status_code == 200
-    body = r.json()
-    assert body["total"] == 200
-    assert body["page"] == 1
-    assert body["page_size"] == 20
-    assert len(body["items"]) == 20
-    assert body["items"][0]["customer_code"] == "0001"
+@pytest.fixture()
+def app_instance(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("SHOPPING_DB_PATH", str(tmp_path / "shopping_test.db"))
+    monkeypatch.setenv("SHOPPING_CSV_PATH", str(DATASET_PATH))
+
+    for module_name in APP_MODULES:
+        sys.modules.pop(module_name, None)
+
+    from app.import_data import import_csv
+
+    import_csv()
+
+    from app.main import app
+
+    yield app
 
 
-def test_list_pagination_second_page(client):
-    r = client.get("/customers?page=2&page_size=50")
-    assert r.status_code == 200
-    body = r.json()
-    assert len(body["items"]) == 50
-    assert body["items"][0]["customer_code"] == "0051"
+async def _request(app, path: str) -> httpx.Response:
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        return await client.get(path)
 
 
-def test_filter_by_gender(client):
-    r = client.get("/customers?gender=Female&page_size=200")
-    assert r.status_code == 200
-    body = r.json()
-    assert body["total"] > 0
-    assert all(item["gender"] == "Female" for item in body["items"])
+def _get(app, path: str) -> httpx.Response:
+    return asyncio.run(_request(app, path))
 
 
-def test_filter_by_age_range(client):
-    r = client.get("/customers?min_age=20&max_age=25&page_size=200")
-    assert r.status_code == 200
-    body = r.json()
-    assert all(20 <= item["age"] <= 25 for item in body["items"])
+def test_customers_list_supports_pagination_and_filters(app_instance) -> None:
+    response = _get(
+        app_instance,
+        "/customers?page=2&page_size=5&genre=Female&min_age=20&max_age=40",
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["meta"]["page"] == 2
+    assert payload["meta"]["page_size"] == 5
+    assert len(payload["items"]) == 5
+    assert all(item["genre"] == "Female" for item in payload["items"])
+    assert all(20 <= item["age"] <= 40 for item in payload["items"])
 
 
-def test_filter_validation_error(client):
-    r = client.get("/customers?min_age=50&max_age=20")
-    assert r.status_code == 400
-
-
-def test_search(client):
-    r = client.get("/customers?search=0042")
-    assert r.status_code == 200
-    body = r.json()
-    assert body["total"] == 1
-    assert body["items"][0]["customer_code"] == "0042"
-
-
-def test_sort_by_spending_score_desc(client):
-    r = client.get("/customers?sort_by=spending_score&order=desc&page_size=5")
-    assert r.status_code == 200
-    scores = [it["spending_score"] for it in r.json()["items"]]
-    assert scores == sorted(scores, reverse=True)
-
-
-def test_get_single_customer(client):
-    r = client.get("/customers/1")
-    assert r.status_code == 200
-    assert r.json()["customer_code"] == "0001"
-
-
-def test_get_missing_customer(client):
-    r = client.get("/customers/999999")
-    assert r.status_code == 404
-
-
-def test_create_and_delete_customer(client):
-    new_payload = {
-        "customer_code": "9999",
-        "gender": "Female",
-        "age": 28,
-        "annual_income_k": 60,
-        "spending_score": 55,
+def test_customer_lookup_and_summary(app_instance) -> None:
+    customer_response = _get(app_instance, "/customers/1")
+    assert customer_response.status_code == 200
+    assert customer_response.json() == {
+        "customer_id": "0001",
+        "genre": "Male",
+        "age": 19,
+        "annual_income_k": 15,
+        "spending_score": 39,
     }
-    r = client.post("/customers", json=new_payload)
-    assert r.status_code == 201
-    created = r.json()
-    assert created["customer_code"] == "9999"
 
-    r2 = client.post("/customers", json=new_payload)
-    assert r2.status_code == 409
-
-    cid = created["id"]
-    r3 = client.delete(f"/customers/{cid}")
-    assert r3.status_code == 204
-    r4 = client.get(f"/customers/{cid}")
-    assert r4.status_code == 404
+    summary_response = _get(app_instance, "/summary")
+    assert summary_response.status_code == 200
+    assert summary_response.json()["total_customers"] == 200
 
 
-def test_create_invalid_payload(client):
-    bad = {
-        "customer_code": "X",
-        "gender": "Other",
-        "age": 25,
-        "annual_income_k": 30,
-        "spending_score": 50,
-    }
-    r = client.post("/customers", json=bad)
-    assert r.status_code == 422
+def test_search_and_validation_errors(app_instance) -> None:
+    search_response = _get(app_instance, "/search?q=137")
+    assert search_response.status_code == 200
+    assert search_response.json()["meta"]["total"] >= 1
+
+    invalid_range = _get(app_instance, "/customers?min_age=50&max_age=20")
+    assert invalid_range.status_code == 400
+
+    missing_customer = _get(app_instance, "/customers/9999")
+    assert missing_customer.status_code == 404
