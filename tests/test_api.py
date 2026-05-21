@@ -61,6 +61,19 @@ def test_search(client):
     assert body["items"][0]["customer_code"] == "0042"
 
 
+def test_search_matches_numeric_fields(client):
+    r = client.get("/customers?search=137&page_size=200")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["total"] >= 2
+    assert any(item["annual_income_k"] == 137 for item in body["items"])
+
+
+def test_search_rejects_blank_value(client):
+    r = client.get("/customers?search=%20")
+    assert r.status_code == 400
+
+
 def test_sort_by_spending_score_desc(client):
     r = client.get("/customers?sort_by=spending_score&order=desc&page_size=5")
     assert r.status_code == 200
