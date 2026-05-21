@@ -1,6 +1,6 @@
 from typing import Optional, Tuple, List
 
-from sqlalchemy import func, or_
+from sqlalchemy import String, cast, func, or_
 from sqlalchemy.orm import Session
 
 from . import models, schemas
@@ -50,11 +50,14 @@ def list_customers(
     if max_score is not None:
         q = q.filter(models.Customer.spending_score <= max_score)
     if search:
-        pattern = f"%{search}%"
+        pattern = f"%{search.strip()}%"
         q = q.filter(
             or_(
                 models.Customer.customer_code.ilike(pattern),
                 models.Customer.gender.ilike(pattern),
+                cast(models.Customer.age, String).ilike(pattern),
+                cast(models.Customer.annual_income_k, String).ilike(pattern),
+                cast(models.Customer.spending_score, String).ilike(pattern),
             )
         )
 
