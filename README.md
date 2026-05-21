@@ -6,7 +6,7 @@ Branch: `model-e-task002/shopping-api-dataset`
 
 ## Dataset
 
-The dataset used on this branch is `Shopping_data.csv` from the Drive file provided in the task. It contains 200 customer records with these columns:
+The source dataset is `Shopping_data.csv` from the Drive file provided in the task. This branch includes a checked-in copy at `data/shopping.csv` for local import. It contains 200 customer records with these columns:
 
 | Source column | Stored column | Type |
 | --- | --- | --- |
