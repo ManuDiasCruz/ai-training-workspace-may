@@ -8,13 +8,13 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "nodemon --watch src --ext ts,json --exec \"npm run build && node dist/server.js\"",
-    "dev:test": "dotenv -e .env.test prisma migrate dev --skip-seed && dotenv -e .env.test nodemon --watch src --ext ts,json --exec \"npm run build && node dist/server.js\"",
+    "dev:test": "dotenv -e .env.test -- prisma migrate dev --skip-seed && dotenv -e .env.test -- nodemon --watch src --ext ts,json --exec \"npm run build && node dist/server.js\"",
     "prisma:migrate": "prisma migrate deploy",
     "prisma:generate": "prisma generate",
-    "test:integration": "cross-env NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test jest -i tests/integration",
-    "test:unit": "cross-env NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test jest -i tests/unit",
-    "prisma-test": "dotenv -e .env.test prisma migrate reset --skip-seed",
-    "test": "npm run prisma-test && NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test jest -i"
+    "test:integration": "cross-env NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test -- jest -i tests/integration",
+    "test:unit": "cross-env NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test -- jest -i tests/unit",
+    "prisma-test": "dotenv -e .env.test -- prisma migrate reset --force --skip-seed",
+    "test": "npm run prisma-test && cross-env NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test -- jest -i"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

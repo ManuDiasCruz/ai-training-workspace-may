@@ -8,6 +8,9 @@ coverage/
 
 .env
 **/.env
+**/.env.test
+**/.env.development
+**/.env.production
 **/.env.local
 **/.env.development.local
 **/.env.test.local
