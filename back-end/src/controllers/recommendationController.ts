@@ -3,55 +3,64 @@ import { recommendationSchema } from "../schemas/recommendationsSchemas.js";
 import { recommendationService } from "../services/recommendationsService.js";
 import { wrongSchemaError } from "../utils/errorUtils.js";
 
-async function insert(req: Request, res: Response) {
-  const validation = recommendationSchema.validate(req.body);
-  if (validation.error) {
-    throw wrongSchemaError();
+function parsePositiveInt(value: string) {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw wrongSchemaError("Route params must be positive integers");
   }
 
-  await recommendationService.insert(req.body);
+  return parsed;
+}
 
-  res.sendStatus(201);
+async function insert(req: Request, res: Response) {
+  const validation = recommendationSchema.validate(req.body, { abortEarly: false });
+  if (validation.error) {
+    throw wrongSchemaError(validation.error.message);
+  }
+
+  const recommendation = await recommendationService.insert(validation.value);
+
+  res.status(201).send(recommendation);
 }
 
 async function upvote(req: Request, res: Response) {
-  const { id } = req.params;
+  const id = parsePositiveInt(req.params.id);
 
-  await recommendationService.upvote(+id);
+  await recommendationService.upvote(id);
 
   res.sendStatus(200);
 }
 
 async function downvote(req: Request, res: Response) {
-  const { id } = req.params;
+  const id = parsePositiveInt(req.params.id);
 
-  await recommendationService.downvote(+id);
+  await recommendationService.downvote(id);
 
   res.sendStatus(200);
 }
 
-async function random(req: Request, res: Response) {
+async function random(_req: Request, res: Response) {
   const randomRecommendation = await recommendationService.getRandom();
 
   res.send(randomRecommendation);
 }
 
-async function get(req: Request, res: Response) {
+async function get(_req: Request, res: Response) {
   const recommendations = await recommendationService.get();
   res.send(recommendations);
 }
 
 async function getTop(req: Request, res: Response) {
-  const { amount } = req.params;
+  const amount = parsePositiveInt(req.params.amount);
 
-  const recommendations = await recommendationService.getTop(+amount);
+  const recommendations = await recommendationService.getTop(amount);
   res.send(recommendations);
 }
 
 async function getById(req: Request, res: Response) {
-  const { id } = req.params;
+  const id = parsePositiveInt(req.params.id);
 
-  const recommendation = await recommendationService.getById(+id);
+  const recommendation = await recommendationService.getById(id);
   res.send(recommendation);
 }
 
