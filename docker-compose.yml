@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: sing-me-a-song-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sing_me_a_song
+    ports:
+      - "5433:5432"
+    volumes:
+      - sing_me_a_song_db:/var/lib/postgresql/data
+
+volumes:
+  sing_me_a_song_db:
