@@ -8,15 +8,15 @@ async function insert(createRecommendationData: CreateRecommendationData) {
   const existingRecommendation = await recommendationRepository.findByName(
     createRecommendationData.name
   );
-  if (existingRecommendation)
+  if (existingRecommendation) {
     throw conflictError("Recommendations names must be unique");
+  }
 
-  await recommendationRepository.create(createRecommendationData);
+  return recommendationRepository.create(createRecommendationData);
 }
 
 async function upvote(id: number) {
   await getByIdOrFail(id);
-
   await recommendationRepository.updateScore(id, "increment");
 }
 
@@ -45,7 +45,7 @@ async function get() {
 }
 
 async function getTop(amount: number) {
-  return recommendationRepository.getAmountByScore(amount);
+  return recommendationRepository.getAmountByScore(Math.min(amount, 100));
 }
 
 async function getRandom() {
