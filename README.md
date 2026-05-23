@@ -18,10 +18,10 @@ Prerequisites:
 - npm
 - Docker, or PostgreSQL 15+ available locally or through a hosted provider
 
-Local database with Docker:
+Local databases with Docker:
 
 ```bash
-docker compose up -d db
+docker compose up -d db db-test
 ```
 
 Backend setup:
@@ -30,6 +30,7 @@ Backend setup:
 cd back-end
 npm ci
 cp .env.example .env
+cp .env.test.example .env.test
 npm run prisma:generate
 npm run prisma:migrate
 npm run dev
@@ -64,6 +65,28 @@ Frontend (`front-end/.env`):
 - `REACT_APP_API_BASE_URL`: backend base URL used by Axios. Example: `http://localhost:5000`
 
 Safe example values live in `back-end/.env.example` and `front-end/.env.example`.
+Backend test example values live in `back-end/.env.test.example` and point at the separate `db-test` service on port `15434`.
+
+## Validation
+
+Backend:
+
+```bash
+cd back-end
+npm run build
+npm run test:unit
+npm run test:integration
+```
+
+Full backend tests reset the database configured by `back-end/.env.test`, so keep that file pointed at the dedicated test database.
+
+Frontend:
+
+```bash
+cd front-end
+npm run build
+CI=true npm test -- --watchAll=false
+```
 
 ## Deployment Instructions
 
@@ -102,7 +125,10 @@ The same split works on common hosting combinations such as a static frontend ho
 - Replaced the broken frontend API example URL with `http://localhost:5000`.
 - Added a frontend Axios fallback to the local backend URL so the app is usable during local setup.
 - Added `.gitignore` coverage for dependencies, builds, local env files, and generated runtime artifacts.
-- Added safe backend env examples and deployment guidance.
+- Corrected backend test scripts so `dotenv-cli` passes command arguments through to Prisma and Jest, and Prisma test resets run in non-interactive shells.
+- Added a separate Docker-backed PostgreSQL test database and safe `.env.test` example.
+- Added a frontend smoke test so the React test command validates a real rendered component.
+- Added safe backend env examples, test setup, and deployment guidance.
 
 ## Known Limitations Or Future Improvements
 
