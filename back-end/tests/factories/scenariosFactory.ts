@@ -1,40 +1,35 @@
 import { prisma } from "../../src/database.js";
+import { Song, createRandomSong, createRecommendation } from "./recommendationFactory.js";
 
-import { Song, createRandomSong, createRecommendation } from "./recommendationFactory.js"
+export async function createRandomSongPostWithNegativeScore(song: Song) {
+  return prisma.recommendation.create({ data: { ...song, score: -5 } });
+}
 
-async function createRandomSongPostWithNegativeScore(song: Song) {
-    const newSong = await prisma.recommendation.create({
-      data: { ...song, score: -5 },
-    });
-    return { ...newSong };
-}
-  
-async function createTwoSongsScenario() {
-    const songs: Song[] = [];
-    for (let i = 0; i < 3; i++) {
-      const newSong = createRandomSong();
-      await createRecommendation(newSong);
-      songs.push(newSong);
-    }
-    return songs;
-}
-  
-async function createMoreThanTenScenario(numberOfPosts: number) {
-    let song: Song;
-    for (let i = 0; i < numberOfPosts; i++) {
-      song = createRandomSong();
-      await createRecommendation(song);
-    }
-    return song;
-}
-  
-async function createThreePostWithUpvotesScenario() {
-    const upvotes = [14, 22, 31];
-    for (let i = 0; i < upvotes.length; i++) {
-      const newSong = createRandomSong();
-      await prisma.recommendation.create({
-        data: { ...newSong, score: upvotes[i] },
-      });
-    }
-    return upvotes[1];
+export async function createThreeSongsScenario() {
+  const songs: Song[] = [];
+  for (let i = 0; i < 3; i += 1) {
+    const newSong = createRandomSong();
+    await createRecommendation(newSong);
+    songs.push(newSong);
   }
+  return songs;
+}
+
+export async function createMoreThanTenScenario(numberOfPosts: number) {
+  let song: Song | null = null;
+  for (let i = 0; i < numberOfPosts; i += 1) {
+    song = createRandomSong();
+    await createRecommendation(song);
+  }
+  return song;
+}
+
+export async function createThreePostsWithUpvotesScenario() {
+  const upvotes = [14, 22, 31];
+  for (const score of upvotes) {
+    await prisma.recommendation.create({
+      data: { ...createRandomSong(), score },
+    });
+  }
+  return upvotes;
+}
