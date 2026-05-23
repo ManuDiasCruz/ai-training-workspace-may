@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: sing-me-a-song-api
+    env: node
+    rootDir: back-end
+    buildCommand: npm install && npx prisma generate && npm run build && npx prisma migrate deploy
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+
+  - type: static
+    name: sing-me-a-song-web
+    rootDir: front-end
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    envVars:
+      - key: REACT_APP_API_BASE_URL
+        sync: false
