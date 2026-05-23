@@ -67,7 +67,19 @@ Safe example values live in `back-end/.env.example` and `front-end/.env.example`
 
 ## Deployment Instructions
 
-A simple deployment path is:
+A simple deployment path is the included `render.yaml` Blueprint, which defines:
+
+- a Render Postgres database
+- a Node backend service rooted at `back-end/`
+- a static frontend site rooted at `front-end/`
+- an `index.html` rewrite rule for direct loads of `/top` and `/random`
+
+Render prompts for the two host-specific values marked with `sync: false`:
+
+- `CORS_ORIGIN`: the public frontend URL
+- `REACT_APP_API_BASE_URL`: the public backend URL
+
+Equivalent manual deployment steps are:
 
 1. Provision a PostgreSQL database and copy its connection string into the backend host as `DATABASE_URL`.
 2. Deploy `back-end/` as a Node web service.
@@ -97,4 +109,3 @@ The same split works on common hosting combinations such as a static frontend ho
 - The project still depends on PostgreSQL and has no seeded development data yet.
 - The dependency tree is from an older CRA/Prisma stack and currently reports npm audit findings.
 - Frontend UX still uses browser alerts for failed actions and has limited empty/error state handling on the random recommendation page.
-- Browser routing on static hosts may need a rewrite rule so `/top` and `/random` resolve to `index.html`.
