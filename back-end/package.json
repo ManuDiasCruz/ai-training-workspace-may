@@ -1,20 +1,18 @@
 {
-  "name": "typescript-back-template",
+  "name": "sing-me-a-song-api",
   "version": "1.0.0",
   "type": "module",
-  "description": "",
-  "main": "index.js",
+  "description": "Sing me a Song recommendations API",
+  "main": "dist/server.js",
   "scripts": {
-    "start": "node dist/index.js",
-    "dev": "nodemon src/server.ts",
-    "dev:test": "dotenv -e .env.test prisma migrate dev --skip-seed && dotenv -e .env.test nodemon src/server.ts",
-    "test:integration": "dotenv -e .env.test jest -- -i ./tests/integration",
-    "test:unit": "dotenv -e .env.test jest -- -i ./tests/unit",
+    "build": "prisma generate && tsc",
+    "start": "node dist/server.js",
+    "dev": "nodemon --watch src --exec \"node --loader ts-node/esm src/server.ts\"",
+    "dev:test": "dotenv -e .env.test prisma migrate dev --skip-seed && MODE=TEST dotenv -e .env.test nodemon --watch src --exec \"node --loader ts-node/esm src/server.ts\"",
+    "test:integration": "NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test jest -- -i ./tests/integration",
+    "test:unit": "NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test jest -- -i ./tests/unit",
     "prisma-test": "dotenv -e .env.test prisma migrate reset --skip-seed",
     "test": "npm run prisma-test && NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test jest -- -i"
-  },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
   },
   "keywords": [],
   "author": "",
@@ -44,7 +42,6 @@
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "express-async-errors": "^3.1.1",
-    "joi": "^17.4.1",
-    "react-player": "^2.10.0"
+    "joi": "^17.4.1"
   }
 }
