@@ -8,8 +8,8 @@ export interface Song {
 
 export function createRandomSong(): Song {
   return {
-    name: faker.person?.fullName?.() ?? faker.name.findName(),
-    youtubeLink: `https://www.youtube.com/watch?v=${faker.string?.alphanumeric?.(11) ?? faker.random.alphaNumeric(11)}`,
+    name: faker.name.findName(),
+    youtubeLink: `https://www.youtube.com/watch?v=${faker.random.alphaNumeric(11)}`,
   };
 }
 
