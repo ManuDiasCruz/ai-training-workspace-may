@@ -1,128 +1,205 @@
-from typing import Optional
+from __future__ import annotations
 
-from fastapi import Depends, FastAPI, HTTPException, Query, status
-from sqlalchemy.exc import IntegrityError
+import math
+from contextlib import asynccontextmanager
+from typing import Annotated
+
+from fastapi import Depends, FastAPI, HTTPException, Query
+from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.orm import Session
 
-from . import crud, models, schemas
-from .database import Base, engine, get_db
+from .db import Base, engine, get_db
+from .models import Customer
+from .schemas import CustomerOut, CustomerPage, GenreStat, PageMeta, StatsOut
 
 
-def create_app() -> FastAPI:
-    Base.metadata.create_all(bind=engine)
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    Base.metadata.create_all(engine)
+    yield
 
-    app = FastAPI(
-        title="Shopping Customers API",
-        version="1.0.0",
-        description=(
-            "REST API exposing the Mall Customer Segmentation dataset "
-            "(CustomerID, Gender, Age, Annual Income, Spending Score)."
-        ),
+
+app = FastAPI(
+    title="Shopping Customer Dataset API",
+    description="Read-only REST API over the Drive shopping customer dataset.",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+
+@app.get("/health", tags=["meta"])
+async def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+def _apply_filters(
+    stmt,
+    *,
+    genre: str | None,
+    min_age: int | None,
+    max_age: int | None,
+    min_annual_income_k: int | None,
+    max_annual_income_k: int | None,
+    min_spending_score: int | None,
+    max_spending_score: int | None,
+):
+    if genre:
+        stmt = stmt.where(Customer.genre == genre)
+    if min_age is not None:
+        stmt = stmt.where(Customer.age >= min_age)
+    if max_age is not None:
+        stmt = stmt.where(Customer.age <= max_age)
+    if min_annual_income_k is not None:
+        stmt = stmt.where(Customer.annual_income_k >= min_annual_income_k)
+    if max_annual_income_k is not None:
+        stmt = stmt.where(Customer.annual_income_k <= max_annual_income_k)
+    if min_spending_score is not None:
+        stmt = stmt.where(Customer.spending_score >= min_spending_score)
+    if max_spending_score is not None:
+        stmt = stmt.where(Customer.spending_score <= max_spending_score)
+    return stmt
+
+
+def _validate_range(name: str, low: int | None, high: int | None) -> None:
+    if low is not None and high is not None and low > high:
+        raise HTTPException(status_code=400, detail=f"{name} minimum cannot exceed maximum")
+
+
+def _page_response(
+    db: Session,
+    count_stmt,
+    items_stmt,
+    *,
+    page: int,
+    page_size: int,
+) -> CustomerPage:
+    total = db.scalar(count_stmt) or 0
+    items = db.scalars(
+        items_stmt.order_by(Customer.id).offset((page - 1) * page_size).limit(page_size)
+    ).all()
+    pages = math.ceil(total / page_size) if total else 0
+    return CustomerPage(
+        meta=PageMeta(total=total, page=page, page_size=page_size, pages=pages),
+        items=[CustomerOut.model_validate(it) for it in items],
     )
 
-    @app.get("/health", tags=["meta"])
-    def health():
-        return {"status": "ok"}
 
-    @app.get("/stats", response_model=schemas.StatsOut, tags=["customers"])
-    def get_stats(db: Session = Depends(get_db)):
-        return crud.stats(db)
+@app.get("/customers", response_model=CustomerPage, tags=["customers"])
+async def list_customers(
+    db: Annotated[Session, Depends(get_db)],
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    genre: str | None = Query(None, pattern=r"^(Male|Female)$"),
+    min_age: int | None = Query(None, ge=0),
+    max_age: int | None = Query(None, ge=0),
+    min_annual_income_k: int | None = Query(None, ge=0),
+    max_annual_income_k: int | None = Query(None, ge=0),
+    min_spending_score: int | None = Query(None, ge=1, le=100),
+    max_spending_score: int | None = Query(None, ge=1, le=100),
+) -> CustomerPage:
+    _validate_range("age", min_age, max_age)
+    _validate_range("annual_income_k", min_annual_income_k, max_annual_income_k)
+    _validate_range("spending_score", min_spending_score, max_spending_score)
 
-    @app.get(
-        "/customers",
-        response_model=schemas.PaginatedCustomers,
-        tags=["customers"],
+    filters = dict(
+        genre=genre,
+        min_age=min_age,
+        max_age=max_age,
+        min_annual_income_k=min_annual_income_k,
+        max_annual_income_k=max_annual_income_k,
+        min_spending_score=min_spending_score,
+        max_spending_score=max_spending_score,
     )
-    def list_customers(
-        page: int = Query(1, ge=1),
-        page_size: int = Query(20, ge=1, le=200),
-        gender: Optional[str] = Query(None, pattern="^(Male|Female)$"),
-        min_age: Optional[int] = Query(None, ge=0, le=130),
-        max_age: Optional[int] = Query(None, ge=0, le=130),
-        min_income: Optional[int] = Query(None, ge=0),
-        max_income: Optional[int] = Query(None, ge=0),
-        min_score: Optional[int] = Query(None, ge=1, le=100),
-        max_score: Optional[int] = Query(None, ge=1, le=100),
-        search: Optional[str] = Query(None, min_length=1, max_length=64),
-        sort_by: str = Query(
-            "id",
-            pattern="^(id|age|annual_income_k|spending_score|customer_code)$",
-        ),
-        order: str = Query("asc", pattern="^(asc|desc)$"),
-        db: Session = Depends(get_db),
-    ):
-        if min_age is not None and max_age is not None and min_age > max_age:
-            raise HTTPException(status_code=400, detail="min_age cannot exceed max_age")
-        if min_income is not None and max_income is not None and min_income > max_income:
-            raise HTTPException(
-                status_code=400, detail="min_income cannot exceed max_income"
-            )
-        if min_score is not None and max_score is not None and min_score > max_score:
-            raise HTTPException(
-                status_code=400, detail="min_score cannot exceed max_score"
-            )
+    return _page_response(
+        db,
+        _apply_filters(select(func.count(Customer.id)), **filters),
+        _apply_filters(select(Customer), **filters),
+        page=page,
+        page_size=page_size,
+    )
 
-        total, items = crud.list_customers(
-            db,
-            page=page,
-            page_size=page_size,
-            gender=gender,
-            min_age=min_age,
-            max_age=max_age,
-            min_income=min_income,
-            max_income=max_income,
-            min_score=min_score,
-            max_score=max_score,
-            search=search,
-            sort_by=sort_by,
-            order=order,
+
+@app.get("/customers/{customer_id}", response_model=CustomerOut, tags=["customers"])
+async def get_customer(customer_id: str, db: Annotated[Session, Depends(get_db)]) -> CustomerOut:
+    obj = db.scalar(select(Customer).where(Customer.customer_id == customer_id))
+    if obj is None:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return CustomerOut.model_validate(obj)
+
+
+@app.get("/search", response_model=CustomerPage, tags=["customers"])
+async def search_customers(
+    db: Annotated[Session, Depends(get_db)],
+    q: str = Query(..., min_length=1, max_length=64, description="Free-text search"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+) -> CustomerPage:
+    like = f"%{q}%"
+    cond = or_(
+        Customer.customer_id.ilike(like),
+        Customer.genre.ilike(like),
+        cast(Customer.age, String).ilike(like),
+        cast(Customer.annual_income_k, String).ilike(like),
+        cast(Customer.spending_score, String).ilike(like),
+    )
+    return _page_response(
+        db,
+        select(func.count(Customer.id)).where(cond),
+        select(Customer).where(cond),
+        page=page,
+        page_size=page_size,
+    )
+
+
+@app.get("/genres", response_model=list[str], tags=["meta"])
+async def list_genres(db: Annotated[Session, Depends(get_db)]) -> list[str]:
+    rows = db.scalars(select(Customer.genre).distinct().order_by(Customer.genre)).all()
+    return list(rows)
+
+
+@app.get("/stats", response_model=StatsOut, tags=["meta"])
+async def stats(db: Annotated[Session, Depends(get_db)]) -> StatsOut:
+    total = db.scalar(select(func.count(Customer.id))) or 0
+    if total == 0:
+        return StatsOut(
+            total_customers=0,
+            avg_age=0.0,
+            avg_annual_income_k=0.0,
+            avg_spending_score=0.0,
+            by_genre=[],
         )
-        return {"total": total, "page": page, "page_size": page_size, "items": items}
 
-    @app.get(
-        "/customers/{customer_id}",
-        response_model=schemas.CustomerOut,
-        responses={404: {"model": schemas.ErrorOut}},
-        tags=["customers"],
+    genre_rows = db.execute(
+        select(
+            Customer.genre,
+            func.count(Customer.id),
+            func.avg(Customer.age),
+            func.avg(Customer.annual_income_k),
+            func.avg(Customer.spending_score),
+        )
+        .group_by(Customer.genre)
+        .order_by(Customer.genre)
+    ).all()
+    by_genre = [
+        GenreStat(
+            genre=r[0],
+            count=int(r[1]),
+            avg_age=round(float(r[2] or 0), 2),
+            avg_annual_income_k=round(float(r[3] or 0), 2),
+            avg_spending_score=round(float(r[4] or 0), 2),
+        )
+        for r in genre_rows
+    ]
+    return StatsOut(
+        total_customers=total,
+        avg_age=round(float(db.scalar(select(func.avg(Customer.age))) or 0), 2),
+        avg_annual_income_k=round(float(db.scalar(select(func.avg(Customer.annual_income_k))) or 0), 2),
+        avg_spending_score=round(float(db.scalar(select(func.avg(Customer.spending_score))) or 0), 2),
+        min_age=db.scalar(select(func.min(Customer.age))),
+        max_age=db.scalar(select(func.max(Customer.age))),
+        min_annual_income_k=db.scalar(select(func.min(Customer.annual_income_k))),
+        max_annual_income_k=db.scalar(select(func.max(Customer.annual_income_k))),
+        min_spending_score=db.scalar(select(func.min(Customer.spending_score))),
+        max_spending_score=db.scalar(select(func.max(Customer.spending_score))),
+        by_genre=by_genre,
     )
-    def get_customer(customer_id: int, db: Session = Depends(get_db)):
-        obj = crud.get_customer(db, customer_id)
-        if not obj:
-            raise HTTPException(status_code=404, detail="Customer not found")
-        return obj
-
-    @app.post(
-        "/customers",
-        response_model=schemas.CustomerOut,
-        status_code=status.HTTP_201_CREATED,
-        responses={409: {"model": schemas.ErrorOut}},
-        tags=["customers"],
-    )
-    def create_customer(
-        payload: schemas.CustomerCreate, db: Session = Depends(get_db)
-    ):
-        if crud.get_customer_by_code(db, payload.customer_code):
-            raise HTTPException(
-                status_code=409, detail="customer_code already exists"
-            )
-        try:
-            return crud.create_customer(db, payload)
-        except IntegrityError:
-            db.rollback()
-            raise HTTPException(status_code=409, detail="Could not create customer")
-
-    @app.delete(
-        "/customers/{customer_id}",
-        status_code=status.HTTP_204_NO_CONTENT,
-        responses={404: {"model": schemas.ErrorOut}},
-        tags=["customers"],
-    )
-    def delete_customer(customer_id: int, db: Session = Depends(get_db)):
-        if not crud.delete_customer(db, customer_id):
-            raise HTTPException(status_code=404, detail="Customer not found")
-        return None
-
-    return app
-
-
-app = create_app()

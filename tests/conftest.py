@@ -1,39 +1,40 @@
+from __future__ import annotations
+
 import os
-import sys
 import tempfile
 from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
+
+@pytest.fixture(scope="session", autouse=True)
+def _isolated_db(tmp_path_factory):
+    tmp_dir = tmp_path_factory.mktemp("shopping-test")
+    db_path = tmp_dir / "test.db"
+    os.environ["SHOPPING_DATABASE_URL"] = f"sqlite:///{db_path}"
+
+    csv_path = Path(__file__).resolve().parent.parent / "data" / "shopping.csv"
+    os.environ["SHOPPING_CSV_PATH"] = str(csv_path)
+
+    from app.db import Base, engine
+    from app.import_data import import_csv
+
+    Base.metadata.create_all(engine)
+    import_csv(csv_path)
+    yield
 
 
 @pytest.fixture()
-def client(tmp_path, monkeypatch):
-    db_file = tmp_path / "test_shopping.db"
-    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_file}")
+async def client():
+    import httpx
 
-    # Re-import modules under the temp DATABASE_URL.
-    for mod in [
-        "scripts.import_data",
-        "scripts",
-        "app.main",
-        "app.crud",
-        "app.models",
-        "app.schemas",
-        "app.database",
-        "app",
-    ]:
-        sys.modules.pop(mod, None)
-
-    from fastapi.testclient import TestClient
     from app.main import app
-    from app.database import Base, engine
-    from scripts.import_data import import_csv
 
-    Base.metadata.create_all(bind=engine)
-    import_csv(ROOT / "data" / "Shopping_data.csv")
-
-    with TestClient(app) as c:
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
         yield c
+
+
+@pytest.fixture()
+def anyio_backend():
+    return "asyncio"

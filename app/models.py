@@ -1,24 +1,21 @@
-from sqlalchemy import Column, Integer, String, CheckConstraint, Index
+from __future__ import annotations
 
-from .database import Base
+from sqlalchemy import Index, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
+
+from .db import Base
 
 
 class Customer(Base):
     __tablename__ = "customers"
 
-    id = Column(Integer, primary_key=True, index=True)
-    customer_code = Column(String(8), unique=True, nullable=False, index=True)
-    gender = Column(String(16), nullable=False)
-    age = Column(Integer, nullable=False)
-    annual_income_k = Column(Integer, nullable=False)
-    spending_score = Column(Integer, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    customer_id: Mapped[str] = mapped_column(String(16), unique=True, index=True)
+    genre: Mapped[str] = mapped_column(String(16), index=True)
+    age: Mapped[int] = mapped_column(Integer)
+    annual_income_k: Mapped[int] = mapped_column(Integer)
+    spending_score: Mapped[int] = mapped_column(Integer)
 
-    __table_args__ = (
-        CheckConstraint("age >= 0 AND age <= 130", name="ck_customer_age_range"),
-        CheckConstraint("annual_income_k >= 0", name="ck_customer_income_nonneg"),
-        CheckConstraint(
-            "spending_score >= 1 AND spending_score <= 100",
-            name="ck_customer_spending_range",
-        ),
-        Index("ix_customers_gender_age", "gender", "age"),
-    )
+
+Index("ix_customers_genre_age", Customer.genre, Customer.age)
+Index("ix_customers_income_score", Customer.annual_income_k, Customer.spending_score)
