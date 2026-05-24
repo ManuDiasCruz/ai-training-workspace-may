@@ -6,22 +6,12 @@ export interface Song {
     youtubeLink: string;
 };
 
-export function createRandomSong() {
-  const randomUrlGen = require("random-youtube-music-video");
-  const youtubeUrl = randomUrlGen.getRandomMusicVideoUrl();
+export function createRandomSong(): Song {
+    const name = faker.music.songName ? faker.music.songName() : faker.name.findName();
+    const youtubeLink = `https://www.youtube.com/watch?v=${faker.random.alphaNumeric(11)}`;
 
-  const name = faker.name.findName();
-  const youtubeLink = youtubeUrl;
-
-  return { name, youtubeLink };
+    return { name, youtubeLink };
 };
-
-// export function createSong() {
-//     const name = faker.name.findName();
-//     const youtubeLink = `https://www.youtube.com/${faker.random.alphaNumeric(10)}`;    
-    
-//     return { name: name, youtubeLink: youtubeLink };
-// };
 
 export async function createRecommendation(song: Song) {
     return prisma.recommendation.create({ data: song });
