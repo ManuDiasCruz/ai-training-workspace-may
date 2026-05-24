@@ -25,8 +25,16 @@ def _isolated_db(tmp_path_factory):
 
 
 @pytest.fixture()
-def client():
-    from fastapi.testclient import TestClient
+async def client():
+    import httpx
+
     from app.main import app
-    with TestClient(app) as c:
+
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
         yield c
+
+
+@pytest.fixture()
+def anyio_backend():
+    return "asyncio"

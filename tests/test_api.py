@@ -1,87 +1,100 @@
 from __future__ import annotations
 
+import pytest
 
-def test_health(client):
-    r = client.get("/health")
+pytestmark = pytest.mark.anyio
+
+
+async def test_health(client):
+    r = await client.get("/health")
     assert r.status_code == 200
     assert r.json() == {"status": "ok"}
 
 
-def test_list_default_pagination(client):
-    r = client.get("/purchases")
+async def test_list_default_pagination(client):
+    r = await client.get("/customers")
     assert r.status_code == 200
     body = r.json()
-    assert body["meta"]["page"] == 1
-    assert body["meta"]["page_size"] == 20
-    assert body["meta"]["total"] > 0
+    assert body["meta"] == {"page": 1, "page_size": 20, "pages": 10, "total": 200}
     assert len(body["items"]) == 20
+    assert body["items"][0]["customer_id"] == "0001"
 
 
-def test_list_pagination_second_page_differs(client):
-    p1 = client.get("/purchases", params={"page": 1, "page_size": 5}).json()
-    p2 = client.get("/purchases", params={"page": 2, "page_size": 5}).json()
+async def test_list_pagination_second_page_differs(client):
+    p1 = (await client.get("/customers", params={"page": 1, "page_size": 5})).json()
+    p2 = (await client.get("/customers", params={"page": 2, "page_size": 5})).json()
     ids1 = [it["id"] for it in p1["items"]]
     ids2 = [it["id"] for it in p2["items"]]
     assert len(ids1) == 5 and len(ids2) == 5
     assert set(ids1).isdisjoint(set(ids2))
 
 
-def test_filter_by_category(client):
-    r = client.get("/purchases", params={"category": "Footwear", "page_size": 50})
+async def test_filter_by_genre_and_income_range(client):
+    r = await client.get(
+        "/customers",
+        params={"genre": "Female", "min_annual_income_k": 70, "page_size": 100},
+    )
     assert r.status_code == 200
     body = r.json()
     assert body["meta"]["total"] > 0
-    assert all(it["category"] == "Footwear" for it in body["items"])
+    assert all(it["genre"] == "Female" and it["annual_income_k"] >= 70 for it in body["items"])
 
 
-def test_filter_amount_range_validation(client):
-    r = client.get("/purchases", params={"min_amount": 100, "max_amount": 10})
+async def test_filter_range_validation(client):
+    r = await client.get("/customers", params={"min_age": 60, "max_age": 30})
     assert r.status_code == 400
+    assert r.json()["detail"] == "age minimum cannot exceed maximum"
 
 
-def test_filter_rating_out_of_range_rejected(client):
-    r = client.get("/purchases", params={"min_rating": 9})
+async def test_filter_spending_score_out_of_range_rejected(client):
+    r = await client.get("/customers", params={"min_spending_score": 101})
     assert r.status_code == 422
 
 
-def test_get_single_and_404(client):
-    r = client.get("/purchases/1")
+async def test_get_single_and_404(client):
+    r = await client.get("/customers/0001")
     assert r.status_code == 200
-    assert r.json()["id"] == 1
+    assert r.json()["customer_id"] == "0001"
 
-    r = client.get("/purchases/99999999")
+    r = await client.get("/customers/9999")
     assert r.status_code == 404
 
 
-def test_search_returns_matching_rows(client):
-    r = client.get("/search", params={"q": "Sneakers"})
+async def test_search_returns_matching_rows(client):
+    r = await client.get("/search", params={"q": "Female", "page_size": 25})
     assert r.status_code == 200
     body = r.json()
     assert body["meta"]["total"] >= 1
     assert all(
-        "sneakers" in (it["item_purchased"] + it["category"] + it["color"] + it["location"]).lower()
+        "female"
+        in (
+            it["customer_id"]
+            + it["genre"]
+            + str(it["age"])
+            + str(it["annual_income_k"])
+            + str(it["spending_score"])
+        ).lower()
         for it in body["items"]
     )
 
 
-def test_search_requires_q(client):
-    r = client.get("/search")
+async def test_search_requires_q(client):
+    r = await client.get("/search")
     assert r.status_code == 422
 
 
-def test_categories_endpoint(client):
-    r = client.get("/categories")
+async def test_genres_endpoint(client):
+    r = await client.get("/genres")
     assert r.status_code == 200
-    cats = r.json()
-    assert isinstance(cats, list) and len(cats) >= 1
-    assert cats == sorted(cats)
+    assert r.json() == ["Female", "Male"]
 
 
-def test_stats_endpoint(client):
-    r = client.get("/stats")
+async def test_stats_endpoint(client):
+    r = await client.get("/stats")
     assert r.status_code == 200
     body = r.json()
-    assert body["total_purchases"] > 0
-    assert body["total_revenue_usd"] > 0
-    assert 0 <= body["avg_review_rating"] <= 5
-    assert len(body["by_category"]) >= 1
+    assert body["total_customers"] == 200
+    assert 18 <= body["avg_age"] <= 70
+    assert body["min_annual_income_k"] == 15
+    assert body["max_annual_income_k"] == 137
+    assert len(body["by_genre"]) == 2
