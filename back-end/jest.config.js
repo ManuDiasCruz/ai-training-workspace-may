@@ -2,6 +2,8 @@
 export default {
   preset: "ts-jest",
   testEnvironment: "node",
+  testMatch: ["**/tests/**/*.test.ts"],
+  testPathIgnorePatterns: ["/node_modules/", "/dist/"],
   extensionsToTreatAsEsm: [".ts"],
   globals: {
     "ts-jest": {

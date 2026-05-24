@@ -1,5 +1,4 @@
 import { jest } from "@jest/globals";
-import { response } from "express";
 
 import { recommendationService } from "../../src/services/recommendationsService.js";
 import { recommendationRepository } from "../../src/repositories/recommendationRepository.js";
@@ -15,6 +14,10 @@ describe("UNIT TESTS SUITE", () => {
         youtubeLink: recommendation1.youtubeLink,
         score: 2
     }
+
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
 
     describe("Create recommendation", () => {
         it("Success", async () => {
@@ -192,6 +195,7 @@ describe("UNIT TESTS SUITE", () => {
 
             jest
                 .spyOn(recommendationRepository, "findAll")
+                .mockResolvedValueOnce([])
                 .mockResolvedValueOnce([]);
 
             expect(recommendationService.getRandom()).rejects.toEqual({

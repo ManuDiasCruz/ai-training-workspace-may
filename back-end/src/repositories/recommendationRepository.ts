@@ -3,7 +3,7 @@ import { prisma } from "../database.js";
 import { CreateRecommendationData } from "../services/recommendationsService.js";
 
 async function create(createRecommendationData: CreateRecommendationData) {
-  await prisma.recommendation.create({
+  return prisma.recommendation.create({
     data: createRecommendationData,
   });
 }
@@ -25,7 +25,7 @@ function findAll(findAllWhere?: FindAllWhere) {
 
 function getAmountByScore(take: number) {
   return prisma.recommendation.findMany({
-    orderBy: { score: "desc" },
+    orderBy: [{ score: "desc" }, { id: "desc" }],
     take,
   });
 }
