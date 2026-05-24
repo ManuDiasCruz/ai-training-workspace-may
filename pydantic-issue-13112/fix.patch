@@ -1,0 +1,47 @@
+diff --git a/pydantic/aliases.py b/pydantic/aliases.py
+index a88a6f8..c8736d7 100644
+--- a/pydantic/aliases.py
++++ b/pydantic/aliases.py
+@@ -25,6 +25,16 @@ class AliasPath:
+     path: list[int | str]
+ 
+     def __init__(self, first_arg: str, *args: str | int) -> None:
++        # The first segment must be a string dict key: ``pydantic-core`` only
++        # supports indexing by ``int`` *after* a string lookup. Validating
++        # eagerly produces a clear error at ``AliasPath`` construction instead
++        # of an opaque ``SchemaError`` at model definition time (see #13112).
++        if not isinstance(first_arg, str):
++            raise TypeError(
++                f'`AliasPath` first argument must be a `str`, got {type(first_arg).__name__!r}. '
++                'Indexing top-level list/tuple inputs by integer is not supported; '
++                'see https://github.com/pydantic/pydantic/issues/13112.'
++            )
+         self.path = [first_arg] + list(args)
+ 
+     def convert_to_aliases(self) -> list[str | int]:
+diff --git a/tests/test_aliases.py b/tests/test_aliases.py
+index a4342bc..ee1ee12 100644
+--- a/tests/test_aliases.py
++++ b/tests/test_aliases.py
+@@ -611,6 +611,21 @@ def test_search_dict_for_alias_path():
+     assert ap.search_dict_for_path({'a': 'hello'}) is PydanticUndefined
+ 
+ 
++def test_alias_path_int_first_segment_raises_type_error():
++    """Regression test for https://github.com/pydantic/pydantic/issues/13112.
++
++    An ``int`` as the first ``AliasPath`` segment is not supported by
++    ``pydantic-core`` (which expects the first segment to be a string dict
++    key). Previously this surfaced as an opaque ``SchemaError`` at model
++    definition time. ``AliasPath`` now raises a clear ``TypeError`` at
++    construction.
++    """
++    with pytest.raises(TypeError, match=r'first argument.*must be a `str`'):
++        AliasPath(0)
++    with pytest.raises(TypeError, match=r'first argument.*must be a `str`'):
++        AliasPath(0, 'name')
++
++
+ def test_validation_alias_invalid_value_type():
+     m = 'Invalid `validation_alias` type. it should be `str`, `AliasChoices`, or `AliasPath`'
+     with pytest.raises(TypeError, match=m):
