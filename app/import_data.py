@@ -1,11 +1,8 @@
-"""Import the shopping CSV into the local SQLite database.
+"""Import the Drive shopping CSV into the local database.
 
-The importer normalizes header names (snake_case, strips units like
-"(USD)") so it accepts the original Kaggle "Customer Shopping Trends"
-column names as well as the snake_case sample produced by the
-generator script. Missing optional columns fall back to safe defaults.
-
-Run as: python -m app.import_data
+Run as:
+    python -m app.import_data
+    python -m app.import_data path/to/Shopping_data.csv
 """
 
 from __future__ import annotations
@@ -14,41 +11,30 @@ import csv
 import re
 import sys
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Iterable
 
 from sqlalchemy import delete
 
 from .config import CSV_PATH
 from .db import Base, SessionLocal, engine
-from .models import Purchase
+from .models import Customer
 
 COLUMN_ALIASES = {
-    "customer_id": {"customer id", "customerid"},
-    "age": set(),
-    "gender": set(),
-    "item_purchased": {"item purchased"},
-    "category": set(),
-    "purchase_amount_usd": {"purchase amount (usd)", "purchase amount usd", "purchase amount"},
-    "location": set(),
-    "size": set(),
-    "color": set(),
-    "season": set(),
-    "review_rating": {"review rating"},
-    "subscription_status": {"subscription status"},
-    "payment_method": {"payment method"},
-    "shipping_type": {"shipping type"},
-    "discount_applied": {"discount applied"},
-    "promo_code_used": {"promo code used"},
-    "previous_purchases": {"previous purchases"},
-    "frequency_of_purchases": {"frequency of purchases"},
+    "customer_id": {"customerid", "customer id"},
+    "genre": {"genre", "gender"},
+    "age": {"age"},
+    "annual_income_k": {"annual income (k$)", "annual income k", "annual income"},
+    "spending_score": {"spending score (1-100)", "spending score"},
 }
+
+REQUIRED_COLUMNS = set(COLUMN_ALIASES)
+VALID_GENRES = {"Female", "Male"}
 
 
 def _normalize(name: str) -> str:
     n = name.strip().lower()
-    n = re.sub(r"\(.*?\)", "", n).strip()
-    n = re.sub(r"[^a-z0-9]+", "_", n).strip("_")
-    return n
+    n = re.sub(r"[^a-z0-9]+", " ", n)
+    return " ".join(n.split())
 
 
 def _build_header_map(fieldnames: Iterable[str]) -> dict[str, str]:
@@ -56,46 +42,65 @@ def _build_header_map(fieldnames: Iterable[str]) -> dict[str, str]:
     for raw in fieldnames:
         norm = _normalize(raw)
         for canonical, aliases in COLUMN_ALIASES.items():
-            alias_norms = {_normalize(a) for a in aliases} | {canonical}
-            if norm in alias_norms:
+            if norm in {_normalize(alias) for alias in aliases} | {_normalize(canonical)}:
                 mapping[canonical] = raw
                 break
+    missing = sorted(REQUIRED_COLUMNS - set(mapping))
+    if missing:
+        raise ValueError(f"CSV missing required columns: {', '.join(missing)}")
     return mapping
 
 
-def _coerce(value: Any, kind: type, default: Any) -> Any:
-    if value is None or value == "":
-        return default
+def _int(value: str, field: str, row_number: int) -> int:
     try:
-        return kind(value)
-    except (TypeError, ValueError):
-        return default
+        return int(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"Invalid integer for {field} on CSV row {row_number}") from exc
 
 
-def _row_to_purchase(row: dict[str, str], hmap: dict[str, str]) -> Purchase:
-    def s(field: str, default: str = "") -> str:
-        col = hmap.get(field)
-        return (row.get(col, default) if col else default) or default
+def _require(value: str, field: str, row_number: int) -> str:
+    if not value:
+        raise ValueError(f"Missing value for {field} on CSV row {row_number}")
+    return value
 
-    return Purchase(
-        customer_id=_coerce(s("customer_id"), int, 0),
-        age=_coerce(s("age"), int, 0),
-        gender=s("gender", "Unknown"),
-        item_purchased=s("item_purchased", "Unknown"),
-        category=s("category", "Unknown"),
-        purchase_amount_usd=_coerce(s("purchase_amount_usd"), float, 0.0),
-        location=s("location", "Unknown"),
-        size=s("size", ""),
-        color=s("color", ""),
-        season=s("season", ""),
-        review_rating=_coerce(s("review_rating"), float, 0.0),
-        subscription_status=s("subscription_status", "No"),
-        payment_method=s("payment_method", ""),
-        shipping_type=s("shipping_type", ""),
-        discount_applied=s("discount_applied", "No"),
-        promo_code_used=s("promo_code_used", "No"),
-        previous_purchases=_coerce(s("previous_purchases"), int, 0),
-        frequency_of_purchases=s("frequency_of_purchases", ""),
+
+def _validate_range(value: int, field: str, row_number: int, *, low: int, high: int) -> int:
+    if not low <= value <= high:
+        raise ValueError(f"{field} on CSV row {row_number} must be between {low} and {high}")
+    return value
+
+
+def _row_to_customer(row: dict[str, str], hmap: dict[str, str], row_number: int) -> Customer:
+    def value(field: str) -> str:
+        return (row.get(hmap[field]) or "").strip()
+
+    customer_id = _require(value("customer_id"), "customer_id", row_number)
+    genre = _require(value("genre"), "genre", row_number)
+    if genre not in VALID_GENRES:
+        raise ValueError(f"Invalid genre on CSV row {row_number}: {genre}")
+
+    age = _validate_range(_int(value("age"), "age", row_number), "age", row_number, low=0, high=120)
+    annual_income_k = _validate_range(
+        _int(value("annual_income_k"), "annual_income_k", row_number),
+        "annual_income_k",
+        row_number,
+        low=0,
+        high=1_000,
+    )
+    spending_score = _validate_range(
+        _int(value("spending_score"), "spending_score", row_number),
+        "spending_score",
+        row_number,
+        low=1,
+        high=100,
+    )
+
+    return Customer(
+        customer_id=customer_id,
+        genre=genre,
+        age=age,
+        annual_income_k=annual_income_k,
+        spending_score=spending_score,
     )
 
 
@@ -107,22 +112,18 @@ def import_csv(csv_path: Path = CSV_PATH, *, truncate: bool = True) -> int:
     inserted = 0
     with SessionLocal() as session:
         if truncate:
-            session.execute(delete(Purchase))
+            session.execute(delete(Customer))
         with csv_path.open(newline="") as f:
             reader = csv.DictReader(f)
             if not reader.fieldnames:
                 raise ValueError("CSV has no header row")
             hmap = _build_header_map(reader.fieldnames)
-            batch: list[Purchase] = []
-            for row in reader:
-                batch.append(_row_to_purchase(row, hmap))
-                if len(batch) >= 500:
-                    session.add_all(batch)
-                    inserted += len(batch)
-                    batch = []
-            if batch:
-                session.add_all(batch)
-                inserted += len(batch)
+            batch = [
+                _row_to_customer(row, hmap, row_number)
+                for row_number, row in enumerate(reader, start=2)
+            ]
+            session.add_all(batch)
+            inserted = len(batch)
         session.commit()
     return inserted
 

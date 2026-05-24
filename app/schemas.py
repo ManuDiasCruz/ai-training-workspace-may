@@ -3,28 +3,15 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class PurchaseOut(BaseModel):
+class CustomerOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    customer_id: int
+    customer_id: str
+    genre: str
     age: int
-    gender: str
-    item_purchased: str
-    category: str
-    purchase_amount_usd: float
-    location: str
-    size: str
-    color: str
-    season: str
-    review_rating: float
-    subscription_status: str
-    payment_method: str
-    shipping_type: str
-    discount_applied: str
-    promo_code_used: str
-    previous_purchases: int
-    frequency_of_purchases: str
+    annual_income_k: int
+    spending_score: int
 
 
 class PageMeta(BaseModel):
@@ -34,22 +21,28 @@ class PageMeta(BaseModel):
     pages: int = Field(..., ge=0)
 
 
-class PurchasePage(BaseModel):
+class CustomerPage(BaseModel):
     meta: PageMeta
-    items: list[PurchaseOut]
+    items: list[CustomerOut]
 
 
-class CategoryStat(BaseModel):
-    category: str
+class GenreStat(BaseModel):
+    genre: str
     count: int
-    total_amount: float
-    avg_amount: float
-    avg_rating: float
+    avg_age: float
+    avg_annual_income_k: float
+    avg_spending_score: float
 
 
 class StatsOut(BaseModel):
-    total_purchases: int
-    total_revenue_usd: float
-    avg_purchase_amount_usd: float
-    avg_review_rating: float
-    by_category: list[CategoryStat]
+    total_customers: int
+    avg_age: float
+    avg_annual_income_k: float
+    avg_spending_score: float
+    min_age: int | None = None
+    max_age: int | None = None
+    min_annual_income_k: int | None = None
+    max_annual_income_k: int | None = None
+    min_spending_score: int | None = None
+    max_spending_score: int | None = None
+    by_genre: list[GenreStat]
