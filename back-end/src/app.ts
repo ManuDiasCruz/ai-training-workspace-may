@@ -8,9 +8,14 @@ import testsRouter from "./routers/testRouter.js";
 import recommendationRouter from "./routers/recommendationRouter.js";
 
 const app = express();
-app.use(cors());
+const corsOrigins = process.env.CORS_ORIGIN?.split(",")
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
+app.use(cors({ origin: corsOrigins?.length ? corsOrigins : true }));
 app.use(express.json());
 
+app.get("/health", (req, res) => res.sendStatus(200));
 app.use("/recommendations", recommendationRouter);
 
 if (process.env.MODE === "TEST") {
