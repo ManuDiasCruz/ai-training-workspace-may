@@ -611,6 +611,22 @@ def test_search_dict_for_alias_path():
     assert ap.search_dict_for_path({'a': 'hello'}) is PydanticUndefined
 
 
+def test_validation_alias_path_with_root_sequence_index():
+    class Model(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+        name: str = Field(validation_alias=AliasPath(1))
+        status: str = Field(validation_alias=AliasPath(7))
+
+    data = [42, 'alice', None, None, None, None, None, 'active']
+    assert Model.model_validate(data).model_dump() == {'id': 42, 'name': 'alice', 'status': 'active'}
+    assert Model.model_validate(tuple(data)).model_dump() == {'id': 42, 'name': 'alice', 'status': 'active'}
+    assert Model.model_validate_json(b'[42, "alice", null, null, null, null, null, "active"]').model_dump() == {
+        'id': 42,
+        'name': 'alice',
+        'status': 'active',
+    }
+
+
 def test_validation_alias_invalid_value_type():
     m = 'Invalid `validation_alias` type. it should be `str`, `AliasChoices`, or `AliasPath`'
     with pytest.raises(TypeError, match=m):
