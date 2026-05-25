@@ -620,6 +620,11 @@ def test_validation_alias_path_with_root_sequence_index():
     data = [42, 'alice', None, None, None, None, None, 'active']
     assert Model.model_validate(data).model_dump() == {'id': 42, 'name': 'alice', 'status': 'active'}
     assert Model.model_validate(tuple(data)).model_dump() == {'id': 42, 'name': 'alice', 'status': 'active'}
+    assert Model.model_validate({'0': 42, '1': 'alice', '7': 'active'}).model_dump() == {
+        'id': 42,
+        'name': 'alice',
+        'status': 'active',
+    }
     assert Model.model_validate_json(b'[42, "alice", null, null, null, null, null, "active"]').model_dump() == {
         'id': 42,
         'name': 'alice',
