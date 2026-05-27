@@ -5,17 +5,21 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query
-from sqlalchemy import String, cast, func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .db import Base, engine, get_db
+from .db import Base, SessionLocal, engine, get_db
 from .models import Customer
+from .search import ensure_customer_search_index, search_customers as search_customers_fts
 from .schemas import CustomerOut, CustomerPage, GenreStat, PageMeta, StatsOut
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(engine)
+    with SessionLocal() as db:
+        ensure_customer_search_index(db)
+        db.commit()
     yield
 
 
@@ -134,21 +138,10 @@ async def search_customers(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
 ) -> CustomerPage:
-    like = f"%{q}%"
-    cond = or_(
-        Customer.customer_id.ilike(like),
-        Customer.genre.ilike(like),
-        cast(Customer.age, String).ilike(like),
-        cast(Customer.annual_income_k, String).ilike(like),
-        cast(Customer.spending_score, String).ilike(like),
-    )
-    return _page_response(
-        db,
-        select(func.count(Customer.id)).where(cond),
-        select(Customer).where(cond),
-        page=page,
-        page_size=page_size,
-    )
+    try:
+        return search_customers_fts(db, q, page=page, page_size=page_size)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.get("/genres", response_model=list[str], tags=["meta"])

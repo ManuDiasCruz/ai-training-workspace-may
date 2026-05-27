@@ -18,6 +18,7 @@ from sqlalchemy import delete
 from .config import CSV_PATH
 from .db import Base, SessionLocal, engine
 from .models import Customer
+from .search import ensure_customer_search_index, rebuild_customer_search_index
 
 COLUMN_ALIASES = {
     "customer_id": {"customerid", "customer id"},
@@ -111,6 +112,7 @@ def import_csv(csv_path: Path = CSV_PATH, *, truncate: bool = True) -> int:
     Base.metadata.create_all(engine)
     inserted = 0
     with SessionLocal() as session:
+        ensure_customer_search_index(session)
         if truncate:
             session.execute(delete(Customer))
         with csv_path.open(newline="") as f:
@@ -124,6 +126,8 @@ def import_csv(csv_path: Path = CSV_PATH, *, truncate: bool = True) -> int:
             ]
             session.add_all(batch)
             inserted = len(batch)
+        session.flush()
+        rebuild_customer_search_index(session)
         session.commit()
     return inserted
 

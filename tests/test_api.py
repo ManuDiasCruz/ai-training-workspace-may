@@ -78,6 +78,14 @@ async def test_search_returns_matching_rows(client):
     )
 
 
+async def test_search_ranks_more_relevant_rows_first(client):
+    r = await client.get("/search", params={"q": "0001 Male", "page_size": 5})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["meta"]["total"] >= 1
+    assert body["items"][0]["customer_id"] == "0001"
+
+
 async def test_search_requires_q(client):
     r = await client.get("/search")
     assert r.status_code == 422
