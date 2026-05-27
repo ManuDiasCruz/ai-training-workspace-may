@@ -23,18 +23,26 @@ dataset:
 
 Stakeholder: Mary
 
-First-page UI/UX prototype:
-[Shopping Customers API - First Page Prototype - Mary](https://www.figma.com/design/Tm80nzRpgA19OvWtydEBuS)
+First-page UI/UX prototype — the **Customer Analytics Dashboard**:
+
+- **Figma reference:** [Shopping Customers API — Dashboard (First Page) — Mary](https://www.figma.com/design/oKTrOkpJPU0gW6qZvr2HC1)
+- **Full design spec:** [`docs/design/first-page-dashboard-spec.md`](docs/design/first-page-dashboard-spec.md)
 
 The design turns this API-only project into a developer-ready customer
-analytics dashboard concept for the existing FastAPI endpoints. It covers:
+analytics dashboard for the existing FastAPI endpoints. The first page covers:
 
-- KPI cards backed by `GET /stats`.
+- KPI cards backed by `GET /stats` (total, gender split, avg age/income/score).
 - Search, filters, sorting and pagination backed by `GET /customers`.
 - A customer table with row-level delete actions backed by
   `DELETE /customers/{id}`.
 - An inline "New customer" entry point backed by `POST /customers`.
-- Token, component and implementation notes in the Figma handoff canvas.
+- Design tokens, component-to-endpoint mapping and state specs in the
+  linked spec document.
+
+The spec is the authoritative, implementable reference (exact tokens, layout
+and API mapping). The Figma file is the canonical design container; its frames
+are pending population (the build was blocked by the workspace's Figma plan
+tool-call limit) and will mirror the spec 1:1 once write access is restored.
 
 Implementation guidance: keep filter state in the URL query string using
 the same parameter names documented below, provide loading, empty and error
