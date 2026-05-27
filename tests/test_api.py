@@ -91,6 +91,37 @@ async def test_search_requires_q(client):
     assert r.status_code == 422
 
 
+async def test_default_search_misses_substring(client):
+    # The default prefix tokenizer anchors on the start of a token, so an
+    # interior substring of "Female" should not match in non-fuzzy mode.
+    r = await client.get("/search", params={"q": "emale", "page_size": 5})
+    assert r.status_code == 200
+    assert r.json()["meta"]["total"] == 0
+
+
+async def test_fuzzy_search_matches_substring(client):
+    # Trigram fuzzy matching finds the same interior substring.
+    r = await client.get("/search", params={"q": "emale", "fuzzy": "true", "page_size": 200})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["meta"]["total"] > 0
+    assert all(it["genre"] == "Female" for it in body["items"])
+
+
+async def test_fuzzy_search_ranks_relevant_rows_first(client):
+    r = await client.get("/search", params={"q": "0001", "fuzzy": "true", "page_size": 5})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["meta"]["total"] >= 1
+    assert body["items"][0]["customer_id"] == "0001"
+
+
+async def test_fuzzy_search_rejects_short_terms(client):
+    r = await client.get("/search", params={"q": "ab", "fuzzy": "true"})
+    assert r.status_code == 400
+    assert "3 characters" in r.json()["detail"]
+
+
 async def test_genres_endpoint(client):
     r = await client.get("/genres")
     assert r.status_code == 200

@@ -137,9 +137,13 @@ async def search_customers(
     q: str = Query(..., min_length=1, max_length=64, description="Free-text search"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
+    fuzzy: bool = Query(
+        False,
+        description="Use trigram substring matching for typo-tolerant search",
+    ),
 ) -> CustomerPage:
     try:
-        return search_customers_fts(db, q, page=page, page_size=page_size)
+        return search_customers_fts(db, q, page=page, page_size=page_size, fuzzy=fuzzy)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 

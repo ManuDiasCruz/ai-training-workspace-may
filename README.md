@@ -182,6 +182,18 @@ relevance and then by `id` for deterministic pagination.
 curl "http://localhost:8000/search?q=Female&page_size=5"
 ```
 
+#### Fuzzy / substring search
+
+By default the search tokenizer is prefix-aware, so query terms match from
+the start of a token. Pass `fuzzy=true` to use a trigram-tokenized index
+instead, which matches substrings anywhere in a value and tolerates partial
+terms (for example `emale` matches `Female`). Fuzzy terms must be at least
+three characters long; shorter terms return `400`.
+
+```bash
+curl "http://localhost:8000/search?q=emale&fuzzy=true&page_size=5"
+```
+
 ### Genres
 
 ```bash
@@ -215,7 +227,7 @@ per-genre breakdown.
 ## Known Limitations And Future Improvements
 
 - The API is read-only. Future work could add create/update/delete endpoints.
-- Search is backed by SQLite FTS5. Typo tolerance/fuzzy matching is not implemented yet.
+- Search is backed by SQLite FTS5, with optional trigram-based fuzzy/substring matching via `?fuzzy=true`. Ranked fuzzy matching (e.g. edit-distance scoring) is still a possible future improvement.
 - There is no authentication or authorization.
 - There is no rate limiting.
 - The default database is SQLite. A Postgres profile would be better for concurrent deployments.
