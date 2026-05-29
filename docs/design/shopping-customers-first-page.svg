@@ -1,0 +1,241 @@
+<svg width="1440" height="1050" viewBox="0 0 1440 1050" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Shopping Customers API first-page dashboard prototype</title>
+  <desc id="desc">Developer-ready first-page dashboard concept for the Shopping Customers API. Stakeholder: Mary.</desc>
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="12" stdDeviation="15" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="150%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#0F172A" flood-opacity="0.06"/>
+    </filter>
+    <style>
+      .bg { fill: #F6F7FB; }
+      .surface { fill: #FFFFFF; }
+      .surface-soft { fill: #F8FAFC; }
+      .border { stroke: #DDE3EA; stroke-width: 1; }
+      .primary { fill: #0F766E; }
+      .primary-dark { fill: #0B5E58; }
+      .accent { fill: #D97706; }
+      .success { fill: #15803D; }
+      .danger { fill: #B42318; }
+      .warning { fill: #B45309; }
+      .text-strong { fill: #111827; font-family: Inter, Arial, sans-serif; font-weight: 700; }
+      .text-mid { fill: #344054; font-family: Inter, Arial, sans-serif; font-weight: 600; }
+      .text-muted { fill: #667085; font-family: Inter, Arial, sans-serif; font-weight: 500; }
+      .text-light { fill: #FFFFFF; font-family: Inter, Arial, sans-serif; font-weight: 700; }
+      .body { fill: #344054; font-family: Inter, Arial, sans-serif; font-size: 14px; font-weight: 500; }
+      .small { fill: #667085; font-family: Inter, Arial, sans-serif; font-size: 12px; font-weight: 500; }
+      .tiny { fill: #98A2B3; font-family: Inter, Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0; }
+      .label { fill: #475467; font-family: Inter, Arial, sans-serif; font-size: 13px; font-weight: 700; }
+      .metric { fill: #111827; font-family: Inter, Arial, sans-serif; font-size: 31px; font-weight: 800; }
+      .mono { fill: #344054; font-family: "SFMono-Regular", Consolas, monospace; font-size: 12px; font-weight: 600; }
+    </style>
+  </defs>
+
+  <rect width="1440" height="1050" class="bg"/>
+
+  <rect x="0" y="0" width="248" height="1050" fill="#0B3B38"/>
+  <rect x="24" y="28" width="44" height="44" rx="8" class="primary"/>
+  <path d="M39 50h14M46 43v14" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+  <text x="82" y="47" class="text-light" font-size="19">Segment Desk</text>
+  <text x="82" y="67" fill="#B8D8D5" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="600">Shopping Customers API</text>
+
+  <rect x="20" y="116" width="208" height="44" rx="8" fill="#114C48"/>
+  <rect x="28" y="126" width="24" height="24" rx="6" fill="#D7EFEC"/>
+  <text x="66" y="144" class="text-light" font-size="14">Dashboard</text>
+  <text x="28" y="199" fill="#B8D8D5" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="700">DATASET</text>
+  <rect x="20" y="218" width="208" height="44" rx="8" fill="#FFFFFF"/>
+  <rect x="28" y="228" width="24" height="24" rx="6" class="primary"/>
+  <text x="66" y="246" class="text-strong" font-size="14">Customers</text>
+  <text x="66" y="299" fill="#B8D8D5" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600">Segments</text>
+  <text x="66" y="351" fill="#B8D8D5" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600">Import history</text>
+  <text x="66" y="403" fill="#B8D8D5" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600">API health</text>
+
+  <rect x="20" y="866" width="208" height="124" rx="8" fill="#114C48"/>
+  <text x="40" y="896" class="text-light" font-size="14">Prototype handoff</text>
+  <text x="40" y="920" fill="#D7EFEC" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="500">Stakeholder: Mary</text>
+  <text x="40" y="944" fill="#D7EFEC" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="500">Branch: prototype-penpot-codex</text>
+  <text x="40" y="968" fill="#D7EFEC" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="500">First page only</text>
+
+  <rect x="248" y="0" width="1192" height="92" class="surface"/>
+  <line x1="248" y1="92" x2="1440" y2="92" stroke="#DDE3EA"/>
+  <text x="288" y="38" class="text-strong" font-size="26">Customers</text>
+  <text x="288" y="63" class="text-muted" font-size="13">Mall segmentation records with FastAPI filters and CRUD actions</text>
+  <rect x="790" y="24" width="296" height="44" rx="8" class="surface-soft border"/>
+  <text x="822" y="52" class="text-muted" font-size="13">Search code, gender or segment</text>
+  <circle cx="808" cy="46" r="7" stroke="#667085" stroke-width="2"/>
+  <line x1="813" y1="51" x2="819" y2="57" stroke="#667085" stroke-width="2" stroke-linecap="round"/>
+  <rect x="1104" y="24" width="112" height="44" rx="8" class="surface border"/>
+  <text x="1130" y="52" class="text-mid" font-size="14">Export</text>
+  <rect x="1232" y="24" width="168" height="44" rx="8" class="primary"/>
+  <text x="1265" y="52" class="text-light" font-size="14">New customer</text>
+
+  <g filter="url(#shadow)">
+    <rect x="288" y="124" width="260" height="134" rx="8" class="surface"/>
+  </g>
+  <text x="312" y="156" class="label">Total customers</text>
+  <text x="312" y="202" class="metric">200</text>
+  <text x="312" y="232" class="small">From GET /stats</text>
+  <rect x="484" y="150" width="40" height="40" rx="8" fill="#D7EFEC"/>
+  <path d="M494 170h20M504 160v20" stroke="#0F766E" stroke-width="3" stroke-linecap="round"/>
+
+  <g filter="url(#shadow)">
+    <rect x="572" y="124" width="260" height="134" rx="8" class="surface"/>
+  </g>
+  <text x="596" y="156" class="label">Average age</text>
+  <text x="596" y="202" class="metric">38.9</text>
+  <text x="596" y="232" class="small">Range filters use min_age and max_age</text>
+  <rect x="768" y="150" width="40" height="40" rx="8" fill="#FEF3C7"/>
+  <text x="780" y="177" class="warning" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="800">A</text>
+
+  <g filter="url(#shadow)">
+    <rect x="856" y="124" width="260" height="134" rx="8" class="surface"/>
+  </g>
+  <text x="880" y="156" class="label">Avg income</text>
+  <text x="880" y="202" class="metric">$60.6k</text>
+  <text x="880" y="232" class="small">Annual income in thousands</text>
+  <rect x="1052" y="150" width="40" height="40" rx="8" fill="#E9D5FF"/>
+  <text x="1065" y="177" fill="#7E22CE" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="800">$</text>
+
+  <g filter="url(#shadow)">
+    <rect x="1140" y="124" width="260" height="134" rx="8" class="surface"/>
+  </g>
+  <text x="1164" y="156" class="label">Avg spend score</text>
+  <text x="1164" y="202" class="metric">50.2</text>
+  <text x="1164" y="232" class="small">Sort by spending_score desc</text>
+  <rect x="1336" y="150" width="40" height="40" rx="8" fill="#DCFCE7"/>
+  <path d="M1348 176l7-9 6 5 8-13" stroke="#15803D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g filter="url(#softShadow)">
+    <rect x="288" y="286" width="744" height="80" rx="8" class="surface"/>
+  </g>
+  <text x="312" y="317" class="label">Filters</text>
+  <rect x="312" y="330" width="118" height="28" rx="8" fill="#D7EFEC"/>
+  <text x="328" y="349" class="text-mid" font-size="12">Gender: All</text>
+  <rect x="442" y="330" width="122" height="28" rx="8" fill="#F8FAFC" stroke="#DDE3EA"/>
+  <text x="458" y="349" class="text-mid" font-size="12">Age: 20-40</text>
+  <rect x="576" y="330" width="156" height="28" rx="8" fill="#F8FAFC" stroke="#DDE3EA"/>
+  <text x="592" y="349" class="text-mid" font-size="12">Income: $40k-$80k</text>
+  <rect x="744" y="330" width="132" height="28" rx="8" fill="#F8FAFC" stroke="#DDE3EA"/>
+  <text x="760" y="349" class="text-mid" font-size="12">Score: 40-80</text>
+  <rect x="888" y="330" width="120" height="28" rx="8" fill="#F8FAFC" stroke="#DDE3EA"/>
+  <text x="904" y="349" class="text-mid" font-size="12">Clear filters</text>
+
+  <g filter="url(#softShadow)">
+    <rect x="1056" y="286" width="344" height="80" rx="8" class="surface"/>
+  </g>
+  <text x="1080" y="317" class="label">Sort</text>
+  <rect x="1080" y="330" width="154" height="28" rx="8" fill="#F8FAFC" stroke="#DDE3EA"/>
+  <text x="1096" y="349" class="text-mid" font-size="12">spending_score</text>
+  <rect x="1246" y="330" width="82" height="28" rx="8" fill="#0F766E"/>
+  <text x="1270" y="349" class="text-light" font-size="12">desc</text>
+
+  <g filter="url(#shadow)">
+    <rect x="288" y="394" width="834" height="544" rx="8" class="surface"/>
+  </g>
+  <text x="312" y="427" class="text-strong" font-size="18">Customer records</text>
+  <text x="312" y="451" class="small">GET /customers?page=1&amp;page_size=20&amp;sort_by=spending_score&amp;order=desc</text>
+  <rect x="312" y="474" width="786" height="42" rx="8" fill="#F8FAFC"/>
+  <text x="330" y="501" class="tiny">CODE</text>
+  <text x="438" y="501" class="tiny">GENDER</text>
+  <text x="548" y="501" class="tiny">AGE</text>
+  <text x="630" y="501" class="tiny">INCOME</text>
+  <text x="742" y="501" class="tiny">SCORE</text>
+  <text x="858" y="501" class="tiny">SEGMENT</text>
+  <text x="1016" y="501" class="tiny">ACTION</text>
+
+  <rect x="312" y="530" width="786" height="56" rx="8" fill="#FFFFFF" stroke="#DDE3EA"/>
+  <text x="330" y="564" class="body">0001</text>
+  <text x="438" y="564" class="body">Male</text>
+  <text x="548" y="564" class="body">19</text>
+  <text x="630" y="564" class="body">$15k</text>
+  <rect x="742" y="548" width="92" height="10" rx="5" fill="#E5E7EB"/>
+  <rect x="742" y="548" width="36" height="10" rx="5" class="accent"/>
+  <text x="742" y="574" class="small">39</text>
+  <rect x="858" y="546" width="104" height="28" rx="8" fill="#FEF3C7"/>
+  <text x="875" y="565" class="warning" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="700">Starter</text>
+  <rect x="1004" y="544" width="70" height="30" rx="8" fill="#FFF1F0" stroke="#FCA5A5"/>
+  <text x="1021" y="564" class="danger" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="700">Delete</text>
+
+  <rect x="312" y="594" width="786" height="56" rx="8" fill="#FFFFFF" stroke="#DDE3EA"/>
+  <text x="330" y="628" class="body">0042</text>
+  <text x="438" y="628" class="body">Female</text>
+  <text x="548" y="628" class="body">24</text>
+  <text x="630" y="628" class="body">$38k</text>
+  <rect x="742" y="612" width="92" height="10" rx="5" fill="#E5E7EB"/>
+  <rect x="742" y="612" width="86" height="10" rx="5" class="success"/>
+  <text x="742" y="638" class="small">94</text>
+  <rect x="858" y="610" width="122" height="28" rx="8" fill="#DCFCE7"/>
+  <text x="875" y="629" class="success" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="700">High value</text>
+  <rect x="1004" y="608" width="70" height="30" rx="8" fill="#FFF1F0" stroke="#FCA5A5"/>
+  <text x="1021" y="628" class="danger" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="700">Delete</text>
+
+  <rect x="312" y="658" width="786" height="56" rx="8" fill="#FFFFFF" stroke="#DDE3EA"/>
+  <text x="330" y="692" class="body">0076</text>
+  <text x="438" y="692" class="body">Female</text>
+  <text x="548" y="692" class="body">36</text>
+  <text x="630" y="692" class="body">$85k</text>
+  <rect x="742" y="676" width="92" height="10" rx="5" fill="#E5E7EB"/>
+  <rect x="742" y="676" width="63" height="10" rx="5" class="primary"/>
+  <text x="742" y="702" class="small">68</text>
+  <rect x="858" y="674" width="128" height="28" rx="8" fill="#D7EFEC"/>
+  <text x="875" y="693" class="primary-dark" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="700">Core buyer</text>
+  <rect x="1004" y="672" width="70" height="30" rx="8" fill="#FFF1F0" stroke="#FCA5A5"/>
+  <text x="1021" y="692" class="danger" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="700">Delete</text>
+
+  <rect x="312" y="722" width="786" height="56" rx="8" fill="#FFFFFF" stroke="#DDE3EA"/>
+  <text x="330" y="756" class="body">0127</text>
+  <text x="438" y="756" class="body">Male</text>
+  <text x="548" y="756" class="body">43</text>
+  <text x="630" y="756" class="body">$71k</text>
+  <rect x="742" y="740" width="92" height="10" rx="5" fill="#E5E7EB"/>
+  <rect x="742" y="740" width="43" height="10" rx="5" class="accent"/>
+  <text x="742" y="766" class="small">47</text>
+  <rect x="858" y="738" width="110" height="28" rx="8" fill="#FEF3C7"/>
+  <text x="875" y="757" class="warning" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="700">Monitor</text>
+  <rect x="1004" y="736" width="70" height="30" rx="8" fill="#FFF1F0" stroke="#FCA5A5"/>
+  <text x="1021" y="756" class="danger" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="700">Delete</text>
+
+  <rect x="312" y="796" width="786" height="1" fill="#DDE3EA"/>
+  <text x="312" y="834" class="small">Showing 1-20 of 200 records</text>
+  <rect x="886" y="812" width="44" height="32" rx="8" fill="#FFFFFF" stroke="#DDE3EA"/>
+  <text x="903" y="833" class="body">1</text>
+  <rect x="938" y="812" width="44" height="32" rx="8" fill="#F8FAFC" stroke="#DDE3EA"/>
+  <text x="955" y="833" class="body">2</text>
+  <rect x="990" y="812" width="84" height="32" rx="8" class="primary"/>
+  <text x="1012" y="833" class="text-light" font-size="13">Next</text>
+  <rect x="312" y="872" width="786" height="42" rx="8" fill="#F8FAFC"/>
+  <text x="330" y="897" class="small">Empty state copy: No customers match these filters. Clear filters or adjust the ranges.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="1146" y="394" width="254" height="544" rx="8" class="surface"/>
+  </g>
+  <text x="1170" y="427" class="text-strong" font-size="18">Selected customer</text>
+  <text x="1170" y="452" class="small">Customer code 0042</text>
+  <rect x="1170" y="480" width="206" height="98" rx="8" fill="#D7EFEC"/>
+  <text x="1190" y="510" class="primary-dark" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="800">High value segment</text>
+  <text x="1190" y="538" class="text-strong" font-size="26">Score 94</text>
+  <text x="1190" y="562" class="primary-dark" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="700">Female, age 24, income $38k</text>
+
+  <text x="1170" y="620" class="label">API contract</text>
+  <rect x="1170" y="638" width="206" height="62" rx="8" fill="#F8FAFC" stroke="#DDE3EA"/>
+  <text x="1186" y="662" class="mono">GET /customers/42</text>
+  <text x="1186" y="684" class="small">Use for detail drawer later.</text>
+  <rect x="1170" y="716" width="206" height="62" rx="8" fill="#F8FAFC" stroke="#DDE3EA"/>
+  <text x="1186" y="740" class="mono">POST /customers</text>
+  <text x="1186" y="762" class="small">Inline validation for 422/409.</text>
+  <rect x="1170" y="794" width="206" height="62" rx="8" fill="#FFF1F0" stroke="#FCA5A5"/>
+  <text x="1186" y="818" fill="#B42318" font-family="SFMono-Regular, Consolas, monospace" font-size="12" font-weight="600">DELETE /customers/{id}</text>
+  <text x="1186" y="840" class="small">Confirm before destructive action.</text>
+
+  <text x="1170" y="888" class="label">Developer notes</text>
+  <circle cx="1178" cy="912" r="3" class="primary"/>
+  <text x="1190" y="916" class="small">Persist filters in URL query params.</text>
+  <circle cx="1178" cy="936" r="3" class="primary"/>
+  <text x="1190" y="940" class="small">Use table skeletons while loading.</text>
+  <circle cx="1178" cy="960" r="3" class="primary"/>
+  <text x="1190" y="964" class="small">Display API errors inline.</text>
+
+  <rect x="288" y="970" width="1112" height="44" rx="8" fill="#FFFFFF" stroke="#DDE3EA"/>
+  <text x="312" y="997" class="small">Design system: 8px radius, neutral surfaces, teal primary actions, amber score warnings, green high-value indicators, red destructive actions.</text>
+</svg>

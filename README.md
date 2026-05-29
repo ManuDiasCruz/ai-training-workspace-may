@@ -23,23 +23,31 @@ dataset:
 
 Stakeholder: Mary
 
-First-page UI/UX prototype:
-[Shopping Customers API - First Page Prototype - Mary](https://www.figma.com/design/Tm80nzRpgA19OvWtydEBuS)
+Source branch: `task002/shopping-api-dataset3`
 
-The design turns this API-only project into a developer-ready customer
-analytics dashboard concept for the existing FastAPI endpoints. It covers:
+Design branch: `prototype-penpot-codex`
+
+Penpot-ready first-page prototype reference:
+[shopping-customers-first-page.svg](docs/design/shopping-customers-first-page.svg)
+
+Developer handoff notes:
+[shopping-customers-first-page-handoff.md](docs/design/shopping-customers-first-page-handoff.md)
+
+The design turns this API-only project into a customer analytics dashboard
+concept for the existing FastAPI endpoints. The prototype is scoped to the
+first page and covers:
 
 - KPI cards backed by `GET /stats`.
 - Search, filters, sorting and pagination backed by `GET /customers`.
 - A customer table with row-level delete actions backed by
   `DELETE /customers/{id}`.
-- An inline "New customer" entry point backed by `POST /customers`.
-- Token, component and implementation notes in the Figma handoff canvas.
+- A "New customer" entry point backed by `POST /customers`.
+- Empty, loading and inline error-state guidance for frontend implementation.
 
-Implementation guidance: keep filter state in the URL query string using
-the same parameter names documented below, provide loading, empty and error
-states for the table, and use inline validation for create-customer form
-errors instead of browser alerts.
+Implementation guidance: import the SVG into Penpot as the first-page canvas,
+then keep filter state in the URL query string using the same parameter names
+documented below. Use inline validation for create-customer form errors instead
+of browser alerts.
 
 ## Database design
 
