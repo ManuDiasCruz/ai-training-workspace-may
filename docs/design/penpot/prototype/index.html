@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!--
+    Shopping Customers API — Customer Analytics Dashboard (first page).
+    Static, developer-ready prototype that mirrors the Penpot design reference.
+    Stakeholder: Mary.  Data shown = first 20 rows of data/Shopping_data.csv +
+    aggregates from GET /stats. This is a VISUAL reference, not a live client.
+  -->
+  <title>Customer Analytics Dashboard — Prototype (Stakeholder: Mary)</title>
+  <link rel="preconnect" href="https://rsms.me/" />
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="page">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <h1>Shopping Customers</h1>
+      <div class="right">
+        <span class="health-badge"><span class="dot"></span> API: healthy</span>
+        <button class="btn btn-primary">＋ New customer</button>
+      </div>
+    </header>
+
+    <!-- KPI cards — GET /stats -->
+    <section class="kpis" aria-label="Dataset statistics">
+      <div class="card kpi">
+        <p class="kpi-label">Total customers</p>
+        <p class="kpi-value">200</p>
+        <p class="kpi-sub"><span class="f">♀ 112 Female</span> · <span class="m">♂ 88 Male</span></p>
+      </div>
+      <div class="card kpi">
+        <p class="kpi-label">Avg age</p>
+        <p class="kpi-value">38.9</p>
+        <p class="kpi-sub">years</p>
+      </div>
+      <div class="card kpi">
+        <p class="kpi-label">Avg annual income</p>
+        <p class="kpi-value">60.6 <small>k$</small></p>
+        <p class="kpi-sub">per customer</p>
+      </div>
+      <div class="card kpi">
+        <p class="kpi-label">Avg spending score</p>
+        <p class="kpi-value">50.2</p>
+        <p class="kpi-sub">scale 1–100</p>
+      </div>
+    </section>
+
+    <!-- Customers panel — GET /customers -->
+    <section class="panel" aria-label="Customers">
+      <div class="panel-head">
+        <h2>Customers</h2>
+        <span class="count">200 results</span>
+      </div>
+
+      <!-- Toolbar maps to /customers query params -->
+      <div class="toolbar" role="search">
+        <label class="search">
+          <span class="ico">🔍</span>
+          <input type="search" placeholder="Search code or gender…" />
+        </label>
+        <select class="select"><option>Gender: All</option><option>Male</option><option>Female</option></select>
+        <select class="select active"><option>Age: 18–25</option></select>
+        <select class="select"><option>Income: Any</option></select>
+        <select class="select"><option>Score: Any</option></select>
+        <select class="select"><option>Sort: ID</option><option>Age</option><option>Income</option><option>Spending score</option></select>
+        <button class="btn btn-ghost" title="Toggle order">⇅ Asc</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Code</th>
+            <th scope="col">Gender</th>
+            <th scope="col" class="num">Age</th>
+            <th scope="col" class="num">Income (k$)</th>
+            <th scope="col">Spending score</th>
+            <th scope="col" class="actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- rows = items[] from GET /customers -->
+          <tr><td class="code">0001</td><td><span class="chip chip-male">♂ Male</span></td><td class="num">19</td><td class="num">15</td><td><span class="score mid"><span class="bar"><span style="width:39%"></span></span><span class="val">39</span></span></td><td class="actions"><button class="btn-icon">🗑 Delete</button></td></tr>
+          <tr><td class="code">0002</td><td><span class="chip chip-male">♂ Male</span></td><td class="num">21</td><td class="num">15</td><td><span class="score high"><span class="bar"><span style="width:81%"></span></span><span class="val">81</span></span></td><td class="actions"><button class="btn-icon">🗑 Delete</button></td></tr>
+          <tr><td class="code">0003</td><td><span class="chip chip-female">♀ Female</span></td><td class="num">20</td><td class="num">16</td><td><span class="score low"><span class="bar"><span style="width:6%"></span></span><span class="val">6</span></span></td><td class="actions"><button class="btn-icon">🗑 Delete</button></td></tr>
+          <tr><td class="code">0004</td><td><span class="chip chip-female">♀ Female</span></td><td class="num">23</td><td class="num">16</td><td><span class="score high"><span class="bar"><span style="width:77%"></span></span><span class="val">77</span></span></td><td class="actions"><button class="btn-icon">🗑 Delete</button></td></tr>
+          <tr><td class="code">0006</td><td><span class="chip chip-female">♀ Female</span></td><td class="num">22</td><td class="num">17</td><td><span class="score high"><span class="bar"><span style="width:76%"></span></span><span class="val">76</span></span></td><td class="actions"><button class="btn-icon">🗑 Delete</button></td></tr>
+          <tr><td class="code">0008</td><td><span class="chip chip-female">♀ Female</span></td><td class="num">23</td><td class="num">18</td><td><span class="score high"><span class="bar"><span style="width:94%"></span></span><span class="val">94</span></span></td><td class="actions"><button class="btn-icon">🗑 Delete</button></td></tr>
+          <tr><td class="code">0014</td><td><span class="chip chip-female">♀ Female</span></td><td class="num">24</td><td class="num">20</td><td><span class="score high"><span class="bar"><span style="width:77%"></span></span><span class="val">77</span></span></td><td class="actions"><button class="btn-icon">🗑 Delete</button></td></tr>
+          <tr><td class="code">0016</td><td><span class="chip chip-male">♂ Male</span></td><td class="num">22</td><td class="num">20</td><td><span class="score high"><span class="bar"><span style="width:79%"></span></span><span class="val">79</span></span></td><td class="actions"><button class="btn-icon">🗑 Delete</button></td></tr>
+          <tr><td class="code">0018</td><td><span class="chip chip-male">♂ Male</span></td><td class="num">20</td><td class="num">21</td><td><span class="score mid"><span class="bar"><span style="width:66%"></span></span><span class="val">66</span></span></td><td class="actions"><button class="btn-icon">🗑 Delete</button></td></tr>
+          <tr><td class="code">0020</td><td><span class="chip chip-female">♀ Female</span></td><td class="num">35</td><td class="num">23</td><td><span class="score high"><span class="bar"><span style="width:98%"></span></span><span class="val">98</span></span></td><td class="actions"><button class="btn-icon">🗑 Delete</button></td></tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination — ?page=&page_size= + response total -->
+      <div class="pagination">
+        <span class="showing">Showing 1–20 of 200</span>
+        <nav class="pager" aria-label="Pagination">
+          <button disabled>‹ Prev</button>
+          <button class="active">1</button>
+          <button>2</button>
+          <button>3</button>
+          <button disabled>…</button>
+          <button>10</button>
+          <button>Next ›</button>
+        </nav>
+      </div>
+    </section>
+
+    <p class="note">
+      Static prototype for design handoff only. Filters/sort/search/pagination
+      are illustrative — the live build must keep this state in the URL query
+      string using the parameter names in <code>../first-page-penpot-spec.md</code>.
+      Tokens: <code>../design-tokens.json</code>. Stakeholder: Mary.
+    </p>
+  </main>
+</body>
+</html>

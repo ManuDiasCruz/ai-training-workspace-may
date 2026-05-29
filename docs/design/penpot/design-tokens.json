@@ -1,0 +1,73 @@
+{
+  "$schema": "https://design-tokens.org/draft/",
+  "$description": "Shopping Customers API — Customer Analytics Dashboard design tokens. W3C DTCG format, importable into Penpot via Tokens > Import (JSON). Stakeholder: Mary.",
+  "color": {
+    "brand": {
+      "primary": { "$type": "color", "$value": "#4F46E5", "$description": "Primary buttons, active controls, links" },
+      "primary-hover": { "$type": "color", "$value": "#4338CA", "$description": "Primary button hover/pressed" },
+      "tint": { "$type": "color", "$value": "#EEF2FF", "$description": "Active filter pill background, focus tint" }
+    },
+    "bg": {
+      "canvas": { "$type": "color", "$value": "#F8FAFC", "$description": "Page background" },
+      "surface": { "$type": "color", "$value": "#FFFFFF", "$description": "Cards, table, toolbar surfaces" },
+      "subtle": { "$type": "color", "$value": "#F1F5F9", "$description": "Table header row, zebra rows" }
+    },
+    "border": {
+      "default": { "$type": "color", "$value": "#E2E8F0", "$description": "Card / table / input borders" }
+    },
+    "text": {
+      "primary": { "$type": "color", "$value": "#0F172A", "$description": "Headings, values" },
+      "secondary": { "$type": "color", "$value": "#475569", "$description": "Body text, labels" },
+      "muted": { "$type": "color", "$value": "#94A3B8", "$description": "Captions, placeholders" }
+    },
+    "accent": {
+      "female": { "$type": "color", "$value": "#DB2777", "$description": "Female gender chip" },
+      "male": { "$type": "color", "$value": "#2563EB", "$description": "Male gender chip" }
+    },
+    "status": {
+      "success": { "$type": "color", "$value": "#16A34A", "$description": "Healthy API badge, high score" },
+      "success-bg": { "$type": "color", "$value": "#DCFCE7", "$description": "High spending-score chip background" },
+      "warn-bg": { "$type": "color", "$value": "#FEF3C7", "$description": "Mid spending-score chip background" },
+      "warn-text": { "$type": "color", "$value": "#92400E", "$description": "Mid spending-score chip text" },
+      "danger": { "$type": "color", "$value": "#DC2626", "$description": "Delete action, destructive states" },
+      "danger-bg": { "$type": "color", "$value": "#FEE2E2", "$description": "Low spending-score chip background" }
+    }
+  },
+  "font": {
+    "family": {
+      "base": { "$type": "fontFamily", "$value": "Inter", "$description": "Primary UI typeface (Penpot bundles Inter)" }
+    },
+    "weight": {
+      "regular": { "$type": "fontWeight", "$value": 400 },
+      "medium": { "$type": "fontWeight", "$value": 500 },
+      "semibold": { "$type": "fontWeight", "$value": 600 }
+    }
+  },
+  "typography": {
+    "kpi-value": { "$type": "typography", "$value": { "fontFamily": "{font.family.base}", "fontWeight": "{font.weight.semibold}", "fontSize": "28px", "lineHeight": "36px" }, "$description": "Display / KPI value" },
+    "h1": { "$type": "typography", "$value": { "fontFamily": "{font.family.base}", "fontWeight": "{font.weight.semibold}", "fontSize": "20px", "lineHeight": "28px" }, "$description": "Page title" },
+    "section": { "$type": "typography", "$value": { "fontFamily": "{font.family.base}", "fontWeight": "{font.weight.semibold}", "fontSize": "16px", "lineHeight": "24px" }, "$description": "Section title" },
+    "body": { "$type": "typography", "$value": { "fontFamily": "{font.family.base}", "fontWeight": "{font.weight.regular}", "fontSize": "14px", "lineHeight": "20px" } },
+    "label": { "$type": "typography", "$value": { "fontFamily": "{font.family.base}", "fontWeight": "{font.weight.medium}", "fontSize": "13px", "lineHeight": "18px" }, "$description": "Label / table head" },
+    "caption": { "$type": "typography", "$value": { "fontFamily": "{font.family.base}", "fontWeight": "{font.weight.regular}", "fontSize": "12px", "lineHeight": "16px" } }
+  },
+  "spacing": {
+    "1": { "$type": "dimension", "$value": "4px" },
+    "2": { "$type": "dimension", "$value": "8px" },
+    "3": { "$type": "dimension", "$value": "12px" },
+    "4": { "$type": "dimension", "$value": "16px" },
+    "6": { "$type": "dimension", "$value": "24px" },
+    "8": { "$type": "dimension", "$value": "32px" },
+    "page-padding": { "$type": "dimension", "$value": "{spacing.8}", "$description": "Outer page padding" },
+    "card-padding": { "$type": "dimension", "$value": "20px", "$description": "Card inner padding" },
+    "control-height": { "$type": "dimension", "$value": "40px", "$description": "Inputs, buttons, selects" }
+  },
+  "radius": {
+    "control": { "$type": "dimension", "$value": "8px", "$description": "Inputs, buttons" },
+    "card": { "$type": "dimension", "$value": "12px", "$description": "Cards" },
+    "pill": { "$type": "dimension", "$value": "999px", "$description": "Chips / pills (full)" }
+  },
+  "shadow": {
+    "card": { "$type": "shadow", "$value": { "offsetX": "0px", "offsetY": "1px", "blur": "2px", "spread": "0px", "color": "rgba(15,23,42,0.06)" }, "$description": "Card elevation, paired with 1px border.default" }
+  }
+}
