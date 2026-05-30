@@ -33,6 +33,9 @@ Penpot-ready first-page prototype reference:
 Developer handoff notes:
 [shopping-customers-first-page-handoff.md](docs/design/shopping-customers-first-page-handoff.md)
 
+Penpot import guide:
+[penpot-import-guide.md](docs/design/penpot-import-guide.md)
+
 The design turns this API-only project into a customer analytics dashboard
 concept for the existing FastAPI endpoints. The prototype is scoped to the
 first page and covers:
@@ -44,10 +47,10 @@ first page and covers:
 - A "New customer" entry point backed by `POST /customers`.
 - Empty, loading and inline error-state guidance for frontend implementation.
 
-Implementation guidance: import the SVG into Penpot as the first-page canvas,
-then keep filter state in the URL query string using the same parameter names
-documented below. Use inline validation for create-customer form errors instead
-of browser alerts.
+Implementation guidance: import the SVG into Penpot as the first-page canvas
+using the import guide, then keep filter state in the URL query string using
+the same parameter names documented below. Use inline validation for
+create-customer form errors instead of browser alerts.
 
 ## Database design
 

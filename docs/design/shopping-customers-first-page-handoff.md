@@ -8,14 +8,17 @@ Design branch: `prototype-penpot-codex`
 ## Prototype Reference
 
 - Prototype artifact: [shopping-customers-first-page.svg](shopping-customers-first-page.svg)
+- Penpot import guide: [penpot-import-guide.md](penpot-import-guide.md)
 - Intended Penpot use: import the SVG into Penpot as the first-page prototype canvas.
 - Canvas: desktop dashboard, `1440 x 1050`.
 - Scope: first page only.
 
-The Penpot MCP plugin was not connected in this workspace, so this branch includes
-an import-ready SVG and developer-ready notes instead of a live Penpot file URL.
-After importing the SVG into Penpot, replace this note with the live Penpot share
-link in the README and related GitHub issue.
+The Penpot MCP execution endpoint is available, but the live plugin instance was
+not connected for this user token during the handoff pass. This branch therefore
+includes an import-ready Penpot reference package: the first-page SVG, import
+steps, visual tokens, API mapping and implementation notes. After importing the
+SVG into Penpot, replace this note with the live Penpot share URL in the README
+and related GitHub issue.
 
 ## Product Direction
 
@@ -80,3 +83,4 @@ Use these values as the first implementation pass:
 - Display `400`, `409`, `422` and `404` API errors inline near the action that caused them.
 - Do not use browser alerts for create or delete flows.
 - Default table density should fit at least 10 rows at common laptop heights.
+- Treat the side panel as a selected-row summary in the first implementation; a full detail drawer can come later.
