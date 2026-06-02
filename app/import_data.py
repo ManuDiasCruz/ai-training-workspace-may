@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 from typing import Iterable
 
-from sqlalchemy import delete
+from sqlalchemy import delete, text
 
 from .config import CSV_PATH
 from .db import Base, SessionLocal, engine
@@ -29,6 +29,9 @@ COLUMN_ALIASES = {
 
 REQUIRED_COLUMNS = set(COLUMN_ALIASES)
 VALID_GENRES = {"Female", "Male"}
+
+SEARCH_INDEX_NAME = "customers_fts"
+SEARCH_INDEX_COLUMNS = "customer_id, genre, age, annual_income_k, spending_score"
 
 
 def _normalize(name: str) -> str:
@@ -125,7 +128,104 @@ def import_csv(csv_path: Path = CSV_PATH, *, truncate: bool = True) -> int:
             session.add_all(batch)
             inserted = len(batch)
         session.commit()
+    ensure_customer_search_index(rebuild=True)
     return inserted
+
+
+def ensure_customer_search_index(*, rebuild: bool = True) -> None:
+    """Create and sync the SQLite FTS5 index used by /search."""
+
+    if engine.dialect.name != "sqlite":
+        return
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                f"""
+                CREATE VIRTUAL TABLE IF NOT EXISTS {SEARCH_INDEX_NAME}
+                USING fts5(
+                    {SEARCH_INDEX_COLUMNS},
+                    content='customers',
+                    content_rowid='id'
+                )
+                """
+            )
+        )
+        conn.execute(
+            text(
+                f"""
+                CREATE TRIGGER IF NOT EXISTS customers_fts_ai
+                AFTER INSERT ON customers BEGIN
+                    INSERT INTO {SEARCH_INDEX_NAME}(rowid, {SEARCH_INDEX_COLUMNS})
+                    VALUES (
+                        new.id,
+                        new.customer_id,
+                        new.genre,
+                        new.age,
+                        new.annual_income_k,
+                        new.spending_score
+                    );
+                END
+                """
+            )
+        )
+        conn.execute(
+            text(
+                f"""
+                CREATE TRIGGER IF NOT EXISTS customers_fts_ad
+                AFTER DELETE ON customers BEGIN
+                    INSERT INTO {SEARCH_INDEX_NAME}(
+                        {SEARCH_INDEX_NAME},
+                        rowid,
+                        {SEARCH_INDEX_COLUMNS}
+                    )
+                    VALUES (
+                        'delete',
+                        old.id,
+                        old.customer_id,
+                        old.genre,
+                        old.age,
+                        old.annual_income_k,
+                        old.spending_score
+                    );
+                END
+                """
+            )
+        )
+        conn.execute(
+            text(
+                f"""
+                CREATE TRIGGER IF NOT EXISTS customers_fts_au
+                AFTER UPDATE ON customers BEGIN
+                    INSERT INTO {SEARCH_INDEX_NAME}(
+                        {SEARCH_INDEX_NAME},
+                        rowid,
+                        {SEARCH_INDEX_COLUMNS}
+                    )
+                    VALUES (
+                        'delete',
+                        old.id,
+                        old.customer_id,
+                        old.genre,
+                        old.age,
+                        old.annual_income_k,
+                        old.spending_score
+                    );
+                    INSERT INTO {SEARCH_INDEX_NAME}(rowid, {SEARCH_INDEX_COLUMNS})
+                    VALUES (
+                        new.id,
+                        new.customer_id,
+                        new.genre,
+                        new.age,
+                        new.annual_income_k,
+                        new.spending_score
+                    );
+                END
+                """
+            )
+        )
+        if rebuild:
+            conn.execute(text(f"INSERT INTO {SEARCH_INDEX_NAME}({SEARCH_INDEX_NAME}) VALUES('rebuild')"))
 
 
 if __name__ == "__main__":

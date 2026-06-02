@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import math
+import re
 from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query
-from sqlalchemy import String, cast, func, or_, select
+from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
 from .db import Base, engine, get_db
+from .import_data import SEARCH_INDEX_NAME, ensure_customer_search_index
 from .models import Customer
 from .schemas import CustomerOut, CustomerPage, GenreStat, PageMeta, StatsOut
 
@@ -16,6 +18,7 @@ from .schemas import CustomerOut, CustomerPage, GenreStat, PageMeta, StatsOut
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(engine)
+    ensure_customer_search_index(rebuild=True)
     yield
 
 
@@ -84,6 +87,48 @@ def _page_response(
     )
 
 
+_FTS_TOKEN_RE = re.compile(r"[A-Za-z0-9_]+")
+
+
+def _fts_match_query(value: str) -> str:
+    tokens = _FTS_TOKEN_RE.findall(value)
+    if not tokens:
+        raise HTTPException(status_code=400, detail="Search query must include letters or numbers")
+    return " OR ".join(f'"{token}"' for token in tokens)
+
+
+def _fts_page_response(db: Session, match_query: str, *, page: int, page_size: int) -> CustomerPage:
+    params = {"query": match_query}
+    total = int(
+        db.execute(
+            text(
+                f"SELECT count(*) FROM {SEARCH_INDEX_NAME} WHERE {SEARCH_INDEX_NAME} MATCH :query"
+            ),
+            params,
+        ).scalar_one()
+    )
+    items = db.execute(
+        select(Customer).from_statement(
+            text(
+                f"""
+                SELECT customers.*
+                FROM customers
+                JOIN {SEARCH_INDEX_NAME} ON {SEARCH_INDEX_NAME}.rowid = customers.id
+                WHERE {SEARCH_INDEX_NAME} MATCH :query
+                ORDER BY bm25({SEARCH_INDEX_NAME}), customers.id
+                LIMIT :limit OFFSET :offset
+                """
+            )
+        ),
+        {**params, "limit": page_size, "offset": (page - 1) * page_size},
+    ).scalars().all()
+    pages = math.ceil(total / page_size) if total else 0
+    return CustomerPage(
+        meta=PageMeta(total=total, page=page, page_size=page_size, pages=pages),
+        items=[CustomerOut.model_validate(it) for it in items],
+    )
+
+
 @app.get("/customers", response_model=CustomerPage, tags=["customers"])
 async def list_customers(
     db: Annotated[Session, Depends(get_db)],
@@ -134,21 +179,7 @@ async def search_customers(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
 ) -> CustomerPage:
-    like = f"%{q}%"
-    cond = or_(
-        Customer.customer_id.ilike(like),
-        Customer.genre.ilike(like),
-        cast(Customer.age, String).ilike(like),
-        cast(Customer.annual_income_k, String).ilike(like),
-        cast(Customer.spending_score, String).ilike(like),
-    )
-    return _page_response(
-        db,
-        select(func.count(Customer.id)).where(cond),
-        select(Customer).where(cond),
-        page=page,
-        page_size=page_size,
-    )
+    return _fts_page_response(db, _fts_match_query(q), page=page, page_size=page_size)
 
 
 @app.get("/genres", response_model=list[str], tags=["meta"])

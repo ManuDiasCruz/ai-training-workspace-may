@@ -78,6 +78,45 @@ async def test_search_returns_matching_rows(client):
     )
 
 
+async def test_search_ranks_rows_with_more_matches_first(client):
+    from app.db import SessionLocal
+    from app.models import Customer
+
+    with SessionLocal() as session:
+        session.add_all(
+            [
+                Customer(
+                    customer_id="rank",
+                    genre="Rank",
+                    age=30,
+                    annual_income_k=30,
+                    spending_score=30,
+                ),
+                Customer(
+                    customer_id="other",
+                    genre="Rank",
+                    age=31,
+                    annual_income_k=31,
+                    spending_score=31,
+                ),
+            ]
+        )
+        session.commit()
+
+    try:
+        r = await client.get("/search", params={"q": "rank", "page_size": 10})
+        assert r.status_code == 200
+        body = r.json()
+        assert body["meta"]["total"] == 2
+        assert [it["customer_id"] for it in body["items"]] == ["rank", "other"]
+    finally:
+        with SessionLocal() as session:
+            session.query(Customer).filter(Customer.customer_id.in_(["rank", "other"])).delete(
+                synchronize_session=False
+            )
+            session.commit()
+
+
 async def test_search_requires_q(client):
     r = await client.get("/search")
     assert r.status_code == 422

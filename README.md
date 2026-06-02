@@ -175,7 +175,8 @@ Returns `404` when the customer id does not exist.
 ### Search
 
 Search matches `customer_id`, `genre`, `age`, `annual_income_k`, and
-`spending_score` using a simple case-insensitive match.
+`spending_score` through a SQLite FTS5 index. Results are ranked with
+BM25 relevance scoring, then by row id as a stable tie-breaker.
 
 ```bash
 curl "http://localhost:8000/search?q=Female&page_size=5"
@@ -214,7 +215,8 @@ per-genre breakdown.
 ## Known Limitations And Future Improvements
 
 - The API is read-only. Future work could add create/update/delete endpoints.
-- Search uses `ILIKE`-style matching. SQLite FTS5 would be better for larger datasets.
+- Search uses SQLite FTS5 with token-level matching. Prefix, substring, and typo-tolerant
+  search are not enabled yet.
 - There is no authentication or authorization.
 - There is no rate limiting.
 - The default database is SQLite. A Postgres profile would be better for concurrent deployments.
