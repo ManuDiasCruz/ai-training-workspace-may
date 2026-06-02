@@ -29,10 +29,13 @@ let qtdadeParesAbertos = 0;
 let clicouDuasCartas = false;
 
 let contador = 0;
+const relogio = document.querySelector(".relogio");
+let intervalo = null;
+let timer = 0;
 
 // Prende o usuário até digitar um número de cartas dentro das restrições do jogo
 // (entre 4 e 14 cartas, sendo um número par)
-let numCartas = parseInt(prompt("Com quantas cartas vocês quer jogar?"));
+let numCartas = obterQtdadeCartasInicial();
 
 // Chamada a função iniciarJogo() para iniciar o jogo
 iniciarJogo();
@@ -42,6 +45,8 @@ function iniciarJogo(){
     validarQtdadecartas();
     geraCartasAleatorias();
     montarJogo();
+    atualizarQtdadeJogadas();
+    iniciarRelogio();
 }
 
 // Função usada para limpar as variáveis globais
@@ -56,11 +61,14 @@ function limparVariaveis(){
 
     contador = 0;
 
+    clearInterval(intervalo);
     intervalo = null;
     timer = 0;
+    atualizarRelogio();
 
     let elemento = document.querySelector(".cartas");
     elemento.innerHTML ="";
+    document.querySelector(".fim-jogo").innerHTML = "";
     // // Outra maneira de limpar a div cuja class é .cartas é usando os seus filhos e chamando o parentNode
     // let elemento = document.querySelectorAll(".carta");
 
@@ -70,12 +78,26 @@ function limparVariaveis(){
 
 }
 
+function qtdadeCartasValida(qtdadeCartas) {
+    return Number.isInteger(qtdadeCartas) && qtdadeCartas >= 4 && qtdadeCartas <= 14 && qtdadeCartas % 2 === 0;
+}
+
+function obterQtdadeCartasInicial() {
+    const params = new URLSearchParams(window.location.search);
+    const qtdadeCartasUrl = parseInt(params.get("cards"), 10);
+
+    if (qtdadeCartasValida(qtdadeCartasUrl)) {
+        return qtdadeCartasUrl;
+    }
+
+    return parseInt(prompt("Com quantas cartas você quer jogar?"), 10);
+}
+
 // Função usada para validar a quantidade de cartas
 // O jogo só funcionará com número de cartas pares entre, 4 e 14 inclusos
 function validarQtdadecartas(){
-    while ((numCartas<4)||(numCartas>14)||((numCartas%2)!=0)){
-        numCartas = parseInt(prompt("Você deve digitar uma quantidade de cartas pares entre 4 e 14, inclusos!\nCom quantas cartas vocês quer jogar?"));
-        print((numCartas<4)||(numCartas>14)||((numCartas%2)!=0));
+    while (!qtdadeCartasValida(numCartas)){
+        numCartas = parseInt(prompt("Você deve digitar uma quantidade de cartas par entre 4 e 14.\nCom quantas cartas você quer jogar?"), 10);
     }
 }
 
@@ -114,14 +136,14 @@ function geraCartasAleatorias(){
 // Função para criar a div que será renderizada na tela com as imagesn da carta 
 function renderizarCarta(caminhoImg){
     const div = `
-    <div class="carta" data-identifier="card" onclick="selecionarCarta(this)">
+    <button class="carta" type="button" data-card="${caminhoImg}" data-identifier="card" onclick="selecionarCarta(this)" aria-label="Carta virada para baixo">
         <div class="frente face" data-identifier="back-face">
-            <img src="img/front.png" alt="">
+            <img src="img/front.png" alt="Verso da carta">
         </div>
         <div class="verso face" data-identifier="front-face">
-            <img src=${caminhoImg} alt="">
+            <img src="${caminhoImg}" alt="Papagaio da carta">
         </div>
-    </div>
+    </button>
     `;
     return div;
     
@@ -129,8 +151,13 @@ function renderizarCarta(caminhoImg){
 
 // Função usada para virar a carta deixando o conteúdo da carta fora de vista
 function desvirar(cartaClicada){
-    cartaClicada.querySelector(".frente").classList.toggle("face-frente-virada");
-    cartaClicada.querySelector(".verso").classList.toggle("face-verso-virada");
+    cartaClicada.classList.remove("carta-virada");
+    cartaClicada.setAttribute("aria-label", "Carta virada para baixo");
+}
+
+function virar(cartaClicada){
+    cartaClicada.classList.add("carta-virada");
+    cartaClicada.setAttribute("aria-label", "Carta virada para cima");
 }
 
 function atualizarQtdadeJogadas(){
@@ -140,16 +167,14 @@ function atualizarQtdadeJogadas(){
 
 // Função usada para tratar o clique nas cartas
 function selecionarCarta(cartaClicada) {
-    if(clicouDuasCartas == false){
+    if(clicouDuasCartas == false && cartaClicada !== primeiraCarta && !cartaClicada.classList.contains("carta-resolvida")){
         if(primeiraCarta === null) {
             primeiraCarta = cartaClicada;
             qtdadeJogadas+=1;
             atualizarQtdadeJogadas();
-            cartaClicada.querySelector(".frente").classList.toggle("face-frente-virada");
-            cartaClicada.querySelector(".verso").classList.toggle("face-verso-virada");
+            virar(cartaClicada);
         } else {
-            cartaClicada.querySelector(".frente").classList.toggle("face-frente-virada");
-            cartaClicada.querySelector(".verso").classList.toggle("face-verso-virada");
+            virar(cartaClicada);
             segundaCarta = cartaClicada;
             qtdadeJogadas+=1;
             atualizarQtdadeJogadas();
@@ -163,7 +188,11 @@ function selecionarCarta(cartaClicada) {
 // Função usada para validar se o par de cartas selecionadas são iguais ou não
 // bem como para encerra o jogo
 function validarPar(){
-    if (primeiraCarta.isEqualNode(segundaCarta)){
+    if (primeiraCarta.dataset.card === segundaCarta.dataset.card){
+        primeiraCarta.classList.add("carta-resolvida");
+        segundaCarta.classList.add("carta-resolvida");
+        primeiraCarta.setAttribute("aria-label", "Par encontrado");
+        segundaCarta.setAttribute("aria-label", "Par encontrado");
         primeiraCarta = null;
         segundaCarta = null;
         qtdadeParesAbertos += 1;
@@ -172,7 +201,7 @@ function validarPar(){
             let novoJogo = prompt("Quer começar um novo jogo (sim/não)?");
             if (novoJogo == "sim"){
                 limparVariaveis();
-                numCartas = parseInt(prompt("Com quantas cartas vocês quer jogar?"));
+                numCartas = parseInt(prompt("Com quantas cartas você quer jogar?"), 10);
                 iniciarJogo();
             }else{
                 limparVariaveis();
@@ -204,14 +233,18 @@ function montarJogo(){
 
 
 // Variáveis e função para fazer contegem do tempo de jogo
-const relogio = document.querySelector(".relogio");
-let intervalo = null;
-let timer = 0;
-
-function aumentarContagem(){    
+function atualizarRelogio() {
     relogio.innerHTML = " " + timer + " segundos";
-    timer+=1;
 }
 
-intervalo = setInterval(aumentarContagem, 1000);
-console.log(intervalo);
+function aumentarContagem(){    
+    timer+=1;
+    atualizarRelogio();
+}
+
+function iniciarRelogio() {
+    clearInterval(intervalo);
+    timer = 0;
+    atualizarRelogio();
+    intervalo = setInterval(aumentarContagem, 1000);
+}
