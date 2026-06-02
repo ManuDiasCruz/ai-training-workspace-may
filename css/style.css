@@ -1,0 +1,152 @@
+:root {
+    --color-white: #ffffff;
+    --color-light-green: #a7e9af;
+    --color-black: #000000;
+    --card-width: clamp(96px, 22vw, 117px);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    background: var(--color-white);
+    color: var(--color-black);
+    font-family: Arial, Helvetica, sans-serif;
+    font-style: normal;
+    font-weight: 700;
+    text-align: center;
+}
+
+.game-header {
+    width: min(100%, 980px);
+    margin: 0 auto;
+    padding: clamp(24px, 7vw, 48px) 20px 0;
+}
+
+h1 {
+    margin: 0 0 clamp(18px, 4vw, 28px);
+    color: var(--color-black);
+    font-size: clamp(34px, 9vw, 56px);
+    letter-spacing: -0.004em;
+    line-height: 1.05;
+}
+
+.scoreboard {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: clamp(24px, 5vw, 34px);
+}
+
+p {
+    margin: 0;
+    padding: 10px 16px;
+    background: var(--color-light-green);
+    border: 2px solid var(--color-black);
+    border-radius: 999px;
+    color: var(--color-black);
+    font-size: clamp(16px, 4vw, 20px);
+}
+
+span {
+    color: var(--color-black);
+}
+
+.game-board {
+    width: min(100%, 980px);
+    margin: 0 auto;
+    padding: 0 16px 40px;
+}
+
+.cartas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, var(--card-width));
+    justify-content: center;
+    gap: clamp(14px, 4vw, 28px);
+}
+
+.carta {
+    appearance: none;
+    width: var(--card-width);
+    height: calc(var(--card-width) * 1.2479);
+    margin: 0;
+    padding: 0;
+    background: var(--color-light-green);
+    border: 2px solid var(--color-black);
+    border-radius: 10px;
+    box-shadow: 4px 4px 0 var(--color-black);
+    color: var(--color-black);
+    cursor: pointer;
+    font: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transform-style: preserve-3d;
+}
+
+.carta:focus-visible {
+    outline: 4px solid var(--color-light-green);
+    outline-offset: 6px;
+}
+
+.face {
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-light-green);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    transition: transform 0.5s;
+    transform-style: preserve-3d;
+}
+
+.verso {
+    background-color: var(--color-white);
+    transform: rotateY(180deg);
+}
+
+.carta-virada .verso,
+.carta-resolvida .verso {
+    transform: rotateY(0deg);
+}
+
+.carta-virada .frente,
+.carta-resolvida .frente {
+    transform: rotateY(-180deg);
+}
+
+img {
+    width: min(72%, 100px);
+    height: min(72%, 100px);
+    object-fit: contain;
+}
+
+.fim-jogo {
+    margin-top: 28px;
+    color: var(--color-black);
+    font-size: clamp(24px, 7vw, 40px);
+}
+
+@media (max-width: 420px) {
+    :root {
+        --card-width: clamp(92px, 29vw, 108px);
+    }
+
+    .game-header {
+        padding-inline: 14px;
+    }
+
+    .game-board {
+        padding-inline: 12px;
+    }
+}
