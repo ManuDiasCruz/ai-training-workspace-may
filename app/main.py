@@ -5,17 +5,19 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query
-from sqlalchemy import String, cast, func, or_, select
+from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
 from .db import Base, engine, get_db
 from .models import Customer
 from .schemas import CustomerOut, CustomerPage, GenreStat, PageMeta, StatsOut
+from .search_index import ensure_search_index, search_match_query
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(engine)
+    ensure_search_index(engine, rebuild=True)
     yield
 
 
@@ -134,20 +136,36 @@ async def search_customers(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
 ) -> CustomerPage:
-    like = f"%{q}%"
-    cond = or_(
-        Customer.customer_id.ilike(like),
-        Customer.genre.ilike(like),
-        cast(Customer.age, String).ilike(like),
-        cast(Customer.annual_income_k, String).ilike(like),
-        cast(Customer.spending_score, String).ilike(like),
-    )
-    return _page_response(
-        db,
-        select(func.count(Customer.id)).where(cond),
-        select(Customer).where(cond),
-        page=page,
-        page_size=page_size,
+    try:
+        match_query = search_match_query(q)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    total = db.scalar(
+        text("SELECT count(*) FROM customers_search WHERE customers_search MATCH :query"),
+        {"query": match_query},
+    ) or 0
+    items = db.execute(
+        text(
+            """
+            SELECT customers.*
+            FROM customers
+            JOIN customers_search ON customers_search.rowid = customers.id
+            WHERE customers_search MATCH :query
+            ORDER BY bm25(customers_search), customers.id
+            LIMIT :limit OFFSET :offset
+            """
+        ),
+        {
+            "query": match_query,
+            "limit": page_size,
+            "offset": (page - 1) * page_size,
+        },
+    ).mappings().all()
+    pages = math.ceil(total / page_size) if total else 0
+    return CustomerPage(
+        meta=PageMeta(total=total, page=page, page_size=page_size, pages=pages),
+        items=[CustomerOut.model_validate(item) for item in items],
     )
 
 

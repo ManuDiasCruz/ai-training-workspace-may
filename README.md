@@ -35,9 +35,12 @@ The Drive CSV is stored locally at `data/shopping.csv`.
 ## Database Design
 
 The local database is SQLite by default, stored at `data/shopping.db`.
-SQLAlchemy creates one denormalized table:
+SQLAlchemy creates one denormalized table and a synchronized SQLite FTS5
+virtual table:
 
 `customers`
+
+`customers_search`
 
 | Column | Type | Constraints / indexes |
 | --- | --- | --- |
@@ -52,6 +55,8 @@ Additional indexes:
 
 - `(genre, age)` for common demographic filtering
 - `(annual_income_k, spending_score)` for segment-style range queries
+- `customers_search` for ranked full-text search across customer id, genre,
+  age, annual income, and spending score
 
 A single table is appropriate here because the source data is small,
 read-only, and already flat. Splitting lookup tables out for `genre`
@@ -175,7 +180,8 @@ Returns `404` when the customer id does not exist.
 ### Search
 
 Search matches `customer_id`, `genre`, `age`, `annual_income_k`, and
-`spending_score` using a simple case-insensitive match.
+`spending_score` through SQLite FTS5 prefix search. Results are ordered by
+BM25 relevance, then customer id for stable pagination.
 
 ```bash
 curl "http://localhost:8000/search?q=Female&page_size=5"
@@ -214,7 +220,7 @@ per-genre breakdown.
 ## Known Limitations And Future Improvements
 
 - The API is read-only. Future work could add create/update/delete endpoints.
-- Search uses `ILIKE`-style matching. SQLite FTS5 would be better for larger datasets.
+- Search uses SQLite FTS5 prefix matching. Typo-tolerant matching is not enabled.
 - There is no authentication or authorization.
 - There is no rate limiting.
 - The default database is SQLite. A Postgres profile would be better for concurrent deployments.
