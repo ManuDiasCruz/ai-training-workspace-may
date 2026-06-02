@@ -78,6 +78,61 @@ async def test_search_returns_matching_rows(client):
     )
 
 
+async def test_search_orders_more_relevant_rows_first(client):
+    r = await client.get("/search", params={"q": "0001 Male", "page_size": 200})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["meta"]["total"] > 1
+    assert body["items"][0]["customer_id"] == "0001"
+
+
+async def test_search_index_tracks_insert_and_delete(client):
+    from sqlalchemy import delete, update
+
+    from app.db import SessionLocal
+    from app.models import Customer
+
+    with SessionLocal() as session:
+        session.add(
+            Customer(
+                customer_id="X999",
+                genre="Female",
+                age=42,
+                annual_income_k=88,
+                spending_score=73,
+            )
+        )
+        session.commit()
+
+    r = await client.get("/search", params={"q": "X999"})
+    assert r.status_code == 200
+    assert [item["customer_id"] for item in r.json()["items"]] == ["X999"]
+
+    with SessionLocal() as session:
+        session.execute(
+            update(Customer)
+            .where(Customer.customer_id == "X999")
+            .values(customer_id="X998")
+        )
+        session.commit()
+
+    r = await client.get("/search", params={"q": "X999"})
+    assert r.status_code == 200
+    assert r.json()["meta"]["total"] == 0
+
+    r = await client.get("/search", params={"q": "X998"})
+    assert r.status_code == 200
+    assert [item["customer_id"] for item in r.json()["items"]] == ["X998"]
+
+    with SessionLocal() as session:
+        session.execute(delete(Customer).where(Customer.customer_id == "X998"))
+        session.commit()
+
+    r = await client.get("/search", params={"q": "X998"})
+    assert r.status_code == 200
+    assert r.json()["meta"]["total"] == 0
+
+
 async def test_search_requires_q(client):
     r = await client.get("/search")
     assert r.status_code == 422
