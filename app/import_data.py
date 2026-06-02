@@ -18,6 +18,7 @@ from sqlalchemy import delete
 from .config import CSV_PATH
 from .db import Base, SessionLocal, engine
 from .models import Customer
+from .search_index import sync_search_index
 
 COLUMN_ALIASES = {
     "customer_id": {"customerid", "customer id"},
@@ -125,6 +126,10 @@ def import_csv(csv_path: Path = CSV_PATH, *, truncate: bool = True) -> int:
             session.add_all(batch)
             inserted = len(batch)
         session.commit()
+
+    # Rebuild the FTS5 search index so freshly imported rows are searchable
+    # (no-op on non-SQLite engines).
+    sync_search_index(engine)
     return inserted
 
 

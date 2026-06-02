@@ -5,17 +5,27 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query
-from sqlalchemy import String, cast, func, or_, select
+from sqlalchemy import String, cast, func, or_, select, text
 from sqlalchemy.orm import Session
 
 from .db import Base, engine, get_db
 from .models import Customer
 from .schemas import CustomerOut, CustomerPage, GenreStat, PageMeta, StatsOut
+from .search_index import ensure_search_index, rebuild_search_index, search_ids
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(engine)
+    # Ensure the FTS5 search index and sync triggers exist. If the customers
+    # table was populated before the index existed (e.g. an older DB file),
+    # rebuild it once so /search has data to match against.
+    if ensure_search_index(engine):
+        with engine.connect() as conn:
+            indexed = conn.execute(text("SELECT count(*) FROM customers_fts")).scalar_one()
+            customers = conn.execute(text("SELECT count(*) FROM customers")).scalar_one()
+        if customers and not indexed:
+            rebuild_search_index(engine)
     yield
 
 
@@ -127,13 +137,10 @@ async def get_customer(customer_id: str, db: Annotated[Session, Depends(get_db)]
     return CustomerOut.model_validate(obj)
 
 
-@app.get("/search", response_model=CustomerPage, tags=["customers"])
-async def search_customers(
-    db: Annotated[Session, Depends(get_db)],
-    q: str = Query(..., min_length=1, max_length=64, description="Free-text search"),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=200),
+def _legacy_like_search(
+    db: Session, q: str, *, page: int, page_size: int
 ) -> CustomerPage:
+    """Fallback substring search for non-SQLite engines (no FTS5 available)."""
     like = f"%{q}%"
     cond = or_(
         Customer.customer_id.ilike(like),
@@ -149,6 +156,37 @@ async def search_customers(
         page=page,
         page_size=page_size,
     )
+
+
+@app.get("/search", response_model=CustomerPage, tags=["customers"])
+async def search_customers(
+    db: Annotated[Session, Depends(get_db)],
+    q: str = Query(..., min_length=1, max_length=64, description="Free-text search"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    fuzzy: bool = Query(
+        False,
+        description="Substring/typo-tolerant matching (FTS5 trigram) instead of prefix ranking.",
+    ),
+) -> CustomerPage:
+    # Primary path: SQLite FTS5 with BM25 relevance ranking (issue #6).
+    result = search_ids(db.get_bind(), q, fuzzy=fuzzy, page=page, page_size=page_size)
+    if result is None:
+        # FTS5 unavailable (e.g. Postgres profile) -> legacy ILIKE search.
+        return _legacy_like_search(db, q, page=page, page_size=page_size)
+
+    pages = math.ceil(result.total / page_size) if result.total else 0
+    meta = PageMeta(total=result.total, page=page, page_size=page_size, pages=pages)
+    if not result.ids:
+        return CustomerPage(meta=meta, items=[])
+
+    # Load the matched rows and re-order them to preserve BM25 rank order.
+    by_id = {
+        c.id: c
+        for c in db.scalars(select(Customer).where(Customer.id.in_(result.ids))).all()
+    }
+    items = [CustomerOut.model_validate(by_id[i]) for i in result.ids if i in by_id]
+    return CustomerPage(meta=meta, items=items)
 
 
 @app.get("/genres", response_model=list[str], tags=["meta"])

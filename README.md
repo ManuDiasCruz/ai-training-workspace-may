@@ -174,12 +174,27 @@ Returns `404` when the customer id does not exist.
 
 ### Search
 
-Search matches `customer_id`, `genre`, `age`, `annual_income_k`, and
-`spending_score` using a simple case-insensitive match.
+Search is backed by a **SQLite FTS5** full-text index over `customer_id`,
+`genre`, `age`, `annual_income_k`, and `spending_score`. Results are ranked by
+relevance (BM25), with the best matches returned first.
 
 ```bash
 curl "http://localhost:8000/search?q=Female&page_size=5"
 ```
+
+By default each whitespace-separated term is matched as a case-insensitive
+**prefix** (`fem` matches `Female`) and all terms must match (AND). Pass
+`fuzzy=true` to switch to **substring / typo-tolerant** matching (FTS5 trigram
+tokenizer), which behaves like the old `ILIKE '%q%'` search:
+
+```bash
+curl "http://localhost:8000/search?q=emal&fuzzy=true&page_size=5"
+```
+
+The index is maintained automatically: triggers keep it in sync with row
+changes, and `python -m app.import_data` rebuilds it after every import. On a
+non-SQLite engine (e.g. a Postgres deployment profile) the endpoint falls back
+to the legacy `ILIKE` search.
 
 ### Genres
 
@@ -214,7 +229,8 @@ per-genre breakdown.
 ## Known Limitations And Future Improvements
 
 - The API is read-only. Future work could add create/update/delete endpoints.
-- Search uses `ILIKE`-style matching. SQLite FTS5 would be better for larger datasets.
+- Search uses a SQLite FTS5 index (BM25 ranking + optional trigram fuzzy
+  matching). On non-SQLite engines it falls back to `ILIKE` matching.
 - There is no authentication or authorization.
 - There is no rate limiting.
 - The default database is SQLite. A Postgres profile would be better for concurrent deployments.
