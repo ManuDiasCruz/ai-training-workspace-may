@@ -58,7 +58,7 @@ read-only, and already flat. Splitting lookup tables out for `genre`
 would add joins without meaningful benefit at this size.
 
 Schema definition lives in `app/models.py`. Import logic lives in
-`app/import_data.py`.
+`app/import_data.py`. Search indexing lives in `app/search_index.py`.
 
 ## Setup
 
@@ -174,8 +174,10 @@ Returns `404` when the customer id does not exist.
 
 ### Search
 
-Search matches `customer_id`, `genre`, `age`, `annual_income_k`, and
-`spending_score` using a simple case-insensitive match.
+Search uses a SQLite FTS5 virtual table over `customer_id`, `genre`,
+`age`, `annual_income_k`, and `spending_score`. The importer and API
+startup both create or refresh the index, and `/search` orders matches
+with SQLite BM25 relevance ranking.
 
 ```bash
 curl "http://localhost:8000/search?q=Female&page_size=5"
@@ -214,7 +216,7 @@ per-genre breakdown.
 ## Known Limitations And Future Improvements
 
 - The API is read-only. Future work could add create/update/delete endpoints.
-- Search uses `ILIKE`-style matching. SQLite FTS5 would be better for larger datasets.
+- Search is optimized for SQLite via FTS5. Non-SQLite database URLs fall back to the older case-insensitive search path.
 - There is no authentication or authorization.
 - There is no rate limiting.
 - The default database is SQLite. A Postgres profile would be better for concurrent deployments.

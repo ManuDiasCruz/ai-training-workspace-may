@@ -5,17 +5,19 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query
-from sqlalchemy import String, cast, func, or_, select
+from sqlalchemy import String, cast, func, or_, select, text
 from sqlalchemy.orm import Session
 
 from .db import Base, engine, get_db
 from .models import Customer
 from .schemas import CustomerOut, CustomerPage, GenreStat, PageMeta, StatsOut
+from .search_index import build_fts_query, ensure_search_index
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(engine)
+    ensure_search_index(engine)
     yield
 
 
@@ -84,6 +86,65 @@ def _page_response(
     )
 
 
+def _empty_page(*, page: int, page_size: int) -> CustomerPage:
+    return CustomerPage(
+        meta=PageMeta(total=0, page=page, page_size=page_size, pages=0),
+        items=[],
+    )
+
+
+def _legacy_search_condition(q: str):
+    like = f"%{q}%"
+    return or_(
+        Customer.customer_id.ilike(like),
+        Customer.genre.ilike(like),
+        cast(Customer.age, String).ilike(like),
+        cast(Customer.annual_income_k, String).ilike(like),
+        cast(Customer.spending_score, String).ilike(like),
+    )
+
+
+def _search_response(
+    db: Session,
+    fts_query: str,
+    *,
+    page: int,
+    page_size: int,
+) -> CustomerPage:
+    if not fts_query:
+        return _empty_page(page=page, page_size=page_size)
+
+    total = db.scalar(
+        text("SELECT count(*) FROM customers_fts WHERE customers_fts MATCH :q"),
+        {"q": fts_query},
+    ) or 0
+    pages = math.ceil(total / page_size) if total else 0
+    rows = db.execute(
+        text(
+            """
+            SELECT
+                customers.id,
+                customers.customer_id,
+                customers.genre,
+                customers.age,
+                customers.annual_income_k,
+                customers.spending_score
+            FROM customers_fts
+            JOIN customers ON customers.id = customers_fts.rowid
+            WHERE customers_fts MATCH :q
+            ORDER BY bm25(customers_fts), customers.id
+            LIMIT :limit OFFSET :offset
+            """
+        ),
+        {"q": fts_query, "limit": page_size, "offset": (page - 1) * page_size},
+    ).mappings()
+
+    return CustomerPage(
+        meta=PageMeta(total=total, page=page, page_size=page_size, pages=pages),
+        items=[CustomerOut(**dict(row)) for row in rows],
+    )
+
+
 @app.get("/customers", response_model=CustomerPage, tags=["customers"])
 async def list_customers(
     db: Annotated[Session, Depends(get_db)],
@@ -134,14 +195,15 @@ async def search_customers(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
 ) -> CustomerPage:
-    like = f"%{q}%"
-    cond = or_(
-        Customer.customer_id.ilike(like),
-        Customer.genre.ilike(like),
-        cast(Customer.age, String).ilike(like),
-        cast(Customer.annual_income_k, String).ilike(like),
-        cast(Customer.spending_score, String).ilike(like),
-    )
+    if engine.dialect.name == "sqlite":
+        return _search_response(
+            db,
+            build_fts_query(q),
+            page=page,
+            page_size=page_size,
+        )
+
+    cond = _legacy_search_condition(q)
     return _page_response(
         db,
         select(func.count(Customer.id)).where(cond),
