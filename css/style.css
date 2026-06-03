@@ -113,6 +113,11 @@ main {
     object-fit: contain;
 }
 
+.fim-jogo {
+    margin-top: 24px;
+    font-size: 24px;
+}
+
 @media (max-width: 600px) {
     header {
         padding: 24px 14px 18px;
