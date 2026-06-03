@@ -1,0 +1,2 @@
+CREATE DATABASE sing_me_a_song_test;
+
