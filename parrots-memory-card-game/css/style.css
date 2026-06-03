@@ -1,11 +1,24 @@
+/*
+ * Color palette (client request): white background, light green accents and
+ * black font. Every color in the UI references these variables so the whole
+ * app stays visually consistent and is easy to maintain.
+ */
+:root{
+    --color-white: #ffffff;
+    --color-light-green: #a7e9af;        /* primary light green (cards / accents) */
+    --color-light-green-soft: #d8f5dc;   /* softer light green tint */
+    --color-light-green-border: #8ed9a0; /* light green used for borders */
+    --color-black: #000000;              /* font color */
+}
+
 body{
-    background: #EEF9BF;
+    background: var(--color-white);
     margin: 0 auto;
     font-family: "Roboto", sans-serif;
     font-style: normal;
     font-weight: bold;
     text-align: center;
-    color: #75B79E;    
+    color: var(--color-black);
 }
 
 h1{
@@ -26,8 +39,8 @@ p{
     font-size: 20px;
 }
 
-span{    
-    color: gray;
+span{
+    color: var(--color-black);
 }
 
 main{
@@ -47,8 +60,8 @@ main{
     margin-left: 34px;
     margin-bottom: 34px;
     
-    background: #A7E9AF;
-    border: 1px solid #99CEA8;
+    background: var(--color-light-green);
+    border: 1px solid var(--color-light-green-border);
     box-sizing: border-box;
     border-radius: 5px;
     box-shadow: 1px 1px 1px rgba(0,0,0,.3);
@@ -59,7 +72,7 @@ main{
 }
 
 .face{
-    background-color: #A7E9AF;
+    background-color: var(--color-light-green);
     border-radius: 10px;
     display: flex;
     align-items: center;
