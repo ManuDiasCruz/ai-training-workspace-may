@@ -8,6 +8,8 @@ export default {
       useESM: true,
     },
   },
+  setupFiles: ["<rootDir>/tests/setupEnv.ts"],
+  testPathIgnorePatterns: ["/node_modules/", "/dist/"],
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
   },

@@ -1,4 +1,7 @@
-import pkg from "@prisma/client";
+import * as prismaClientModule from "@prisma/client";
 
-const { PrismaClient } = pkg;
+const prismaClientRuntime = prismaClientModule as any;
+const PrismaClient =
+  prismaClientRuntime.PrismaClient ?? prismaClientRuntime.default?.PrismaClient;
+
 export const prisma = new PrismaClient();

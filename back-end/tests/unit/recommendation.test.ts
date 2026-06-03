@@ -16,6 +16,10 @@ describe("UNIT TESTS SUITE", () => {
         score: 2
     }
 
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     describe("Create recommendation", () => {
         it("Success", async () => {
             const { name } = recommendation1;
@@ -38,7 +42,7 @@ describe("UNIT TESTS SUITE", () => {
                 .spyOn(recommendationRepository, "findByName")
                 .mockResolvedValueOnce(recommendation2);
 
-            expect(recommendationService.insert(recommendation1)).rejects.toEqual(
+            await expect(recommendationService.insert(recommendation1)).rejects.toEqual(
                 { message: "Recommendations names must be unique", type: "conflict" }
             );
         });
@@ -64,7 +68,7 @@ describe("UNIT TESTS SUITE", () => {
                 .spyOn(recommendationRepository, "find")
                 .mockResolvedValueOnce(null);
         
-            expect(recommendationService.upvote(1)).rejects.toEqual(
+            await expect(recommendationService.upvote(1)).rejects.toEqual(
                 { message: "", type: "not_found" }
             );
         });
@@ -109,7 +113,7 @@ describe("UNIT TESTS SUITE", () => {
                 .spyOn(recommendationRepository, "find")
                 .mockResolvedValueOnce(null);
         
-            expect(recommendationService.downvote(1)).rejects.toEqual(
+            await expect(recommendationService.downvote(1)).rejects.toEqual(
                 { message: "", type: "not_found" }
             );
         });
@@ -131,7 +135,7 @@ describe("UNIT TESTS SUITE", () => {
                 .spyOn(recommendationRepository, "find")
                 .mockResolvedValueOnce(null);
 
-            expect(recommendationService.getById(1)).rejects.toEqual({
+            await expect(recommendationService.getById(1)).rejects.toEqual({
                 message: "",
                 type: "not_found",
             });
@@ -192,9 +196,10 @@ describe("UNIT TESTS SUITE", () => {
 
             jest
                 .spyOn(recommendationRepository, "findAll")
+                .mockResolvedValueOnce([])
                 .mockResolvedValueOnce([]);
 
-            expect(recommendationService.getRandom()).rejects.toEqual({
+            await expect(recommendationService.getRandom()).rejects.toEqual({
                 message: "",
                 type: "not_found",
             });
