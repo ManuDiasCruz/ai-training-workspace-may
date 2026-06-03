@@ -1,0 +1,160 @@
+:root {
+    --white: #FFFFFF;
+    --light-green: #A7E9AF;
+    --black: #000000;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--white);
+    margin: 0;
+    font-family: "Roboto", sans-serif;
+    font-style: normal;
+    font-weight: bold;
+    text-align: center;
+    color: var(--black);
+}
+
+h1 {
+    margin: 0;
+    font-size: 56px;
+    line-height: 1.05;
+    letter-spacing: 0;
+}
+
+header {
+    padding: 36px 20px 22px;
+    background: var(--light-green);
+    border-bottom: 2px solid var(--black);
+}
+
+nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+p {
+    min-width: 156px;
+    margin: 0;
+    padding: 10px 14px;
+    background: var(--white);
+    border: 1px solid var(--black);
+    border-radius: 5px;
+    font-size: 20px;
+}
+
+span {
+    color: var(--black);
+}
+
+main {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 32px 20px 48px;
+}
+
+.cartas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 117px);
+    justify-content: center;
+    gap: 24px;
+}
+
+.carta {
+    width: 117px;
+    height: 146px;
+    background: var(--light-green);
+    border: 2px solid var(--black);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+}
+
+.face {
+    width: 100%;
+    height: 100%;
+    background-color: var(--light-green);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    backface-visibility: hidden;
+    transition: all .5s;
+    transform-style: preserve-3d;
+}
+
+.verso {
+    transform: rotateY(180deg);
+}
+
+.face-verso-virada {
+    transform: rotateY(0deg);
+}
+
+.face-frente-virada {
+    transform: rotateY(-180deg);
+}
+
+.face img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+}
+
+.fim-jogo {
+    margin-top: 24px;
+    font-size: 24px;
+}
+
+@media (max-width: 600px) {
+    header {
+        padding: 24px 14px 18px;
+    }
+
+    h1 {
+        font-size: 36px;
+    }
+
+    nav {
+        gap: 8px;
+        margin-top: 16px;
+    }
+
+    p {
+        min-width: 0;
+        padding: 8px 10px;
+        font-size: 16px;
+    }
+
+    main {
+        padding: 24px 12px 36px;
+    }
+
+    .cartas {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .carta {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 117 / 146;
+    }
+
+    .face img {
+        width: 72%;
+        height: 72%;
+    }
+}
