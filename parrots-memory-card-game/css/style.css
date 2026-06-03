@@ -22,21 +22,27 @@ body{
 }
 
 h1{
-    font-size: 56px;
+    /* Fluid title: scales smoothly between mobile and desktop */
+    font-size: clamp(2rem, 8vw, 3.5rem);
     letter-spacing: -0.004em;
-    margin-top: 40px;
-    margin-bottom: 25px;
+    margin-top: clamp(20px, 5vw, 40px);
+    margin-bottom: clamp(15px, 3vw, 25px);
+    padding: 0 12px;
 }
 
 nav{
-    margin-bottom: 30px;
+    margin-bottom: clamp(18px, 4vw, 30px);
     display: flex;
     align-items: center;
     justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    padding: 0 16px;
 }
 
 p{
-    font-size: 20px;
+    font-size: clamp(1rem, 4vw, 1.25rem);
+    margin: 6px 0;
 }
 
 span{
@@ -44,43 +50,54 @@ span{
 }
 
 main{
-    margin: auto 116px;
+    /* Centered, width-capped container with fluid side padding instead of
+       fixed margins so it never overflows narrow viewports. */
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 clamp(12px, 4vw, 48px) 32px;
 }
 
 .cartas{
+    /* Responsive flex grid: cards wrap and the gap scales with the viewport. */
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
+    gap: clamp(12px, 3vw, 34px);
 }
 
 .carta{
-    width: 117px;
-    height: 146px;
-    margin-left: 34px;
-    margin-bottom: 34px;
-    
+    /* Fluid card size: shrinks on phones, caps at the original 117px on desktop.
+       aspect-ratio keeps the original 117:146 proportions at every size. */
+    width: clamp(72px, 20vw, 117px);
+    aspect-ratio: 117 / 146;
+
     background: var(--color-light-green);
     border: 1px solid var(--color-light-green-border);
     box-sizing: border-box;
-    border-radius: 5px;
-    box-shadow: 1px 1px 1px rgba(0,0,0,.3);
+    border-radius: 8px;
+    box-shadow: 1px 1px 3px rgba(0,0,0,.25);
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
+    cursor: pointer;
 }
 
 .face{
     background-color: var(--color-light-green);
-    border-radius: 10px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     position: absolute;
+    /* Fill the card so faces scale with the fluid card size. */
+    inset: 0;
+    width: 100%;
+    height: 100%;
     backface-visibility: hidden;
     transition: all .5s;
-    transform-style: preserve-3d;   
+    transform-style: preserve-3d;
 }
 
 .verso{
@@ -97,25 +114,21 @@ main{
 
 
 img{
-    width: 100px;
-    height: 100px;
+    /* Images scale with their card instead of a fixed pixel size. */
+    width: 72%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
 }
 
-@media (max-width: 335px) {
-    h1{
-        font-size: 36px;
-    }
-
-    main{
-        margin: auto 0px;
+/* On very small phones, give cards a bit more relative width so the
+   board stays comfortably tappable without horizontal scrolling. */
+@media (max-width: 380px) {
+    .carta{
+        width: clamp(64px, 26vw, 96px);
     }
 
     .cartas{
-        display: flex;
-        flex-direction: column;
-    }
-
-    .carta{
-        margin: 34px auto;
+        gap: 12px;
     }
 }
