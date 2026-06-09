@@ -1,0 +1,58 @@
+{
+  "$schema": "https://design-tokens.org/draft/format/",
+  "$description": "Shopping Customers first-page tokens. Stakeholder: Mary.",
+  "color": {
+    "brand": {
+      "primary": { "$type": "color", "$value": "#0F766E" },
+      "hover": { "$type": "color", "$value": "#115E59" },
+      "soft": { "$type": "color", "$value": "#CCFBF1" }
+    },
+    "canvas": { "$type": "color", "$value": "#F3F6F4" },
+    "surface": { "$type": "color", "$value": "#FFFFFF" },
+    "surfaceSubtle": { "$type": "color", "$value": "#F8FAF9" },
+    "border": { "$type": "color", "$value": "#DDE5E1" },
+    "text": {
+      "primary": { "$type": "color", "$value": "#18201D" },
+      "secondary": { "$type": "color", "$value": "#56625D" },
+      "muted": { "$type": "color", "$value": "#7D8984" }
+    },
+    "accent": {
+      "blue": { "$type": "color", "$value": "#2563EB" },
+      "coral": { "$type": "color", "$value": "#C2415B" },
+      "amber": { "$type": "color", "$value": "#B45309" }
+    },
+    "status": {
+      "success": { "$type": "color", "$value": "#15803D" },
+      "danger": { "$type": "color", "$value": "#B42318" },
+      "dangerSoft": { "$type": "color", "$value": "#FEE4E2" }
+    }
+  },
+  "font": {
+    "family": { "$type": "fontFamily", "$value": "Inter" },
+    "size": {
+      "caption": { "$type": "dimension", "$value": "12px" },
+      "body": { "$type": "dimension", "$value": "14px" },
+      "section": { "$type": "dimension", "$value": "16px" },
+      "title": { "$type": "dimension", "$value": "24px" },
+      "metric": { "$type": "dimension", "$value": "30px" }
+    }
+  },
+  "spacing": {
+    "1": { "$type": "dimension", "$value": "4px" },
+    "2": { "$type": "dimension", "$value": "8px" },
+    "3": { "$type": "dimension", "$value": "12px" },
+    "4": { "$type": "dimension", "$value": "16px" },
+    "5": { "$type": "dimension", "$value": "20px" },
+    "6": { "$type": "dimension", "$value": "24px" },
+    "8": { "$type": "dimension", "$value": "32px" }
+  },
+  "radius": {
+    "control": { "$type": "dimension", "$value": "6px" },
+    "card": { "$type": "dimension", "$value": "8px" },
+    "pill": { "$type": "dimension", "$value": "999px" }
+  },
+  "size": {
+    "control": { "$type": "dimension", "$value": "40px" },
+    "pageMax": { "$type": "dimension", "$value": "1360px" }
+  }
+}

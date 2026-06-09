@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shopping Customers - First Page Prototype</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="app-header">
+      <div class="identity">
+        <span class="mark" aria-hidden="true">SC</span>
+        <div>
+          <h1>Shopping Customers</h1>
+          <p>Customer directory</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="health"><i></i>API healthy</span>
+        <button class="button primary" type="button" data-open-dialog>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          New customer
+        </button>
+      </div>
+    </header>
+
+    <section class="summary" aria-label="Customer dataset summary">
+      <article class="metric featured">
+        <div class="metric-label"><span>Total customers</span><span class="trend">Live dataset</span></div>
+        <strong>200</strong>
+        <div class="split" aria-label="112 female customers and 88 male customers">
+          <span style="width:56%"></span><span style="width:44%"></span>
+        </div>
+        <p><b class="coral">112 Female</b><b class="blue">88 Male</b></p>
+      </article>
+      <article class="metric">
+        <div class="metric-label"><span>Average age</span><span class="metric-icon">A</span></div>
+        <strong>38.9</strong><p>years</p>
+      </article>
+      <article class="metric">
+        <div class="metric-label"><span>Average income</span><span class="metric-icon">$</span></div>
+        <strong>60.6k</strong><p>USD per year</p>
+      </article>
+      <article class="metric">
+        <div class="metric-label"><span>Average score</span><span class="metric-icon">%</span></div>
+        <strong>50.2</strong><p>out of 100</p>
+      </article>
+    </section>
+
+    <section class="directory" aria-labelledby="directory-title">
+      <div class="directory-head">
+        <div><h2 id="directory-title">Customers</h2><p><span data-count>200</span> records</p></div>
+        <div class="directory-actions">
+          <label class="search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" placeholder="Search by code or gender" aria-label="Search customers" data-search>
+          </label>
+          <button class="button secondary" type="button" data-toggle-filters aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+            Filters <span class="count">1</span>
+          </button>
+          <button class="icon-button" type="button" title="Sort customers" aria-label="Sort customers">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h14M3 12h10M3 18h6M17 14v7M14 18l3 3 3-3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="filter-panel" data-filter-panel hidden>
+        <label>Gender<select><option>All genders</option><option>Female</option><option>Male</option></select></label>
+        <label>Minimum age<input type="number" min="0" max="130" placeholder="0"></label>
+        <label>Maximum age<input type="number" min="0" max="130" value="25"></label>
+        <label>Minimum score<input type="number" min="1" max="100" placeholder="1"></label>
+        <button class="button secondary" type="button" data-clear-filter>Clear filters</button>
+      </div>
+
+      <div class="active-filters" data-active-filter>
+        <span>Age up to 25 <button type="button" aria-label="Remove age filter" data-clear-filter>&times;</button></span>
+      </div>
+
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Customer</th><th>Gender</th><th>Age</th><th>Annual income</th><th>Spending score</th><th><span class="sr-only">Actions</span></th></tr></thead>
+          <tbody data-rows>
+            <tr data-search-row="0001 male"><td><b>0001</b><small>Record 1</small></td><td><span class="badge male">Male</span></td><td>19</td><td>$15k</td><td><span class="score low"><i style="width:39%"></i></span><b>39</b></td><td><button class="row-action" title="Delete customer 0001" aria-label="Delete customer 0001"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M8 11v6M12 11v6M16 11v6M6 7l1 14h10l1-14"/></svg></button></td></tr>
+            <tr data-search-row="0002 male"><td><b>0002</b><small>Record 2</small></td><td><span class="badge male">Male</span></td><td>21</td><td>$15k</td><td><span class="score high"><i style="width:81%"></i></span><b>81</b></td><td><button class="row-action" title="Delete customer 0002" aria-label="Delete customer 0002"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M8 11v6M12 11v6M16 11v6M6 7l1 14h10l1-14"/></svg></button></td></tr>
+            <tr data-search-row="0003 female"><td><b>0003</b><small>Record 3</small></td><td><span class="badge female">Female</span></td><td>20</td><td>$16k</td><td><span class="score low"><i style="width:6%"></i></span><b>6</b></td><td><button class="row-action" title="Delete customer 0003" aria-label="Delete customer 0003"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M8 11v6M12 11v6M16 11v6M6 7l1 14h10l1-14"/></svg></button></td></tr>
+            <tr data-search-row="0004 female"><td><b>0004</b><small>Record 4</small></td><td><span class="badge female">Female</span></td><td>23</td><td>$16k</td><td><span class="score high"><i style="width:77%"></i></span><b>77</b></td><td><button class="row-action" title="Delete customer 0004" aria-label="Delete customer 0004"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M8 11v6M12 11v6M16 11v6M6 7l1 14h10l1-14"/></svg></button></td></tr>
+            <tr data-search-row="0005 female"><td><b>0005</b><small>Record 5</small></td><td><span class="badge female">Female</span></td><td>31</td><td>$17k</td><td><span class="score medium"><i style="width:40%"></i></span><b>40</b></td><td><button class="row-action" title="Delete customer 0005" aria-label="Delete customer 0005"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M8 11v6M12 11v6M16 11v6M6 7l1 14h10l1-14"/></svg></button></td></tr>
+            <tr data-search-row="0006 female"><td><b>0006</b><small>Record 6</small></td><td><span class="badge female">Female</span></td><td>22</td><td>$17k</td><td><span class="score high"><i style="width:76%"></i></span><b>76</b></td><td><button class="row-action" title="Delete customer 0006" aria-label="Delete customer 0006"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M8 11v6M12 11v6M16 11v6M6 7l1 14h10l1-14"/></svg></button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <footer class="table-footer">
+        <p>Showing 1-20 of 200</p>
+        <nav aria-label="Pagination"><button class="icon-button" disabled aria-label="Previous page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><button class="page current">1</button><button class="page">2</button><button class="page">3</button><button class="icon-button" aria-label="Next page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></nav>
+      </footer>
+    </section>
+    <footer class="handoff">Stakeholder: Mary · First-page Penpot handoff · Source: task002/shopping-api-dataset3</footer>
+  </main>
+
+  <dialog data-dialog>
+    <form method="dialog" class="dialog-card">
+      <header><div><h2>New customer</h2><p>Add a record to the customer dataset.</p></div><button class="icon-button" value="cancel" aria-label="Close dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+      <div class="form-grid">
+        <label class="full">Customer code<input required maxlength="8" placeholder="e.g. 0201"></label>
+        <label>Gender<select required><option value="">Select</option><option>Female</option><option>Male</option></select></label>
+        <label>Age<input required type="number" min="0" max="130" placeholder="38"></label>
+        <label>Annual income (k$)<input required type="number" min="0" placeholder="62"></label>
+        <label>Spending score<input required type="number" min="1" max="100" placeholder="50"></label>
+      </div>
+      <footer><button class="button secondary" value="cancel">Cancel</button><button class="button primary" value="save">Create customer</button></footer>
+    </form>
+  </dialog>
+  <script src="app.js"></script>
+</body>
+</html>
