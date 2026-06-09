@@ -1,0 +1,37 @@
+databases:
+  - name: sing-me-a-song-db
+    databaseName: sing_me_a_song
+    user: sing_me_a_song
+
+services:
+  - type: web
+    name: sing-me-a-song-api
+    runtime: node
+    rootDir: back-end
+    buildCommand: npm ci && npm run prisma:generate && npm run build
+    startCommand: npm start
+    preDeployCommand: npm run prisma:migrate
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CORS_ORIGIN
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sing-me-a-song-db
+          property: connectionString
+
+  - type: web
+    name: sing-me-a-song-web
+    runtime: static
+    rootDir: front-end
+    buildCommand: npm ci && npm run build
+    staticPublishPath: build
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: REACT_APP_API_BASE_URL
+        sync: false
