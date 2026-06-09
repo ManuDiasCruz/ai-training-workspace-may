@@ -1,0 +1,54 @@
+# Sing Me a Song - full stack (PostgreSQL + Express API + React/nginx)
+#
+# Usage:
+#   docker compose up --build
+#
+# Then open http://localhost:3000  (API on http://localhost:5000).
+#
+# Ports and credentials can be overridden via environment variables or a
+# .env file placed next to this docker-compose.yml, e.g. BACKEND_PORT=5055.
+services:
+  db:
+    image: postgres:14
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-singmeasong}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./back-end
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-singmeasong}?schema=public
+      PORT: 5000
+      MODE: ${MODE:-DEV}
+    ports:
+      - "${BACKEND_PORT:-5000}:5000"
+
+  frontend:
+    build:
+      context: ./front-end
+      args:
+        # Baked into the bundle at build time; must be reachable from the browser.
+        REACT_APP_API_BASE_URL: ${REACT_APP_API_BASE_URL:-http://localhost:5000}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+
+volumes:
+  db_data:
