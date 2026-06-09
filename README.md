@@ -21,25 +21,36 @@ dataset:
 
 ## Design
 
-Stakeholder: Mary
+**Stakeholder: Mary**
 
-First-page UI/UX prototype:
-[Shopping Customers API - First Page Prototype - Mary](https://www.figma.com/design/Tm80nzRpgA19OvWtydEBuS)
+First-page UI/UX prototype (Penpot): **[Shopping Customers API – First Page Prototype](https://design.penpot.app/#/view/8344a9c9-994c-8094-8008-267c16d0d3a6?page-id=8344a9c9-994c-8094-8008-267c16d0d3a7&index=0&share-id=8344a9c9-994c-8094-8008-267c294600df)**
 
-The design turns this API-only project into a developer-ready customer
-analytics dashboard concept for the existing FastAPI endpoints. It covers:
+The prototype was built in [Penpot](https://penpot.app) — starting from a free/public dashboard layout and then meaningfully customized for this API's data model, endpoints and constraints. Per the sprint task, **only the first page** (the customer analytics dashboard) is in scope.
 
-- KPI cards backed by `GET /stats`.
-- Search, filters, sorting and pagination backed by `GET /customers`.
-- A customer table with row-level delete actions backed by
-  `DELETE /customers/{id}`.
-- An inline "New customer" entry point backed by `POST /customers`.
-- Token, component and implementation notes in the Figma handoff canvas.
+![First page prototype](design/first-page-prototype.png)
 
-Implementation guidance: keep filter state in the URL query string using
-the same parameter names documented below, provide loading, empty and error
-states for the table, and use inline validation for create-customer form
-errors instead of browser alerts.
+### What the first page contains
+
+| UI area | Backed by |
+|---|---|
+| KPI header cards — Total customers, Avg age, Avg annual income, Avg spending score | `GET /stats` |
+| Search + filter bar — search, gender, age range, income range, spending-score range, sort | `GET /customers` query params |
+| Customer table — `id`, `customer_code`, `gender`, `age`, `annual_income_k`, `spending_score` | `GET /customers` |
+| Per-row **Delete** action | `DELETE /customers/{id}` |
+| **+ New customer** button | `POST /customers` |
+| Pagination footer ("Showing 1–10 of 200") | `page` / `page_size` |
+
+### Frontend developer notes
+
+- **Design tokens** — Primary `#6C5CE7` · Text `#101828` · Muted `#667085` · Border `#EAECF0` · Surface `#FFFFFF` · Danger `#D92D20` · Radius `12px` · Font *Source Sans Pro*.
+- **State in URL** — keep all filter/search/sort/pagination state in the URL query string using the documented parameter names so views are shareable and back-button friendly.
+- **Table states** — implement loading (skeleton), empty ("no customers match") and error states; do not block the whole page on a single failed request.
+- **Forms** — inline-validate the *New customer* form against the API contract (handle `422` validation and `409` duplicate `customer_code`) instead of browser `alert()`s.
+- **Constraints** — `gender ∈ {Male, Female}`; `age` 0–130; `spending_score` 1–100; `annual_income_k ≥ 0`; `customer_code` ≤ 8 chars, unique.
+- **Sortable columns** — `id`, `age`, `annual_income_k`, `spending_score`, `customer_code` (asc/desc).
+
+> The Penpot link above is a read-only public share. For edit access (components, variants, additional pages) ask Mary, the design stakeholder.
+
 
 ## Database design
 
