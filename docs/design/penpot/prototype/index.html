@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping Customers Dashboard Prototype - Stakeholder: Mary</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div>
+        <h1>Shopping Customers</h1>
+        <p>Stakeholder: Mary</p>
+      </div>
+      <div class="topbar-actions">
+        <span class="health"><span></span> API: healthy</span>
+        <button class="primary">+ New customer</button>
+      </div>
+    </header>
+
+    <section class="kpis" aria-label="Dataset statistics">
+      <article class="card">
+        <p class="label">Total customers</p>
+        <strong>200</strong>
+        <small><span class="female">112 Female</span> / <span class="male">88 Male</span></small>
+      </article>
+      <article class="card">
+        <p class="label">Average age</p>
+        <strong>38.9</strong>
+        <small>years</small>
+      </article>
+      <article class="card">
+        <p class="label">Average annual income</p>
+        <strong>60.6 k$</strong>
+        <small>per customer</small>
+      </article>
+      <article class="card">
+        <p class="label">Average spending score</p>
+        <strong>50.2</strong>
+        <small>scale 1-100</small>
+      </article>
+    </section>
+
+    <section class="panel" aria-label="Customers">
+      <div class="panel-head">
+        <h2>Customers</h2>
+        <span>200 results</span>
+      </div>
+
+      <div class="toolbar">
+        <input type="search" placeholder="Search code or gender..." aria-label="Search code or gender">
+        <button>Gender: All</button>
+        <button class="active">Age: 18-25</button>
+        <button>Income: Any</button>
+        <button>Score: Any</button>
+        <button>Sort: ID</button>
+        <button>Asc order</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Code</th>
+            <th scope="col">Gender</th>
+            <th scope="col">Age</th>
+            <th scope="col">Income (k$)</th>
+            <th scope="col">Spending score</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>0001</td><td><span class="chip male-bg">Male</span></td><td>19</td><td>15</td><td><span class="score"><i style="width:39%"></i></span>39</td><td><button class="danger">Delete</button></td></tr>
+          <tr><td>0002</td><td><span class="chip male-bg">Male</span></td><td>21</td><td>15</td><td><span class="score"><i class="success" style="width:81%"></i></span>81</td><td><button class="danger">Delete</button></td></tr>
+          <tr><td>0003</td><td><span class="chip female-bg">Female</span></td><td>20</td><td>16</td><td><span class="score"><i class="danger-bar" style="width:6%"></i></span>6</td><td><button class="danger">Delete</button></td></tr>
+          <tr><td>0004</td><td><span class="chip female-bg">Female</span></td><td>23</td><td>16</td><td><span class="score"><i class="success" style="width:77%"></i></span>77</td><td><button class="danger">Delete</button></td></tr>
+          <tr><td>0006</td><td><span class="chip female-bg">Female</span></td><td>22</td><td>17</td><td><span class="score"><i class="success" style="width:76%"></i></span>76</td><td><button class="danger">Delete</button></td></tr>
+        </tbody>
+      </table>
+
+      <footer class="pagination">
+        <span>Showing 1-20 of 200</span>
+        <nav aria-label="Pagination">
+          <button disabled>Prev</button>
+          <button class="page-active">1</button>
+          <button>2</button>
+          <button>Next</button>
+        </nav>
+      </footer>
+    </section>
+
+    <p class="note">
+      Static prototype for design handoff. The implementation should keep
+      search, filter, sort and pagination state in the URL query string using
+      the FastAPI parameters documented in ../first-page-penpot-spec.md.
+    </p>
+  </main>
+</body>
+</html>

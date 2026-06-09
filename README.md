@@ -23,8 +23,18 @@ dataset:
 
 Stakeholder: Mary
 
-First-page UI/UX prototype:
-[Shopping Customers API - First Page Prototype - Mary](https://www.figma.com/design/Tm80nzRpgA19OvWtydEBuS)
+Source branch: `task002/shopping-api-dataset3`
+
+Design branch: `codex-prototype-penpot`
+
+Penpot-ready first-page UI/UX reference:
+[Customer Analytics Dashboard - Penpot handoff](docs/design/penpot/README.md)
+
+Prototype link:
+[Static first-page prototype](docs/design/penpot/prototype/index.html)
+
+Penpot importable canvas:
+[first-page.svg](docs/design/penpot/first-page.svg)
 
 The design turns this API-only project into a developer-ready customer
 analytics dashboard concept for the existing FastAPI endpoints. It covers:
@@ -34,7 +44,7 @@ analytics dashboard concept for the existing FastAPI endpoints. It covers:
 - A customer table with row-level delete actions backed by
   `DELETE /customers/{id}`.
 - An inline "New customer" entry point backed by `POST /customers`.
-- Token, component and implementation notes in the Figma handoff canvas.
+- Token, component, state and implementation notes in the Penpot handoff.
 
 Implementation guidance: keep filter state in the URL query string using
 the same parameter names documented below, provide loading, empty and error

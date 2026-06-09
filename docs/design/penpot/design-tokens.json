@@ -1,0 +1,121 @@
+{
+  "$schema": "https://design-tokens.org/draft/",
+  "$description": "Shopping Customers API first-page dashboard tokens. Stakeholder: Mary.",
+  "color": {
+    "brand": {
+      "primary": { "$type": "color", "$value": "#4F46E5" },
+      "primary-hover": { "$type": "color", "$value": "#4338CA" },
+      "tint": { "$type": "color", "$value": "#EEF2FF" }
+    },
+    "bg": {
+      "canvas": { "$type": "color", "$value": "#F8FAFC" },
+      "surface": { "$type": "color", "$value": "#FFFFFF" },
+      "subtle": { "$type": "color", "$value": "#F1F5F9" }
+    },
+    "border": {
+      "default": { "$type": "color", "$value": "#E2E8F0" }
+    },
+    "text": {
+      "primary": { "$type": "color", "$value": "#0F172A" },
+      "secondary": { "$type": "color", "$value": "#475569" },
+      "muted": { "$type": "color", "$value": "#94A3B8" }
+    },
+    "accent": {
+      "female": { "$type": "color", "$value": "#DB2777" },
+      "male": { "$type": "color", "$value": "#2563EB" }
+    },
+    "status": {
+      "success": { "$type": "color", "$value": "#16A34A" },
+      "success-bg": { "$type": "color", "$value": "#DCFCE7" },
+      "warn": { "$type": "color", "$value": "#D97706" },
+      "warn-bg": { "$type": "color", "$value": "#FEF3C7" },
+      "danger": { "$type": "color", "$value": "#DC2626" },
+      "danger-bg": { "$type": "color", "$value": "#FEE2E2" }
+    }
+  },
+  "font": {
+    "family": {
+      "base": { "$type": "fontFamily", "$value": "Inter" }
+    },
+    "weight": {
+      "regular": { "$type": "fontWeight", "$value": 400 },
+      "medium": { "$type": "fontWeight", "$value": 500 },
+      "semibold": { "$type": "fontWeight", "$value": 600 }
+    }
+  },
+  "typography": {
+    "h1": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.family.base}",
+        "fontWeight": "{font.weight.semibold}",
+        "fontSize": "20px",
+        "lineHeight": "28px"
+      }
+    },
+    "section": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.family.base}",
+        "fontWeight": "{font.weight.semibold}",
+        "fontSize": "16px",
+        "lineHeight": "24px"
+      }
+    },
+    "body": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.family.base}",
+        "fontWeight": "{font.weight.regular}",
+        "fontSize": "14px",
+        "lineHeight": "20px"
+      }
+    },
+    "label": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.family.base}",
+        "fontWeight": "{font.weight.medium}",
+        "fontSize": "13px",
+        "lineHeight": "18px"
+      }
+    },
+    "kpi-value": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.family.base}",
+        "fontWeight": "{font.weight.semibold}",
+        "fontSize": "28px",
+        "lineHeight": "36px"
+      }
+    }
+  },
+  "spacing": {
+    "1": { "$type": "dimension", "$value": "4px" },
+    "2": { "$type": "dimension", "$value": "8px" },
+    "3": { "$type": "dimension", "$value": "12px" },
+    "4": { "$type": "dimension", "$value": "16px" },
+    "6": { "$type": "dimension", "$value": "24px" },
+    "8": { "$type": "dimension", "$value": "32px" },
+    "page-padding": { "$type": "dimension", "$value": "32px" },
+    "card-padding": { "$type": "dimension", "$value": "20px" },
+    "control-height": { "$type": "dimension", "$value": "40px" }
+  },
+  "radius": {
+    "control": { "$type": "dimension", "$value": "8px" },
+    "card": { "$type": "dimension", "$value": "12px" },
+    "pill": { "$type": "dimension", "$value": "999px" }
+  },
+  "shadow": {
+    "card": {
+      "$type": "shadow",
+      "$value": {
+        "offsetX": "0px",
+        "offsetY": "1px",
+        "blur": "2px",
+        "spread": "0px",
+        "color": "rgba(15, 23, 42, 0.06)"
+      }
+    }
+  }
+}

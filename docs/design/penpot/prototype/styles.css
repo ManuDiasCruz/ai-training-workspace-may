@@ -1,0 +1,306 @@
+:root {
+  --brand: #4F46E5;
+  --brand-hover: #4338CA;
+  --brand-tint: #EEF2FF;
+  --canvas: #F8FAFC;
+  --surface: #FFFFFF;
+  --subtle: #F1F5F9;
+  --border: #E2E8F0;
+  --text: #0F172A;
+  --secondary: #475569;
+  --muted: #94A3B8;
+  --female: #DB2777;
+  --male: #2563EB;
+  --success: #16A34A;
+  --warn: #D97706;
+  --danger: #DC2626;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background: var(--canvas);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.page {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+.topbar,
+.topbar-actions,
+.panel-head,
+.pagination,
+nav {
+  display: flex;
+  align-items: center;
+}
+
+.topbar,
+.panel-head,
+.pagination {
+  justify-content: space-between;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 24px;
+}
+
+.topbar p,
+.note {
+  color: var(--secondary);
+}
+
+.topbar-actions,
+nav {
+  gap: 12px;
+}
+
+.health,
+button,
+input {
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--secondary);
+  font: inherit;
+}
+
+.health {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.health span {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--success);
+}
+
+button {
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+.primary,
+.page-active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: white;
+  font-weight: 700;
+}
+
+.primary:hover {
+  background: var(--brand-hover);
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin: 32px 0 24px;
+}
+
+.card,
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.card {
+  padding: 20px;
+}
+
+.label {
+  color: var(--secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 32px;
+  line-height: 1.15;
+}
+
+.card small {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+}
+
+.female {
+  color: var(--female);
+}
+
+.male {
+  color: var(--male);
+}
+
+.panel {
+  overflow: hidden;
+}
+
+.panel-head {
+  padding: 22px 24px 14px;
+}
+
+.panel-head span {
+  color: var(--muted);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 24px 18px;
+}
+
+input {
+  min-width: 280px;
+  flex: 1 1 320px;
+  padding: 0 14px;
+}
+
+.toolbar .active {
+  background: var(--brand-tint);
+  border-color: var(--brand);
+  color: var(--brand);
+  font-weight: 700;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 14px 24px;
+  border-top: 1px solid var(--border);
+  text-align: left;
+}
+
+th {
+  background: var(--subtle);
+  color: var(--secondary);
+  font-size: 13px;
+}
+
+tbody tr:hover {
+  background: var(--brand-tint);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.female-bg {
+  background: #FCE7F3;
+  color: var(--female);
+}
+
+.male-bg {
+  background: #DBEAFE;
+  color: var(--male);
+}
+
+.score {
+  display: inline-block;
+  width: 72px;
+  height: 8px;
+  margin-right: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--subtle);
+  vertical-align: middle;
+}
+
+.score i {
+  display: block;
+  height: 100%;
+  background: var(--warn);
+}
+
+.score .success {
+  background: var(--success);
+}
+
+.score .danger-bar {
+  background: var(--danger);
+}
+
+.danger {
+  border: 0;
+  color: var(--danger);
+  background: transparent;
+}
+
+.pagination {
+  padding: 18px 24px;
+}
+
+.pagination span {
+  color: var(--secondary);
+}
+
+.note {
+  margin-top: 24px;
+  font-size: 12px;
+}
+
+@media (max-width: 980px) {
+  .kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 16px;
+  }
+
+  .topbar,
+  .pagination {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .panel {
+    overflow-x: auto;
+  }
+
+  table {
+    min-width: 840px;
+  }
+}
