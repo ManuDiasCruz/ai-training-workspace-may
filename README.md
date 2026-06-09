@@ -28,7 +28,7 @@ Source branch: `task002/shopping-api-dataset3`
 Design branch: `kindle-aplha-prototype-penpot`
 
 First-page UI/UX prototype:
-[Shopping Customers - Customer Directory (Penpot)](https://design.penpot.app/#/view/8344a9c9-994c-8094-8008-267c16d0d3a6?page-id=8344a9c9-994c-8094-8008-267c16d0d3a7&index=0&share-id=8344a9c9-994c-8094-8008-267c294600df)
+[Shopping Customers - Customer Directory (Penpot)](https://design.penpot.app/#/view/8344a9c9-994c-8094-8008-26a4e97bf3f4?page-id=8344a9c9-994c-8094-8008-267c16d0d3a7&index=0&share-id=8344a9c9-994c-8094-8008-26a54cb73fe8)
 
 Repository handoff:
 [Penpot design reference](docs/design/penpot/README.md) ·

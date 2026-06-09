@@ -7,7 +7,7 @@ Developer-ready first-page UI/UX reference for the Shopping Customers API.
 - Source branch: `task002/shopping-api-dataset3`
 - Design branch: `kindle-aplha-prototype-penpot`
 - Scope: first page only
-- Public Penpot share: [Customer Directory prototype](https://design.penpot.app/#/view/8344a9c9-994c-8094-8008-267c16d0d3a6?page-id=8344a9c9-994c-8094-8008-267c16d0d3a7&index=0&share-id=8344a9c9-994c-8094-8008-267c294600df)
+- Public Penpot share: [Customer Directory prototype](https://design.penpot.app/#/view/8344a9c9-994c-8094-8008-26a4e97bf3f4?page-id=8344a9c9-994c-8094-8008-267c16d0d3a7&index=0&share-id=8344a9c9-994c-8094-8008-26a54cb73fe8)
 
 ## Handoff Files
 
@@ -26,8 +26,9 @@ Segmentation dataset. The first page is therefore designed as an operational
 customer directory, not a marketing dashboard. It prioritizes comparison,
 filtering and repeated record actions while keeping aggregate context visible.
 
-The free [Penpot Hub Sales Dashboard example](https://penpot.app/penpothub/libraries-templates/sales-dashboard-example)
-informed the basic dashboard grid.
+The final deliverable is a newly created Penpot file derived from a dashboard
+template and customized for this repository's API, dataset and teal design
+tokens. It has its own file and public share IDs.
 The result is meaningfully adapted with this repository's customer fields,
 actual dataset values, FastAPI query parameters, API health, create and delete
 flows, spending-score visualization and implementation states.
