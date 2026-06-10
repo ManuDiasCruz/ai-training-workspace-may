@@ -1,35 +1,56 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Encode+Sans:wght@100;200;300;400;500;600;700&family=Roboto:wght@100;300;400;500;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap"
         rel="stylesheet">
 
-    <!-- CSS imports -->
-    <link rel="stylesheet" href="css\style.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script defer src="src/script.js"></script>
 
-    <!-- Page title -->
-    <title>🦜 Parrot Card Game 🦜</title>
+    <title>Parrot Card Game</title>
 </head>
 <body>
-    <h1>PARROT CARD GAME</h1>
-    <nav>
-        <p>Jogadas: <span class="qtdade-jogadas"></span></p>
-        <p>🕗<span class="relogio"></span></p>
-    </nav>
-    <main>
-        <div class="cartas">
-        </div>
-        <div class="fim-jogo"></div>       
-    </main>
-    <script src="src/script.js"></script>
-    
+    <div class="app-shell">
+        <header class="game-header">
+            <h1>Parrot Card Game</h1>
+            <nav class="scoreboard" aria-label="Game stats">
+                <p>
+                    <span class="stat-label">Moves</span>
+                    <strong class="qtdade-jogadas">0</strong>
+                </p>
+                <p>
+                    <span class="stat-label">Time</span>
+                    <strong class="relogio">0s</strong>
+                </p>
+            </nav>
+        </header>
+
+        <main>
+            <section class="controls" aria-labelledby="controls-title">
+                <h2 id="controls-title">Cards</h2>
+                <div class="card-options" role="group" aria-label="Number of cards">
+                    <button class="card-option" type="button" data-card-count="4">4</button>
+                    <button class="card-option" type="button" data-card-count="6">6</button>
+                    <button class="card-option" type="button" data-card-count="8">8</button>
+                    <button class="card-option" type="button" data-card-count="10">10</button>
+                    <button class="card-option" type="button" data-card-count="12">12</button>
+                    <button class="card-option" type="button" data-card-count="14">14</button>
+                </div>
+                <button class="start-button" type="button">New game</button>
+            </section>
+
+            <section class="game-area" aria-label="Memory card board">
+                <div class="cartas"></div>
+                <p class="fim-jogo" role="status" aria-live="polite"></p>
+            </section>
+        </main>
+    </div>
 </body>
 </html>
