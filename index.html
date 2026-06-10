@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A responsive parrot-themed memory matching game.">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Parrot Memory</title>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <p class="eyebrow">Memory game</p>
+            <h1>Parrot Memory</h1>
+        </div>
+    </header>
+
+    <main class="game-shell">
+        <section class="game-toolbar" aria-label="Game controls and status">
+            <div class="stats" aria-label="Current game status">
+                <div class="stat">
+                    <span class="stat-label">Moves</span>
+                    <strong class="moves" aria-live="polite">0</strong>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Time</span>
+                    <strong class="timer" aria-live="polite">00:00</strong>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Pairs</span>
+                    <strong class="pairs" aria-live="polite">0 / 4</strong>
+                </div>
+            </div>
+
+            <form class="game-settings">
+                <label for="card-count">Cards</label>
+                <select id="card-count" name="card-count">
+                    <option value="4">4</option>
+                    <option value="6">6</option>
+                    <option value="8" selected>8</option>
+                    <option value="10">10</option>
+                    <option value="12">12</option>
+                    <option value="14">14</option>
+                </select>
+                <button type="submit">New game</button>
+            </form>
+        </section>
+
+        <section class="board-section" aria-label="Memory card board">
+            <div class="cards" role="group" aria-label="Parrot memory cards"></div>
+        </section>
+    </main>
+
+    <dialog class="result-dialog" aria-labelledby="result-title">
+        <p class="eyebrow">All pairs found</p>
+        <h2 id="result-title">You won!</h2>
+        <p class="result-summary"></p>
+        <button class="play-again" type="button">Play again</button>
+    </dialog>
+
+    <script src="src/script.js"></script>
+</body>
+</html>
