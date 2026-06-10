@@ -1,11 +1,14 @@
 import { jest } from "@jest/globals";
-import { response } from "express";
 
 import { recommendationService } from "../../src/services/recommendationsService.js";
 import { recommendationRepository } from "../../src/repositories/recommendationRepository.js";
 import { createRandomSong } from "../factories/recommendationFactory.js";
 
 describe("UNIT TESTS SUITE", () => {
+
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
 
     const recommendation1 = createRandomSong();
 
@@ -190,9 +193,12 @@ describe("UNIT TESTS SUITE", () => {
         it("Error notfound in get random", async () => {
             jest.spyOn(Math, "random").mockReturnValueOnce(0.5);
 
+            // getRandom falls back to an unfiltered findAll when the filtered
+            // call returns nothing, so both calls must resolve to [] for this
+            // test to stay off the real database.
             jest
                 .spyOn(recommendationRepository, "findAll")
-                .mockResolvedValueOnce([]);
+                .mockResolvedValue([]);
 
             expect(recommendationService.getRandom()).rejects.toEqual({
                 message: "",
