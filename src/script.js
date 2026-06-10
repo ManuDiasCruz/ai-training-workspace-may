@@ -42,6 +42,7 @@ function iniciarJogo(){
     validarQtdadecartas();
     geraCartasAleatorias();
     montarJogo();
+    atualizarQtdadeJogadas();
 }
 
 // Função usada para limpar as variáveis globais
@@ -212,5 +213,5 @@ function aumentarContagem(){
     timer+=1;
 }
 
+aumentarContagem();
 intervalo = setInterval(aumentarContagem, 1000);
-console.log(intervalo);
