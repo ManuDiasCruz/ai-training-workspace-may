@@ -1,0 +1,3 @@
+# Keep the source dataset byte-identical to the Google Drive original
+# (it uses CRLF line endings; never normalize them).
+data/Shopping_data.csv -text

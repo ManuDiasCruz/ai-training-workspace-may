@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Tooling caches
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local SQLite database (rebuilt from the CSV via scripts/import_data.py)
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+
+# Environment / editor
+.env
+.idea/
+.vscode/
