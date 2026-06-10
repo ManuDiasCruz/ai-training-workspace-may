@@ -75,7 +75,6 @@ function limparVariaveis(){
 function validarQtdadecartas(){
     while ((numCartas<4)||(numCartas>14)||((numCartas%2)!=0)){
         numCartas = parseInt(prompt("Você deve digitar uma quantidade de cartas pares entre 4 e 14, inclusos!\nCom quantas cartas vocês quer jogar?"));
-        print((numCartas<4)||(numCartas>14)||((numCartas%2)!=0));
     }
 }
 
