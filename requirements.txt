@@ -1,0 +1,9 @@
+# Runtime dependencies (direct). Transitive packages are resolved by pip.
+fastapi==0.136.3          # web framework + request validation (Pydantic)
+uvicorn==0.49.0           # ASGI server used to run the app locally
+SQLAlchemy==2.0.50        # ORM / database access layer
+pydantic==2.13.4          # data validation models (also pulled in by FastAPI)
+
+# Development / test dependencies
+pytest==9.0.3             # test runner
+httpx==0.28.1             # required by fastapi.testclient.TestClient
