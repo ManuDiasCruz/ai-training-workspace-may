@@ -1,11 +1,25 @@
+/* ============================================================
+   Parrot Memory Card Game — colour palette
+   Client request: use only white, light green and a black font.
+   Colours are centralised here as CSS variables so the whole UI
+   stays consistent and is easy to re-theme.
+   ============================================================ */
+:root{
+    --color-bg: #ffffff;          /* page background — white                 */
+    --color-surface: #a7e9af;     /* cards / accents — light green           */
+    --color-border: #8ed29a;      /* card edge — a slightly deeper green tint */
+    --color-text: #000000;        /* all typography — black                  */
+    --shadow: rgba(0, 0, 0, 0.3); /* subtle depth (black at low opacity)     */
+}
+
 body{
-    background: #EEF9BF;
+    background: var(--color-bg);
     margin: 0 auto;
     font-family: "Roboto", sans-serif;
     font-style: normal;
     font-weight: bold;
     text-align: center;
-    color: #75B79E;    
+    color: var(--color-text);
 }
 
 h1{
@@ -13,6 +27,7 @@ h1{
     letter-spacing: -0.004em;
     margin-top: 40px;
     margin-bottom: 25px;
+    color: var(--color-text);
 }
 
 nav{
@@ -26,8 +41,8 @@ p{
     font-size: 20px;
 }
 
-span{    
-    color: gray;
+span{
+    color: var(--color-text);
 }
 
 main{
@@ -46,12 +61,12 @@ main{
     height: 146px;
     margin-left: 34px;
     margin-bottom: 34px;
-    
-    background: #A7E9AF;
-    border: 1px solid #99CEA8;
+
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     box-sizing: border-box;
     border-radius: 5px;
-    box-shadow: 1px 1px 1px rgba(0,0,0,.3);
+    box-shadow: 1px 1px 1px var(--shadow);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -59,7 +74,7 @@ main{
 }
 
 .face{
-    background-color: #A7E9AF;
+    background-color: var(--color-surface);
     border-radius: 10px;
     display: flex;
     align-items: center;
@@ -67,11 +82,11 @@ main{
     position: absolute;
     backface-visibility: hidden;
     transition: all .5s;
-    transform-style: preserve-3d;   
+    transform-style: preserve-3d;
 }
 
 .verso{
-    transform: rotateY(180deg);    
+    transform: rotateY(180deg);
 }
 
 .face-verso-virada {
