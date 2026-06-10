@@ -22,5 +22,9 @@ coverage/
 # OS / editor
 .DS_Store
 
+# Cypress run artifacts
+cypress/videos/
+cypress/screenshots/
+
 # Claude Code local settings (machine-local, not shared)
 .claude/settings.local.json
