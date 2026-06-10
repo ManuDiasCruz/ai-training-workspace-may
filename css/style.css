@@ -1,20 +1,34 @@
 /* ============================================================
-   Parrot Memory Card Game — colour palette
-   Client request: use only white, light green and a black font.
-   Colours are centralised here as CSS variables so the whole UI
-   stays consistent and is easy to re-theme.
+   Parrot Memory Card Game — styles
+   Palette (client request): white, light green, black font.
+   Layout is fully fluid/responsive, from small phones to desktop.
    ============================================================ */
 :root{
-    --color-bg: #ffffff;          /* page background — white                 */
-    --color-surface: #a7e9af;     /* cards / accents — light green           */
-    --color-border: #8ed29a;      /* card edge — a slightly deeper green tint */
-    --color-text: #000000;        /* all typography — black                  */
-    --shadow: rgba(0, 0, 0, 0.3); /* subtle depth (black at low opacity)     */
+    /* --- Colour palette ----------------------------------- */
+    --color-bg: #ffffff;          /* white page background           */
+    --color-surface: #a7e9af;     /* light-green cards / faces        */
+    --color-border: #8ed29a;      /* slightly deeper green for edges  */
+    --color-text: #000000;        /* black typography                 */
+    --shadow: rgba(0, 0, 0, 0.3); /* subtle depth (black, low alpha)  */
+
+    /* --- Responsive sizing tokens ------------------------- */
+    --card-width: clamp(64px, 20vw, 117px); /* scales with viewport  */
+    --card-radius: 6px;
+    --grid-gap: clamp(10px, 2.5vw, 34px);
+    --content-max: 1000px;
+}
+
+*,
+*::before,
+*::after{
+    box-sizing: border-box;
 }
 
 body{
     background: var(--color-bg);
-    margin: 0 auto;
+    margin: 0;
+    padding: 0 0 clamp(24px, 6vw, 48px);
+    min-height: 100vh;
     font-family: "Roboto", sans-serif;
     font-style: normal;
     font-weight: bold;
@@ -23,22 +37,27 @@ body{
 }
 
 h1{
-    font-size: 56px;
+    font-size: clamp(30px, 7vw, 56px);
     letter-spacing: -0.004em;
-    margin-top: 40px;
-    margin-bottom: 25px;
+    margin: clamp(20px, 5vw, 40px) auto clamp(16px, 3vw, 25px);
+    padding: 0 12px;
     color: var(--color-text);
 }
 
 nav{
-    margin-bottom: 30px;
+    max-width: 720px;
+    margin: 0 auto clamp(18px, 4vw, 30px);
+    padding: 0 clamp(16px, 5vw, 48px);
     display: flex;
+    flex-wrap: wrap;
+    gap: 6px 24px;
     align-items: center;
     justify-content: space-around;
 }
 
 p{
-    font-size: 20px;
+    font-size: clamp(16px, 4vw, 20px);
+    margin: 4px 0;
 }
 
 span{
@@ -46,7 +65,9 @@ span{
 }
 
 main{
-    margin: auto 116px;
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: 0 clamp(12px, 4vw, 48px);
 }
 
 .cartas{
@@ -54,32 +75,43 @@ main{
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
+    gap: var(--grid-gap);
 }
 
 .carta{
-    width: 117px;
-    height: 146px;
-    margin-left: 34px;
-    margin-bottom: 34px;
+    width: var(--card-width);
+    aspect-ratio: 117 / 146;        /* preserves the original card proportions */
 
     background: var(--color-surface);
     border: 1px solid var(--color-border);
-    box-sizing: border-box;
-    border-radius: 5px;
-    box-shadow: 1px 1px 1px var(--shadow);
+    border-radius: var(--card-radius);
+    box-shadow: 1px 1px 3px var(--shadow);
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+/* Hover lift only on devices that truly hover (no sticky hover on touch) */
+@media (hover: hover){
+    .carta:hover{
+        transform: translateY(-3px);
+        box-shadow: 2px 4px 10px var(--shadow);
+    }
 }
 
 .face{
+    width: 100%;
+    height: 100%;
     background-color: var(--color-surface);
-    border-radius: 10px;
+    border-radius: var(--card-radius);
     display: flex;
     align-items: center;
     justify-content: center;
     position: absolute;
+    inset: 0;
     backface-visibility: hidden;
     transition: all .5s;
     transform-style: preserve-3d;
@@ -89,35 +121,24 @@ main{
     transform: rotateY(180deg);
 }
 
-.face-verso-virada {
+.face-verso-virada{
     transform: rotateY(0deg);
 }
 
-.face-frente-virada {
+.face-frente-virada{
     transform: rotateY(-180deg);
 }
 
-
 img{
-    width: 100px;
-    height: 100px;
+    width: 72%;
+    height: 72%;
+    max-width: 100px;
+    max-height: 100px;
+    object-fit: contain;
 }
 
-@media (max-width: 335px) {
-    h1{
-        font-size: 36px;
-    }
-
-    main{
-        margin: auto 0px;
-    }
-
-    .cartas{
-        display: flex;
-        flex-direction: column;
-    }
-
-    .carta{
-        margin: 34px auto;
-    }
+.fim-jogo{
+    margin-top: clamp(20px, 5vw, 36px);
+    font-size: clamp(20px, 5vw, 28px);
+    color: var(--color-text);
 }
