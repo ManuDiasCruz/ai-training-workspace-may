@@ -1,217 +1,217 @@
-// Criação das cartas como objeto
-const carta0 = {nome: "img/bobrossparrot.gif", id: 0}
-const carta1 = {nome: "img/explodyparrot.gif", id: 1}
-const carta2 = {nome: "img/fiestaparrot.gif", id: 2}
-const carta3 = {nome: "img/metalparrot.gif", id: 3}
-const carta4 = {nome: "img/revertitparrot.gif", id: 4}
-const carta5 = {nome: "img/tripletsparrot.gif", id: 5}
-const carta6 = {nome: "img/unicornparrot.gif", id: 6}
+const CARD_IMAGES = [
+    "img/bobrossparrot.gif",
+    "img/explodyparrot.gif",
+    "img/fiestaparrot.gif",
+    "img/metalparrot.gif",
+    "img/revertitparrot.gif",
+    "img/tripletsparrot.gif",
+    "img/unicornparrot.gif",
+];
 
-// Criação de um array com todos os objetos cartas
-const cartas = []
-cartas.push(carta0);
-cartas.push(carta1);
-cartas.push(carta2);
-cartas.push(carta3);
-cartas.push(carta4);
-cartas.push(carta5);
-cartas.push(carta6);
+const cardsElement = document.querySelector(".cards");
+const movesElement = document.querySelector(".moves");
+const timerElement = document.querySelector(".timer");
+const pairsElement = document.querySelector(".pairs");
+const settingsForm = document.querySelector(".game-settings");
+const cardCountSelect = document.querySelector("#card-count");
+const resultDialog = document.querySelector(".result-dialog");
+const resultSummary = document.querySelector(".result-summary");
+const playAgainButton = document.querySelector(".play-again");
 
-// Vetor para guardar as cartas que estão em jogo
-let cartasEmJogo = [];
+let firstCard = null;
+let secondCard = null;
+let moves = 0;
+let matchedPairs = 0;
+let totalPairs = 0;
+let elapsedSeconds = 0;
+let timerId = null;
+let flipBackId = null;
+let boardLocked = false;
 
-// variáveis globais usadas para auxilixar o controle do jogo
-let primeiraCarta = null;
-let segundaCarta = null;
+function shuffle(items) {
+    const shuffledItems = [...items];
 
-let qtdadeJogadas = 0;
-let qtdadeParesAbertos = 0;
-let clicouDuasCartas = false;
+    for (let index = shuffledItems.length - 1; index > 0; index -= 1) {
+        const randomIndex = Math.floor(Math.random() * (index + 1));
+        [shuffledItems[index], shuffledItems[randomIndex]] = [
+            shuffledItems[randomIndex],
+            shuffledItems[index],
+        ];
+    }
 
-let contador = 0;
-
-// Prende o usuário até digitar um número de cartas dentro das restrições do jogo
-// (entre 4 e 14 cartas, sendo um número par)
-let numCartas = parseInt(prompt("Com quantas cartas vocês quer jogar?"));
-
-// Chamada a função iniciarJogo() para iniciar o jogo
-iniciarJogo();
-
-// Função usada para iniciar um novo jogo
-function iniciarJogo(){
-    validarQtdadecartas();
-    geraCartasAleatorias();
-    montarJogo();
+    return shuffledItems;
 }
 
-// Função usada para limpar as variáveis globais
-function limparVariaveis(){
-    cartasEmJogo = [];
-    primeiraCarta = null;
-    segundaCarta = null;
-
-    qtdadeJogadas = 0;
-    qtdadeParesAbertos = 0;
-    clicouDuasCartas = false;
-
-    contador = 0;
-
-    intervalo = null;
-    timer = 0;
-
-    let elemento = document.querySelector(".cartas");
-    elemento.innerHTML ="";
-    // // Outra maneira de limpar a div cuja class é .cartas é usando os seus filhos e chamando o parentNode
-    // let elemento = document.querySelectorAll(".carta");
-
-    // for(let i = 0; i < elemento.length; i++){
-    //     elemento[i].parentNode.removeChild(elemento[i]);
-    // }
-
+function formatTime(totalSeconds) {
+    const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
+    const seconds = (totalSeconds % 60).toString().padStart(2, "0");
+    return `${minutes}:${seconds}`;
 }
 
-// Função usada para validar a quantidade de cartas
-// O jogo só funcionará com número de cartas pares entre, 4 e 14 inclusos
-function validarQtdadecartas(){
-    while ((numCartas<4)||(numCartas>14)||((numCartas%2)!=0)){
-        numCartas = parseInt(prompt("Você deve digitar uma quantidade de cartas pares entre 4 e 14, inclusos!\nCom quantas cartas vocês quer jogar?"));
-        print((numCartas<4)||(numCartas>14)||((numCartas%2)!=0));
+function updateStatus() {
+    movesElement.textContent = moves;
+    timerElement.textContent = formatTime(elapsedSeconds);
+    pairsElement.textContent = `${matchedPairs} / ${totalPairs}`;
+}
+
+function startTimer() {
+    if (timerId !== null) {
+        return;
+    }
+
+    timerId = window.setInterval(() => {
+        elapsedSeconds += 1;
+        timerElement.textContent = formatTime(elapsedSeconds);
+    }, 1000);
+}
+
+function stopTimer() {
+    if (timerId !== null) {
+        window.clearInterval(timerId);
+        timerId = null;
     }
 }
 
-// Função usada para gerar um array contendo pares das cartas do jogo 
-// aleatoriamente em um array :cartasEmJogo:
-function geraCartasAleatorias(){
-    // Algoritmo de embaralhamento de Fisher-Yates
-    let list = [];
-    for(let i=0; i<(numCartas/2); i++){
-        list.push(i);
-    }
+function createCard(imagePath, pairId, cardIndex) {
+    const card = document.createElement("button");
+    card.className = "card";
+    card.type = "button";
+    card.dataset.pairId = pairId;
+    card.setAttribute("aria-label", `Hidden card ${cardIndex + 1}`);
 
-    let randomNumber;
-    let tmp;
-    for (let i = list.length; i;) {
-        randomNumber = Math.random() * i-- | 0;
-        tmp = list[randomNumber];
-        // troca o número aleatório pelo atual
-        list[randomNumber] = list[i];
-        // troca o atual pelo aleatório
-        list[i] = tmp;
-        cartasEmJogo.push(cartas[list[i]]);
-    } 
-
-    for (let i = list.length; i;) {
-        randomNumber = Math.random() * i-- | 0;
-        tmp = list[randomNumber];
-        // troca o número aleatório pelo atual
-        list[randomNumber] = list[i];
-        // troca o atual pelo aleatório
-        list[i] = tmp;
-        cartasEmJogo.push(cartas[list[i]]);
-    } 
-}
-
-// Função para criar a div que será renderizada na tela com as imagesn da carta 
-function renderizarCarta(caminhoImg){
-    const div = `
-    <div class="carta" data-identifier="card" onclick="selecionarCarta(this)">
-        <div class="frente face" data-identifier="back-face">
+    card.innerHTML = `
+        <span class="card-face card-front" aria-hidden="true">
             <img src="img/front.png" alt="">
-        </div>
-        <div class="verso face" data-identifier="front-face">
-            <img src=${caminhoImg} alt="">
-        </div>
-    </div>
+        </span>
+        <span class="card-face card-back" aria-hidden="true">
+            <img src="${imagePath}" alt="">
+        </span>
     `;
-    return div;
-    
+
+    card.addEventListener("click", handleCardSelection);
+    return card;
 }
 
-// Função usada para virar a carta deixando o conteúdo da carta fora de vista
-function desvirar(cartaClicada){
-    cartaClicada.querySelector(".frente").classList.toggle("face-frente-virada");
-    cartaClicada.querySelector(".verso").classList.toggle("face-verso-virada");
+function buildDeck(cardCount) {
+    const selectedImages = shuffle(CARD_IMAGES).slice(0, cardCount / 2);
+    const pairedCards = selectedImages.flatMap((imagePath, pairId) => [
+        { imagePath, pairId },
+        { imagePath, pairId },
+    ]);
+
+    return shuffle(pairedCards);
 }
 
-function atualizarQtdadeJogadas(){
-    let elemento = document.querySelector(".qtdade-jogadas");
-    elemento.innerHTML = qtdadeJogadas;
+function resetSelection() {
+    firstCard = null;
+    secondCard = null;
+    boardLocked = false;
 }
 
-// Função usada para tratar o clique nas cartas
-function selecionarCarta(cartaClicada) {
-    if(clicouDuasCartas == false){
-        if(primeiraCarta === null) {
-            primeiraCarta = cartaClicada;
-            qtdadeJogadas+=1;
-            atualizarQtdadeJogadas();
-            cartaClicada.querySelector(".frente").classList.toggle("face-frente-virada");
-            cartaClicada.querySelector(".verso").classList.toggle("face-verso-virada");
-        } else {
-            cartaClicada.querySelector(".frente").classList.toggle("face-frente-virada");
-            cartaClicada.querySelector(".verso").classList.toggle("face-verso-virada");
-            segundaCarta = cartaClicada;
-            qtdadeJogadas+=1;
-            atualizarQtdadeJogadas();
-            clicouDuasCartas = true;
+function finishGame() {
+    stopTimer();
+    resultSummary.textContent = `You matched ${totalPairs} pairs in ${moves} moves and ${formatTime(elapsedSeconds)}.`;
 
-            setTimeout(validarPar, 1000);
-        }
-    }
+    window.setTimeout(() => {
+        resultDialog.showModal();
+    }, 450);
 }
 
-// Função usada para validar se o par de cartas selecionadas são iguais ou não
-// bem como para encerra o jogo
-function validarPar(){
-    if (primeiraCarta.isEqualNode(segundaCarta)){
-        primeiraCarta = null;
-        segundaCarta = null;
-        qtdadeParesAbertos += 1;
-        if(qtdadeParesAbertos == (numCartas/2)){
-            alert("Você ganhou em " + qtdadeJogadas + " jogadas!");
-            let novoJogo = prompt("Quer começar um novo jogo (sim/não)?");
-            if (novoJogo == "sim"){
-                limparVariaveis();
-                numCartas = parseInt(prompt("Com quantas cartas vocês quer jogar?"));
-                iniciarJogo();
-            }else{
-                limparVariaveis();
-                qtdadeJogadas = 0;
-                atualizarQtdadeJogadas();
-                let elemento = document.querySelector(".fim-jogo");
-                elemento.innerHTML = "FIM DE JOGO!";
-            }
+function checkSelectedPair() {
+    const cardsMatch = firstCard.dataset.pairId === secondCard.dataset.pairId;
+
+    if (cardsMatch) {
+        firstCard.classList.add("is-matched");
+        secondCard.classList.add("is-matched");
+        firstCard.disabled = true;
+        secondCard.disabled = true;
+        firstCard.setAttribute("aria-label", "Matched parrot card");
+        secondCard.setAttribute("aria-label", "Matched parrot card");
+        matchedPairs += 1;
+        updateStatus();
+        resetSelection();
+
+        if (matchedPairs === totalPairs) {
+            finishGame();
         }
 
-    }else{
-        desvirar(primeiraCarta);    
-        desvirar(segundaCarta);
-        primeiraCarta = null;
-        segundaCarta = null;
+        return;
     }
-    clicouDuasCartas = false;
+
+    flipBackId = window.setTimeout(() => {
+        firstCard.classList.remove("is-flipped");
+        secondCard.classList.remove("is-flipped");
+        firstCard.setAttribute("aria-label", "Hidden parrot card");
+        secondCard.setAttribute("aria-label", "Hidden parrot card");
+        flipBackId = null;
+        resetSelection();
+    }, 750);
 }
 
-// Função para montar as cartas do jogo na tela
-function montarJogo(){
-    let elemento = document.querySelector(".cartas");
-    for (let i=0; i<numCartas; i++){
-        const carta = cartasEmJogo[i];
-        const aux = renderizarCarta(carta.nome);
-        elemento.innerHTML += aux;
+function handleCardSelection(event) {
+    const selectedCard = event.currentTarget;
+
+    if (
+        boardLocked
+        || selectedCard === firstCard
+        || selectedCard.classList.contains("is-matched")
+        || selectedCard.classList.contains("is-flipped")
+    ) {
+        return;
     }
+
+    startTimer();
+    selectedCard.classList.add("is-flipped");
+    selectedCard.setAttribute("aria-label", "Revealed parrot card");
+
+    if (firstCard === null) {
+        firstCard = selectedCard;
+        return;
+    }
+
+    secondCard = selectedCard;
+    moves += 1;
+    boardLocked = true;
+    updateStatus();
+    checkSelectedPair();
 }
 
+function startNewGame(cardCount) {
+    stopTimer();
 
-// Variáveis e função para fazer contegem do tempo de jogo
-const relogio = document.querySelector(".relogio");
-let intervalo = null;
-let timer = 0;
+    if (flipBackId !== null) {
+        window.clearTimeout(flipBackId);
+        flipBackId = null;
+    }
 
-function aumentarContagem(){    
-    relogio.innerHTML = " " + timer + " segundos";
-    timer+=1;
+    if (resultDialog.open) {
+        resultDialog.close();
+    }
+
+    firstCard = null;
+    secondCard = null;
+    moves = 0;
+    matchedPairs = 0;
+    totalPairs = cardCount / 2;
+    elapsedSeconds = 0;
+    boardLocked = false;
+    cardsElement.replaceChildren();
+
+    const deck = buildDeck(cardCount);
+    deck.forEach(({ imagePath, pairId }, cardIndex) => {
+        cardsElement.append(createCard(imagePath, pairId, cardIndex));
+    });
+
+    updateStatus();
 }
 
-intervalo = setInterval(aumentarContagem, 1000);
-console.log(intervalo);
+settingsForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    startNewGame(Number(cardCountSelect.value));
+});
+
+playAgainButton.addEventListener("click", () => {
+    startNewGame(Number(cardCountSelect.value));
+});
+
+startNewGame(Number(cardCountSelect.value));
