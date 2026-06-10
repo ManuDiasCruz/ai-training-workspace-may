@@ -8,12 +8,12 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
-    "dev:test": "dotenv -e .env.test prisma migrate dev --skip-seed && dotenv -e .env.test tsx watch src/server.ts",
+    "dev:test": "dotenv -e .env.test -- prisma migrate dev --skip-seed && dotenv -e .env.test -- tsx watch src/server.ts",
     "prisma:migrate": "prisma migrate deploy",
-    "test:integration": "dotenv -e .env.test jest -- -i ./tests/integration",
-    "test:unit": "dotenv -e .env.test jest -- -i ./tests/unit",
-    "prisma-test": "dotenv -e .env.test prisma migrate reset --skip-seed",
-    "test": "npm run prisma-test && NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test jest -- -i"
+    "test:integration": "dotenv -e .env.test -- jest -i ./tests/integration",
+    "test:unit": "dotenv -e .env.test -- jest -i ./tests/unit",
+    "prisma-test": "dotenv -e .env.test -- prisma migrate reset --force --skip-seed",
+    "test": "npm run prisma-test && NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test -- jest -i"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
