@@ -1,15 +1,22 @@
+/* Client palette: white background, light green accents, black font */
+:root{
+    --white: #FFFFFF;
+    --light-green: #A7E9AF;
+    --black: #000000;
+}
+
 *{
     box-sizing: border-box;
 }
 
 body{
-    background: #EEF9BF;
+    background: var(--white);
     margin: 0 auto;
     font-family: "Roboto", sans-serif;
     font-style: normal;
     font-weight: bold;
     text-align: center;
-    color: #75B79E;
+    color: var(--black);
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -36,6 +43,7 @@ nav p{
     margin: 0;
     padding: 6px 18px;
     border-radius: 999px;
+    background: var(--light-green);
 }
 
 p{
@@ -43,7 +51,7 @@ p{
 }
 
 span{
-    color: gray;
+    color: var(--black);
 }
 
 main{
@@ -64,8 +72,8 @@ main{
     width: clamp(64px, 21vw, 117px);
     aspect-ratio: 117 / 146;
 
-    background: #A7E9AF;
-    border: 1px solid #99CEA8;
+    background: var(--light-green);
+    border: 1px solid rgba(0,0,0,.15);
     border-radius: 5px;
     box-shadow: 1px 1px 1px rgba(0,0,0,.3);
     display: flex;
@@ -83,7 +91,7 @@ main{
     height: 100%;
     top: 0;
     left: 0;
-    background-color: #A7E9AF;
+    background-color: var(--light-green);
     border-radius: 5px;
     display: flex;
     align-items: center;
