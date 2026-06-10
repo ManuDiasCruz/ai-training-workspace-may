@@ -1,0 +1,340 @@
+:root {
+    --color-white: #ffffff;
+    --color-green: #dff7d8;
+    --color-green-strong: #b7e8a9;
+    --color-black: #000000;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    background: var(--color-green);
+    color: var(--color-black);
+    font-family: "Roboto", Arial, sans-serif;
+    font-style: normal;
+    font-weight: 700;
+    text-align: center;
+}
+
+button {
+    color: var(--color-black);
+    font: inherit;
+}
+
+.app-shell {
+    width: min(100%, 1120px);
+    margin: 0 auto;
+    padding: 32px 24px 40px;
+}
+
+.game-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 28px;
+    padding-bottom: 18px;
+    border-bottom: 3px solid var(--color-black);
+}
+
+h1,
+h2,
+p {
+    margin: 0;
+}
+
+h1 {
+    max-width: 620px;
+    font-size: 52px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: 0;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+h2 {
+    font-size: 20px;
+    line-height: 1.2;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.scoreboard {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.scoreboard p {
+    min-width: 112px;
+    padding: 10px 14px;
+    border: 2px solid var(--color-black);
+    border-radius: 8px;
+    background: var(--color-white);
+    text-align: left;
+}
+
+.stat-label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--color-black);
+    font-size: 12px;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.scoreboard strong {
+    display: block;
+    min-height: 28px;
+    color: var(--color-black);
+    font-size: 24px;
+    line-height: 1.1;
+}
+
+main {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    align-items: start;
+    gap: 28px;
+}
+
+.controls {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+    border: 2px solid var(--color-black);
+    border-radius: 8px;
+    background: var(--color-white);
+}
+
+.card-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.card-option,
+.start-button {
+    min-height: 44px;
+    border: 2px solid var(--color-black);
+    border-radius: 8px;
+    background: var(--color-white);
+    cursor: pointer;
+}
+
+.card-option.is-selected,
+.card-option[aria-pressed="true"],
+.start-button {
+    background: var(--color-green-strong);
+}
+
+.card-option:hover,
+.start-button:hover,
+.card-option:focus-visible,
+.start-button:focus-visible,
+.carta:focus-visible {
+    outline: 3px solid var(--color-black);
+    outline-offset: 3px;
+}
+
+.game-area {
+    min-width: 0;
+}
+
+.cartas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 117px);
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    width: 100%;
+}
+
+.carta {
+    width: 117px;
+    height: 146px;
+    margin: 0;
+    padding: 0;
+    border: 2px solid var(--color-black);
+    border-radius: 8px;
+    background: var(--color-green-strong);
+    box-shadow: 4px 4px 0 var(--color-black);
+    cursor: pointer;
+    position: relative;
+    transform-style: preserve-3d;
+}
+
+.carta:disabled {
+    color: var(--color-black);
+    cursor: default;
+}
+
+.face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    backface-visibility: hidden;
+    transition: transform 0.45s ease;
+    transform-style: preserve-3d;
+}
+
+.frente {
+    background: var(--color-green-strong);
+}
+
+.verso {
+    background: var(--color-white);
+    transform: rotateY(180deg);
+}
+
+.carta.is-flipped .frente {
+    transform: rotateY(-180deg);
+}
+
+.carta.is-flipped .verso {
+    transform: rotateY(0deg);
+}
+
+.carta img {
+    width: 92px;
+    height: 92px;
+    object-fit: contain;
+}
+
+.fim-jogo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    margin-top: 26px;
+    padding: 10px 16px;
+    border: 2px solid var(--color-black);
+    border-radius: 8px;
+    background: var(--color-white);
+    color: var(--color-black);
+    font-size: 18px;
+    line-height: 1.3;
+}
+
+.fim-jogo:empty {
+    display: none;
+}
+
+@media (max-width: 760px) {
+    .app-shell {
+        padding: 24px 16px 32px;
+    }
+
+    .game-header {
+        display: block;
+        margin-bottom: 22px;
+    }
+
+    h1 {
+        max-width: none;
+        margin-bottom: 16px;
+        font-size: 40px;
+        line-height: 1.05;
+        text-align: center;
+    }
+
+    .scoreboard {
+        justify-content: center;
+    }
+
+    main {
+        grid-template-columns: 1fr;
+        gap: 22px;
+    }
+
+    .controls {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+    }
+
+    .card-options {
+        grid-template-columns: repeat(6, minmax(42px, 1fr));
+    }
+}
+
+@media (max-width: 520px) {
+    .app-shell {
+        padding: 20px 12px 28px;
+    }
+
+    .game-header {
+        padding-bottom: 16px;
+    }
+
+    h1 {
+        font-size: 36px;
+    }
+
+    .scoreboard p {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    .controls {
+        grid-template-columns: 1fr;
+        padding: 14px;
+    }
+
+    h2 {
+        text-align: center;
+    }
+
+    .card-options {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .cartas {
+        grid-template-columns: repeat(auto-fit, 104px);
+        gap: 16px;
+    }
+
+    .carta {
+        width: 104px;
+        height: 130px;
+        box-shadow: 3px 3px 0 var(--color-black);
+    }
+
+    .carta img {
+        width: 78px;
+        height: 78px;
+    }
+
+    .fim-jogo {
+        width: 100%;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 340px) {
+    h1 {
+        font-size: 32px;
+    }
+
+    .cartas {
+        grid-template-columns: repeat(2, 100px);
+        gap: 14px;
+    }
+
+    .carta {
+        width: 100px;
+        height: 126px;
+    }
+}

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css">
+    <script defer src="src/script.js"></script>
+
+    <title>Parrot Card Game</title>
+</head>
+<body>
+    <div class="app-shell">
+        <header class="game-header">
+            <h1>Parrot Card Game</h1>
+            <nav class="scoreboard" aria-label="Game stats">
+                <p>
+                    <span class="stat-label">Moves</span>
+                    <strong class="qtdade-jogadas">0</strong>
+                </p>
+                <p>
+                    <span class="stat-label">Time</span>
+                    <strong class="relogio">0s</strong>
+                </p>
+            </nav>
+        </header>
+
+        <main>
+            <section class="controls" aria-labelledby="controls-title">
+                <h2 id="controls-title">Cards</h2>
+                <div class="card-options" role="group" aria-label="Number of cards">
+                    <button class="card-option" type="button" data-card-count="4">4</button>
+                    <button class="card-option" type="button" data-card-count="6">6</button>
+                    <button class="card-option" type="button" data-card-count="8">8</button>
+                    <button class="card-option" type="button" data-card-count="10">10</button>
+                    <button class="card-option" type="button" data-card-count="12">12</button>
+                    <button class="card-option" type="button" data-card-count="14">14</button>
+                </div>
+                <button class="start-button" type="button">New game</button>
+            </section>
+
+            <section class="game-area" aria-label="Memory card board">
+                <div class="cartas"></div>
+                <p class="fim-jogo" role="status" aria-live="polite"></p>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
