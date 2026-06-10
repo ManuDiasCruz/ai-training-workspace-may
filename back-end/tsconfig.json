@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "esModuleInterop": true,
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "rootDir": "src",
+    "skipLibCheck": true,
+    "strict": false
+  },
+  "ts-node": {
+    "esm": true
+  },
+  "include": ["src/**/*.ts"]
+}
