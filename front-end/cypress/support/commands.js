@@ -1,10 +1,15 @@
+const apiUrl = () => Cypress.env("apiUrl") ?? "";
+
+// Reset the database via the back-end test-only helper route.
+// NOTE: the route is mounted at /tests/reset (the test router is mounted on
+// "/tests"), and is only available when the back-end runs with MODE=TEST.
 Cypress.Commands.add("resetData", () => {
-    cy.request("DELETE", "http://localhost:5000/reset");
+    cy.request("DELETE", `${apiUrl()}/tests/reset`);
 });
 
-//createPost
+// Create a recommendation directly through the API.
 Cypress.Commands.add("addSong", (song) => {
-    cy.request("POST", "http://localhost:5000/recommendations", song).then(
-        (res) => cy.log(res)
+    cy.request("POST", `${apiUrl()}/recommendations`, song).then(
+        (res) => cy.log(JSON.stringify(res.body))
     );
 });
