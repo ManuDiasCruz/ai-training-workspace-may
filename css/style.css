@@ -1,3 +1,7 @@
+*{
+    box-sizing: border-box;
+}
+
 body{
     background: #EEF9BF;
     margin: 0 auto;
@@ -5,33 +9,47 @@ body{
     font-style: normal;
     font-weight: bold;
     text-align: center;
-    color: #75B79E;    
+    color: #75B79E;
+    -webkit-tap-highlight-color: transparent;
 }
 
 h1{
-    font-size: 56px;
+    font-size: clamp(34px, 8vw, 56px);
     letter-spacing: -0.004em;
-    margin-top: 40px;
-    margin-bottom: 25px;
+    margin-top: clamp(20px, 4vw, 40px);
+    margin-bottom: clamp(16px, 3vw, 25px);
+    padding: 0 16px;
 }
 
 nav{
-    margin-bottom: 30px;
+    margin: 0 auto 24px;
+    padding: 0 16px;
+    max-width: 1208px;
     display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
     align-items: center;
     justify-content: space-around;
 }
 
-p{
-    font-size: 20px;
+nav p{
+    margin: 0;
+    padding: 6px 18px;
+    border-radius: 999px;
 }
 
-span{    
+p{
+    font-size: clamp(16px, 4vw, 20px);
+}
+
+span{
     color: gray;
 }
 
 main{
-    margin: auto 116px;
+    margin: 0 auto;
+    padding: 0 12px 40px;
+    max-width: 1208px;
 }
 
 .cartas{
@@ -39,39 +57,46 @@ main{
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
+    gap: clamp(8px, 2.5vw, 34px);
 }
 
 .carta{
-    width: 117px;
-    height: 146px;
-    margin-left: 34px;
-    margin-bottom: 34px;
-    
+    width: clamp(64px, 21vw, 117px);
+    aspect-ratio: 117 / 146;
+
     background: #A7E9AF;
     border: 1px solid #99CEA8;
-    box-sizing: border-box;
     border-radius: 5px;
     box-shadow: 1px 1px 1px rgba(0,0,0,.3);
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .face{
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
     background-color: #A7E9AF;
-    border-radius: 10px;
+    border-radius: 5px;
     display: flex;
     align-items: center;
     justify-content: center;
     position: absolute;
     backface-visibility: hidden;
-    transition: all .5s;
-    transform-style: preserve-3d;   
+    -webkit-backface-visibility: hidden;
+    transition: transform .5s;
+    transform-style: preserve-3d;
 }
 
 .verso{
-    transform: rotateY(180deg);    
+    transform: rotateY(180deg);
 }
 
 .face-verso-virada {
@@ -83,26 +108,13 @@ main{
 }
 
 
-img{
-    width: 100px;
-    height: 100px;
+.face img{
+    width: 85%;
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
 }
 
-@media (max-width: 335px) {
-    h1{
-        font-size: 36px;
-    }
-
-    main{
-        margin: auto 0px;
-    }
-
-    .cartas{
-        display: flex;
-        flex-direction: column;
-    }
-
-    .carta{
-        margin: 34px auto;
-    }
+.fim-jogo{
+    font-size: clamp(22px, 5vw, 32px);
+    padding: 24px 0;
 }
