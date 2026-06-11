@@ -19,12 +19,19 @@ class AliasPath:
     A data class used by `validation_alias` as a convenience to create aliases.
 
     Attributes:
-        path: A list of string or integer aliases.
+        path: A list of string or integer aliases. The first element must be a string, as it is
+            looked up as a key in the (mapping-like) input.
     """
 
     path: list[int | str]
 
     def __init__(self, first_arg: str, *args: str | int) -> None:
+        if not isinstance(first_arg, str):
+            raise TypeError(
+                f'`AliasPath` requires a string as its first argument, got {type(first_arg).__name__!r}. '
+                'An integer first segment (to index a top-level list input) is not supported; '
+                "to validate a model from a list, use a `model_validator(mode='before')`."
+            )
         self.path = [first_arg] + list(args)
 
     def convert_to_aliases(self) -> list[str | int]:
