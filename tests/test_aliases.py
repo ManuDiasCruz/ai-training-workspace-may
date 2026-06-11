@@ -611,6 +611,27 @@ def test_search_dict_for_alias_path():
     assert ap.search_dict_for_path({'a': 'hello'}) is PydanticUndefined
 
 
+def test_alias_path_requires_string_first_argument():
+    # `AliasPath` indexes into mapping-like inputs by key, so the first path segment
+    # must be a string. An integer first segment (to index a top-level list) is not
+    # supported and previously failed with an opaque `pydantic-core` SchemaError at
+    # class-definition time. See https://github.com/pydantic/pydantic/issues/13112.
+    msg = 'requires a string as its first argument'
+    for first_arg in (0, -1, 1.5, None):
+        with pytest.raises(TypeError, match=msg):
+            AliasPath(first_arg)
+    # An integer first segment is rejected even when followed by further segments.
+    with pytest.raises(TypeError, match=msg):
+        AliasPath(0, 'nested')
+
+    # A string first segment is always valid, including the falsy empty string, and
+    # integer indices remain allowed for subsequent (nested) segments.
+    assert AliasPath('').path == ['']
+    assert AliasPath('a').path == ['a']
+    assert AliasPath('a', 0).path == ['a', 0]
+    assert AliasPath('a', 'b', 1).path == ['a', 'b', 1]
+
+
 def test_validation_alias_invalid_value_type():
     m = 'Invalid `validation_alias` type. it should be `str`, `AliasChoices`, or `AliasPath`'
     with pytest.raises(TypeError, match=m):
