@@ -605,10 +605,48 @@ def test_validation_alias_path(value):
     assert Model.model_fields['x'].validation_alias == value
 
 
+def test_validation_alias_path_with_root_list():
+    class Row(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+        name: str = Field(validation_alias=AliasPath(1))
+        email: str = Field(validation_alias=AliasPath(2))
+        last: str = Field(validation_alias=AliasPath(-1))
+
+    expected = {'id': 42, 'name': 'alice', 'email': 'a@example.com', 'last': 'a@example.com'}
+
+    assert Row.model_validate([42, 'alice', 'a@example.com']).model_dump() == expected
+    assert Row.model_validate((42, 'alice', 'a@example.com')).model_dump() == expected
+    assert Row.model_validate_json('[42, "alice", "a@example.com"]').model_dump() == expected
+
+    class SparseRow(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+        status: str = Field(validation_alias=AliasPath(7))
+
+    assert SparseRow.model_validate([42, None, None, None, None, None, None, 'active']).model_dump() == {
+        'id': 42,
+        'status': 'active',
+    }
+
+    class ChoiceRow(BaseModel):
+        name: str = Field(validation_alias=AliasChoices('name', AliasPath(1)))
+
+    assert ChoiceRow.model_validate({'name': 'alice'}).name == 'alice'
+    assert ChoiceRow.model_validate([None, 'alice']).name == 'alice'
+
+
+def test_root_list_rejected_without_integer_alias_path():
+    class Model(BaseModel):
+        value: int
+
+    with pytest.raises(ValidationError, match='Input should be a valid dictionary or instance of Model'):
+        Model.model_validate([1])
+
+
 def test_search_dict_for_alias_path():
     ap = AliasPath('a', 1)
     assert ap.search_dict_for_path({'a': ['hello', 'world']}) == 'world'
     assert ap.search_dict_for_path({'a': 'hello'}) is PydanticUndefined
+    assert AliasPath(0).search_dict_for_path(['hello']) == 'hello'
 
 
 def test_validation_alias_invalid_value_type():
