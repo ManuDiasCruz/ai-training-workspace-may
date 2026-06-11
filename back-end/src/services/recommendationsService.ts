@@ -1,4 +1,4 @@
-import { Recommendation } from "@prisma/client";
+import type { Recommendation } from "@prisma/client";
 import { recommendationRepository } from "../repositories/recommendationRepository.js";
 import { conflictError, notFoundError } from "../utils/errorUtils.js";
 
@@ -11,7 +11,7 @@ async function insert(createRecommendationData: CreateRecommendationData) {
   if (existingRecommendation)
     throw conflictError("Recommendations names must be unique");
 
-  await recommendationRepository.create(createRecommendationData);
+  return recommendationRepository.create(createRecommendationData);
 }
 
 async function upvote(id: number) {

@@ -1,0 +1,12 @@
+.DS_Store
+**/.DS_Store
+**/node_modules/
+**/dist/
+**/build/
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.test.example
+front-end/cypress/screenshots/
+front-end/cypress/videos/
+*.log

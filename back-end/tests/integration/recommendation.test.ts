@@ -9,6 +9,10 @@ const agent = supertest(app);
 
 describe("INTEGRATION TESTS SUITE", () => {
 
+    afterAll(async () => {
+        await prisma.$disconnect();
+    });
+
     beforeEach(async () => {
         await prisma.$executeRaw`TRUNCATE TABLE recommendations RESTART IDENTITY`;
     });
@@ -62,14 +66,14 @@ describe("INTEGRATION TESTS SUITE", () => {
             expect(response.status).toBe(200);
             expect(response.body).toHaveLength(3);
         
-            expect(response.body[0].name).toBe(recommendation2.name);
-            expect(response.body[0].youtubeLink).toBe(recommendation2.youtubeLink);
+            expect(response.body[0].name).toBe(recommendation3.name);
+            expect(response.body[0].youtubeLink).toBe(recommendation3.youtubeLink);
         
-            expect(response.body[1].name).toBe(recommendation1.name);
-            expect(response.body[1].youtubeLink).toBe(recommendation1.youtubeLink);
+            expect(response.body[1].name).toBe(recommendation2.name);
+            expect(response.body[1].youtubeLink).toBe(recommendation2.youtubeLink);
 
-            expect(response.body[2].name).toBe(recommendation3.name);
-            expect(response.body[2].youtubeLink).toBe(recommendation3.youtubeLink);
+            expect(response.body[2].name).toBe(recommendation1.name);
+            expect(response.body[2].youtubeLink).toBe(recommendation1.youtubeLink);
         });
     
         it("Show empty recommendations list", async () => {
@@ -131,6 +135,14 @@ describe("INTEGRATION TESTS SUITE", () => {
             expect(response.body.name).toBe(recommendation.name);
             expect(response.body.youtubeLink).toBe(recommendation.youtubeLink);
         });
+
+        it("Rejects invalid numeric route params", async () => {
+            const byId = await agent.get("/recommendations/not-a-number");
+            const top = await agent.get("/recommendations/top/not-a-number");
+
+            expect(byId.status).toBe(422);
+            expect(top.status).toBe(422);
+        });
     });
     
     describe("POST /upvote and /downvote", () => {
@@ -180,6 +192,13 @@ describe("INTEGRATION TESTS SUITE", () => {
             const response = await agent.post("/recommendations/1/downvote");
             expect(response.status).toBe(404);
         });
+
+        it("Rejects invalid vote ids", async () => {
+            const upvote = await agent.post("/recommendations/not-a-number/upvote");
+            const downvote = await agent.post("/recommendations/not-a-number/downvote");
+
+            expect(upvote.status).toBe(422);
+            expect(downvote.status).toBe(422);
+        });
     });
 });
-

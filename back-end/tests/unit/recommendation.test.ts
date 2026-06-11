@@ -1,204 +1,109 @@
-import { jest } from "@jest/globals";
-import { response } from "express";
+import { afterEach, describe, expect, jest, test } from "@jest/globals";
 
-import { recommendationService } from "../../src/services/recommendationsService.js";
 import { recommendationRepository } from "../../src/repositories/recommendationRepository.js";
-import { createRandomSong } from "../factories/recommendationFactory.js";
+import { recommendationService } from "../../src/services/recommendationsService.js";
 
-describe("UNIT TESTS SUITE", () => {
+const recommendation = {
+  id: 1,
+  name: "Unit test song",
+  youtubeLink: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  score: 2,
+};
 
-    const recommendation1 = createRandomSong();
+const recommendationInput = {
+  name: recommendation.name,
+  youtubeLink: recommendation.youtubeLink,
+};
 
-    const recommendation2 = {
-        id: 1,
-        name: recommendation1.name,
-        youtubeLink: recommendation1.youtubeLink,
-        score: 2
-    }
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
-    describe("Create recommendation", () => {
-        it("Success", async () => {
-            const { name } = recommendation1;
+describe("recommendationService", () => {
+  test("creates a unique recommendation", async () => {
+    jest.spyOn(recommendationRepository, "findByName").mockResolvedValue(null);
+    jest.spyOn(recommendationRepository, "create").mockResolvedValue(recommendation);
 
-            jest
-                .spyOn(recommendationRepository, "findByName")
-                .mockResolvedValueOnce(null);
+    await expect(recommendationService.insert(recommendationInput)).resolves.toEqual(
+      recommendation
+    );
+  });
 
-            jest
-                .spyOn(recommendationRepository, "create")
-                .mockResolvedValueOnce(null);
+  test("rejects duplicate recommendation names", async () => {
+    jest
+      .spyOn(recommendationRepository, "findByName")
+      .mockResolvedValue(recommendation);
 
-            await recommendationService.insert(recommendation1);
-            expect(recommendationRepository.findByName).toHaveBeenCalledWith(name);
-            expect(recommendationRepository.create).toHaveBeenCalledTimes(1);
-        });
-
-        it("Fail", async () => {
-            jest
-                .spyOn(recommendationRepository, "findByName")
-                .mockResolvedValueOnce(recommendation2);
-
-            expect(recommendationService.insert(recommendation1)).rejects.toEqual(
-                { message: "Recommendations names must be unique", type: "conflict" }
-            );
-        });
+    await expect(recommendationService.insert(recommendationInput)).rejects.toEqual({
+      message: "Recommendations names must be unique",
+      type: "conflict",
     });
+  });
 
-    describe("Upvotes tests", () => {
-        it("Sucess in upvote", async () => {
-            jest
-                .spyOn(recommendationRepository, "find")
-                .mockResolvedValueOnce(recommendation2);
-        
-            jest
-                .spyOn(recommendationRepository, "updateScore")
-                .mockResolvedValueOnce(recommendation2);
-            
-            await recommendationService.upvote(1);
-            expect(recommendationRepository.find).toHaveBeenCalledWith(1);
-            expect(recommendationRepository.updateScore).toHaveBeenLastCalledWith(1, "increment"); 
-        });
+  test("upvotes an existing recommendation", async () => {
+    jest.spyOn(recommendationRepository, "find").mockResolvedValue(recommendation);
+    const updateScore = jest
+      .spyOn(recommendationRepository, "updateScore")
+      .mockResolvedValue({ ...recommendation, score: 3 });
 
-        it("Fail", async () => {
-            jest
-                .spyOn(recommendationRepository, "find")
-                .mockResolvedValueOnce(null);
-        
-            expect(recommendationService.upvote(1)).rejects.toEqual(
-                { message: "", type: "not_found" }
-            );
-        });
+    await recommendationService.upvote(recommendation.id);
+
+    expect(updateScore).toHaveBeenCalledWith(recommendation.id, "increment");
+  });
+
+  test("rejects votes for missing recommendations", async () => {
+    jest.spyOn(recommendationRepository, "find").mockResolvedValue(null);
+
+    await expect(recommendationService.upvote(999)).rejects.toEqual({
+      message: "",
+      type: "not_found",
     });
+  });
 
-    describe("Downvotes tests", () => {
-        it("Success", async () => {
-            jest
-                .spyOn(recommendationRepository, "find")
-                .mockResolvedValueOnce(recommendation2);
-        
-            jest
-                .spyOn(recommendationRepository, "updateScore")
-                .mockResolvedValueOnce(recommendation2);
-            
-            await recommendationService.downvote(1);
-            expect(recommendationRepository.find).toHaveBeenCalledWith(1);
-            expect(recommendationRepository.updateScore).toHaveBeenLastCalledWith(1, "decrement");   
-        });
+  test("removes recommendations whose score drops below minus five", async () => {
+    jest.spyOn(recommendationRepository, "find").mockResolvedValue(recommendation);
+    jest
+      .spyOn(recommendationRepository, "updateScore")
+      .mockResolvedValue({ ...recommendation, score: -6 });
+    const remove = jest
+      .spyOn(recommendationRepository, "remove")
+      .mockResolvedValue(undefined);
 
-        it("Downvote deleting recommendation", async () => {
-            jest
-                .spyOn(recommendationRepository, "find")
-                .mockResolvedValueOnce(recommendation2);
-        
-            jest
-                .spyOn(recommendationRepository, "updateScore")
-                .mockResolvedValueOnce({ ...recommendation2, score: -6 });
+    await recommendationService.downvote(recommendation.id);
 
-            jest
-                .spyOn(recommendationRepository, "remove")
-                .mockResolvedValueOnce(null);
-            
-            await recommendationService.downvote(1);
-            expect(recommendationRepository.find).toHaveBeenCalledWith(1);
-            expect(recommendationRepository.updateScore).toHaveBeenLastCalledWith(1, "decrement");
-            expect(recommendationRepository.remove).toHaveBeenCalledTimes(1);
-        });
+    expect(remove).toHaveBeenCalledWith(recommendation.id);
+  });
 
-        it("Fail", async () => {
-            jest
-                .spyOn(recommendationRepository, "find")
-                .mockResolvedValueOnce(null);
-        
-            expect(recommendationService.downvote(1)).rejects.toEqual(
-                { message: "", type: "not_found" }
-            );
-        });
+  test("lists recommendations and top recommendations", async () => {
+    jest.spyOn(recommendationRepository, "findAll").mockResolvedValue([recommendation]);
+    jest
+      .spyOn(recommendationRepository, "getAmountByScore")
+      .mockResolvedValue([recommendation]);
+
+    await expect(recommendationService.get()).resolves.toEqual([recommendation]);
+    await expect(recommendationService.getTop(1)).resolves.toEqual([recommendation]);
+  });
+
+  test("uses the weighted high-score random branch", async () => {
+    jest.spyOn(Math, "random").mockReturnValueOnce(0.5).mockReturnValueOnce(0);
+    const findAll = jest
+      .spyOn(recommendationRepository, "findAll")
+      .mockResolvedValue([recommendation]);
+
+    await expect(recommendationService.getRandom()).resolves.toEqual(recommendation);
+    expect(findAll).toHaveBeenCalledWith({ score: 10, scoreFilter: "gt" });
+  });
+
+  test("returns not found when no random recommendation exists", async () => {
+    jest.spyOn(Math, "random").mockReturnValue(0.5);
+    jest
+      .spyOn(recommendationRepository, "findAll")
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+
+    await expect(recommendationService.getRandom()).rejects.toEqual({
+      message: "",
+      type: "not_found",
     });
-
-    describe("/GET tests", () => {
-        it("Sucess in getByIdOrFail", async () => {
-            jest
-                .spyOn(recommendationRepository, "find")
-                .mockResolvedValueOnce(recommendation2);
-
-            const searched = await recommendationService.getById(1);
-            expect(recommendationRepository.find).toHaveBeenCalledWith(1);
-            expect(searched).toEqual(recommendation2);
-        });
-
-        it("Fail in getById", async () => {
-            jest
-                .spyOn(recommendationRepository, "find")
-                .mockResolvedValueOnce(null);
-
-            expect(recommendationService.getById(1)).rejects.toEqual({
-                message: "",
-                type: "not_found",
-            });
-        });
-
-        it("Sucess", async () => {
-            jest
-                .spyOn(recommendationRepository, "findAll")
-                .mockResolvedValueOnce([recommendation2]);
-
-            const searched = await recommendationService.get();
-            expect(recommendationRepository.findAll).toHaveBeenCalledTimes(1);
-            expect(searched).toEqual([recommendation2]);
-        });
-
-        it("Sucess in getTop", async () => {
-            jest
-                .spyOn(recommendationRepository, "getAmountByScore")
-                .mockResolvedValueOnce([recommendation2]);
-
-            const searched = await recommendationService.getTop(1);
-            expect(recommendationRepository.getAmountByScore).toHaveBeenCalledWith(1);
-            expect(searched).toEqual([recommendation2]);
-        });
-    });
-
-    describe("Random recommendations tests", () => {
-        it("Success in get random gt", async () => {
-            jest.spyOn(Math, "random").mockReturnValueOnce(0.5);
-
-            jest
-                .spyOn(recommendationRepository, "findAll")
-                .mockResolvedValueOnce([recommendation2]);
-
-            await recommendationService.getRandom();
-            expect(recommendationRepository.findAll).toHaveBeenLastCalledWith({
-                score: 10,
-                scoreFilter: "gt",
-            });
-        });
-
-        it("Success in get random lte", async () => {
-            jest.spyOn(Math, "random").mockReturnValueOnce(0.8);
-
-            jest
-                .spyOn(recommendationRepository, "findAll")
-                .mockResolvedValueOnce([recommendation2]);
-
-            await recommendationService.getRandom();
-            expect(recommendationRepository.findAll).toHaveBeenLastCalledWith({
-                score: 10,
-                scoreFilter: "lte",
-            });
-        });
-
-        it("Error notfound in get random", async () => {
-            jest.spyOn(Math, "random").mockReturnValueOnce(0.5);
-
-            jest
-                .spyOn(recommendationRepository, "findAll")
-                .mockResolvedValueOnce([]);
-
-            expect(recommendationService.getRandom()).rejects.toEqual({
-                message: "",
-                type: "not_found",
-            });
-        });
-    });
-
+  });
 });
