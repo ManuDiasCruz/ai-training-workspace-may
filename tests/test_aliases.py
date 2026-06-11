@@ -639,6 +639,38 @@ def test_validation_alias_parse_data():
     ]
 
 
+def test_validation_alias_path_root_list_index():
+    class Row(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+        name: str = Field(validation_alias=AliasPath(1))
+        email: str = Field(validation_alias=AliasPath(2))
+
+    assert Row.model_validate([42, 'alice', 'a@example.com']).model_dump() == {
+        'id': 42,
+        'name': 'alice',
+        'email': 'a@example.com',
+    }
+    assert Row.model_validate((42, 'alice', 'a@example.com')).model_dump() == {
+        'id': 42,
+        'name': 'alice',
+        'email': 'a@example.com',
+    }
+    assert Row.model_validate_json('[42, "alice", "a@example.com"]').model_dump() == {
+        'id': 42,
+        'name': 'alice',
+        'email': 'a@example.com',
+    }
+
+    class SparseRecord(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+        status: str = Field(validation_alias=AliasPath(7))
+
+    assert SparseRecord.model_validate([42, None, None, None, None, None, None, 'active']).model_dump() == {
+        'id': 42,
+        'status': 'active',
+    }
+
+
 def test_validation_alias_priority():
     class Model(BaseModel):
         model_config = ConfigDict(validate_by_alias=True, validate_by_name=True)

@@ -8,7 +8,7 @@ use pyo3::exceptions::PyKeyError;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::pybacked::PyBackedStr;
-use pyo3::types::{PyDict, PySet, PyString, PyType};
+use pyo3::types::{PyDict, PyList, PySet, PyString, PyTuple, PyType};
 
 use crate::build_tools::py_schema_err;
 use crate::build_tools::{ExtraBehavior, is_strict, schema_or_config_same};
@@ -144,21 +144,46 @@ impl Validator for ModelFieldsValidator {
         let from_attributes = state.extra().from_attributes.unwrap_or(self.from_attributes);
 
         let (model_dict, mut model_extra_dict_op, fields_set) = if let Some(json_input) = input.as_json() {
-            let JsonValue::Object(json_object) = json_input else {
-                return Err(ValError::new(
-                    ErrorType::ModelType {
-                        context: None,
-                        class_name: self.model_name.clone(),
-                    },
-                    input,
-                ));
-            };
-            self.validate_json_by_iteration(py, json_input, json_object, state)?
+            match json_input {
+                JsonValue::Object(json_object) => {
+                    self.validate_json_by_iteration(py, json_input, json_object, state)?
+                }
+                JsonValue::Array(_) if self.has_root_sequence_alias(state)? => {
+                    self.validate_by_get_item(py, input, RootJsonInput { input: json_input }, state)?
+                }
+                _ => {
+                    return Err(ValError::new(
+                        ErrorType::ModelType {
+                            context: None,
+                            class_name: self.model_name.clone(),
+                        },
+                        input,
+                    ));
+                }
+            }
         } else {
             // we convert the DictType error to a ModelType error
             let dict = match input.validate_model_fields(strict, from_attributes) {
                 Ok(d) => d,
                 Err(ValError::LineErrors(errors)) => {
+                    if self.has_root_sequence_alias(state)?
+                        && let Some(sequence) = input.as_python()
+                        && (sequence.cast::<PyList>().is_ok() || sequence.cast::<PyTuple>().is_ok())
+                    {
+                        let (model_dict, model_extra_dict_op, fields_set) =
+                            self.validate_by_get_item(py, input, RootPyInput { input: sequence }, state)?;
+                        state.add_fields_set(fields_set.len());
+
+                        let model_extra_dict_op =
+                            if matches!(extra_behavior, ExtraBehavior::Allow) && model_extra_dict_op.is_none() {
+                                Some(PyDict::new(py))
+                            } else {
+                                model_extra_dict_op
+                            };
+
+                        return Ok((model_dict, model_extra_dict_op, fields_set).into_py_any(py)?);
+                    }
+
                     let errors: Vec<ValLineError> = errors
                         .into_iter()
                         .map(|e| match e.error_type {
@@ -299,7 +324,84 @@ impl Validator for ModelFieldsValidator {
 
 type ValidatedModelFields<'py> = (Bound<'py, PyDict>, Option<Bound<'py, PyDict>>, Bound<'py, PySet>);
 
+struct RootPyInput<'a, 'py> {
+    input: &'a Bound<'py, PyAny>,
+}
+
+impl<'py> ValidatedDict<'py> for RootPyInput<'_, 'py> {
+    type Key<'a>
+        = Bound<'py, PyAny>
+    where
+        Self: 'a;
+
+    type Item<'a>
+        = Bound<'py, PyAny>
+    where
+        Self: 'a;
+
+    fn get_item(&self, key: &crate::lookup_key::LookupPath) -> ValResult<Option<Self::Item<'_>>> {
+        key.py_get_item(self.input).map_err(Into::into)
+    }
+
+    fn iterate<'a, R>(
+        &'a self,
+        consumer: impl ConsumeIterator<ValResult<(Self::Key<'a>, Self::Item<'a>)>, Output = R>,
+    ) -> ValResult<R> {
+        Ok(consumer.consume_iterator(std::iter::empty()))
+    }
+
+    fn last_key(&self) -> Option<Self::Key<'_>> {
+        None
+    }
+}
+
+struct RootJsonInput<'a, 'data> {
+    input: &'a JsonValue<'data>,
+}
+
+impl<'data> ValidatedDict<'_> for RootJsonInput<'_, 'data> {
+    type Key<'a>
+        = &'static str
+    where
+        Self: 'a;
+
+    type Item<'a>
+        = &'a JsonValue<'data>
+    where
+        Self: 'a;
+
+    fn get_item(&self, key: &crate::lookup_key::LookupPath) -> ValResult<Option<Self::Item<'_>>> {
+        Ok(key.json_get_value(self.input))
+    }
+
+    fn iterate<'a, R>(
+        &'a self,
+        consumer: impl ConsumeIterator<ValResult<(Self::Key<'a>, Self::Item<'a>)>, Output = R>,
+    ) -> ValResult<R> {
+        Ok(consumer.consume_iterator(std::iter::empty()))
+    }
+
+    fn last_key(&self) -> Option<Self::Key<'_>> {
+        None
+    }
+}
+
 impl ModelFieldsValidator {
+    fn has_root_sequence_alias(&self, state: &ValidationState<'_, '_>) -> PyResult<bool> {
+        let validate_by_alias = state.validate_by_alias_or(self.validate_by_alias);
+        let validate_by_name = state.validate_by_name_or(self.validate_by_name);
+        let lookup_type = LookupType::from_bools(validate_by_alias, validate_by_name)?;
+
+        Ok(lookup_type.matches(LookupType::Alias)
+            && self.fields.iter().any(|field| {
+                field
+                    .lookup_path_collection
+                    .by_alias
+                    .iter()
+                    .any(crate::lookup_key::LookupPath::starts_with_int)
+            }))
+    }
+
     fn validate_by_get_item<'py>(
         &self,
         py: Python<'py>,
@@ -355,7 +457,9 @@ impl ModelFieldsValidator {
                     if let Some(ref mut used_keys) = used_keys {
                         // key is "used" whether or not validation passes, since we want to skip this key in
                         // extra logic either way
-                        used_keys.insert(lookup_path.first_key());
+                        if let Some(first_key) = lookup_path.first_key() {
+                            used_keys.insert(first_key);
+                        }
                     }
 
                     match field.validator.validate(py, value.borrow_input(), state) {
