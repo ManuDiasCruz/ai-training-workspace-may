@@ -1,11 +1,12 @@
 from contextlib import AbstractContextManager
 from contextlib import nullcontext as does_not_raise
 from inspect import signature
-from typing import Any
+from typing import Annotated, Any
 
 import pytest
 from dirty_equals import IsStr
 from pydantic_core import PydanticUndefined
+from typing_extensions import TypedDict
 
 from pydantic import (
     AliasChoices,
@@ -15,9 +16,13 @@ from pydantic import (
     ConfigDict,
     Field,
     PydanticUserError,
+    TypeAdapter,
     ValidationError,
     computed_field,
+    model_validator,
+    with_config,
 )
+from pydantic.dataclasses import dataclass as pydantic_dataclass
 
 
 def test_alias_generator():
@@ -594,8 +599,11 @@ def test_aliases_json_schema(field, expected):
     [
         'a',
         AliasPath('a', 'b', 1),
+        AliasPath(0),
+        AliasPath(1, 'a'),
         AliasChoices('a', 'b'),
         AliasChoices('a', AliasPath('b', 1)),
+        AliasChoices(AliasPath(0), 'a'),
     ],
 )
 def test_validation_alias_path(value):
@@ -673,6 +681,210 @@ def test_validation_alias_priority_json():
     assert Model.model_validate_json(b'{"a": "a", "d": "d"}').a == 'd'
 
     assert Model.model_validate_json(b'{"a": "a"}').a == 'a'
+
+
+def test_validation_alias_path_root_index() -> None:
+    """An `AliasPath` with an integer first segment indexes into a top-level sequence input.
+
+    https://github.com/pydantic/pydantic/issues/13112
+    """
+
+    class Row(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+        name: str = Field(validation_alias=AliasPath(1))
+        email: str = Field(validation_alias=AliasPath(2))
+
+    row = Row.model_validate([42, 'alice', 'a@example.com'])
+    assert row.model_dump() == {'id': 42, 'name': 'alice', 'email': 'a@example.com'}
+
+    row = Row.model_validate((43, 'bob', 'b@example.com'))
+    assert row.model_dump() == {'id': 43, 'name': 'bob', 'email': 'b@example.com'}
+
+    row = Row.model_validate_json('[44, "carol", "c@example.com"]')
+    assert row.model_dump() == {'id': 44, 'name': 'carol', 'email': 'c@example.com'}
+
+
+def test_validation_alias_path_root_index_sparse() -> None:
+    """Unreferenced positions of the input sequence are ignored, even with `extra='forbid'`."""
+
+    class Record(BaseModel):
+        model_config = ConfigDict(extra='forbid')
+
+        id: int = Field(validation_alias=AliasPath(0))
+        status: str = Field(validation_alias=AliasPath(7))
+
+    record = Record.model_validate([1, 'a', 'b', 'c', 'd', 'e', 'f', 'ok'])
+    assert record.id == 1
+    assert record.status == 'ok'
+
+
+def test_validation_alias_path_root_index_extra_allow() -> None:
+    class Model(BaseModel):
+        model_config = ConfigDict(extra='allow')
+
+        id: int = Field(validation_alias=AliasPath(0))
+
+    m = Model.model_validate([1, 'unrelated'])
+    assert m.id == 1
+    assert m.model_extra == {}
+
+
+def test_validation_alias_path_root_index_nested_path() -> None:
+    class Model(BaseModel):
+        x: int = Field(validation_alias=AliasPath(0, 'inner', -1))
+
+    assert Model.model_validate([{'inner': [1, 2, 3]}]).x == 3
+
+
+def test_validation_alias_path_root_negative_index() -> None:
+    class Model(BaseModel):
+        last: str = Field(validation_alias=AliasPath(-1))
+
+    assert Model.model_validate(['a', 'b', 'z']).last == 'z'
+
+
+def test_validation_alias_path_root_index_missing() -> None:
+    class Row(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+        status: str = Field(validation_alias=AliasPath(7))
+
+    with pytest.raises(ValidationError) as exc_info:
+        Row.model_validate([42])
+    # The `loc` and `input` reflect the internal dictionary wrapping of the input sequence,
+    # similar to how errors reflect the transformed input of a `mode='before'` model validator:
+    assert exc_info.value.errors(include_url=False) == [
+        {
+            'type': 'missing',
+            'loc': ('__pydantic_root_sequence__', 7),
+            'msg': 'Field required',
+            'input': {'__pydantic_root_sequence__': [42]},
+        }
+    ]
+
+
+def test_validation_alias_path_root_index_dict_input() -> None:
+    """A positional alias does not enable population by field name or dict keys."""
+
+    class Model(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+
+    with pytest.raises(ValidationError):
+        Model.model_validate({'id': 1})
+
+    class ModelByName(BaseModel):
+        model_config = ConfigDict(validate_by_name=True)
+
+        id: int = Field(validation_alias=AliasPath(0))
+
+    assert ModelByName.model_validate({'id': 1}).id == 1
+    assert ModelByName.model_validate([2]).id == 2
+
+
+def test_validation_alias_path_root_index_str_input_invalid() -> None:
+    """Strings and other non list/tuple inputs are not treated as positional sequences."""
+
+    class Model(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+
+    with pytest.raises(ValidationError):
+        Model.model_validate('42')
+
+
+def test_validation_alias_path_root_index_alias_choices() -> None:
+    class Model(BaseModel):
+        id: int = Field(validation_alias=AliasChoices(AliasPath(0), 'id_key'))
+
+    assert Model.model_validate([5]).id == 5
+    assert Model.model_validate({'id_key': 6}).id == 6
+
+
+def test_validation_alias_path_root_index_nested_model() -> None:
+    class Inner(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+
+    class Outer(BaseModel):
+        row: Inner
+
+    assert Outer.model_validate({'row': [1]}).row.id == 1
+    assert Outer.model_validate_json('{"row": [2]}').row.id == 2
+
+
+def test_validation_alias_path_root_index_assignment() -> None:
+    class Model(BaseModel):
+        model_config = ConfigDict(validate_assignment=True)
+
+        id: int = Field(validation_alias=AliasPath(0))
+
+    m = Model.model_validate([1])
+    m.id = 3
+    assert m.id == 3
+    with pytest.raises(ValidationError):
+        m.id = 'not an int'
+
+
+def test_validation_alias_path_root_index_before_validator() -> None:
+    """`mode='before'` model validators see the raw input and may return a sequence."""
+
+    class Model(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+
+        @model_validator(mode='before')
+        @classmethod
+        def split_string(cls, value: Any) -> Any:
+            if isinstance(value, str):
+                return value.split(',')
+            return value
+
+    assert Model.model_validate('41,foo').id == 41
+
+
+def test_validation_alias_path_root_index_typed_dict() -> None:
+    class TD(TypedDict):
+        id: Annotated[int, Field(validation_alias=AliasPath(0))]
+
+    ta = TypeAdapter(TD)
+    assert ta.validate_python([7]) == {'id': 7}
+    assert ta.validate_json('[7]') == {'id': 7}
+
+
+def test_validation_alias_path_root_index_alias_generator() -> None:
+    """Alias paths with an integer first segment can also be produced by an alias generator."""
+    alias_generator = AliasGenerator(validation_alias=lambda field_name: AliasPath(0) if field_name == 'id' else None)
+
+    class Model(BaseModel):
+        model_config = ConfigDict(alias_generator=alias_generator)
+
+        id: int
+
+    assert Model.model_validate([10]).id == 10
+
+    @with_config(ConfigDict(alias_generator=alias_generator))
+    class TD(TypedDict):
+        id: int
+
+    assert TypeAdapter(TD).validate_python([11]) == {'id': 11}
+
+
+def test_validation_alias_path_root_index_dataclass() -> None:
+    @pydantic_dataclass
+    class DC:
+        id: int = Field(validation_alias=AliasPath(0))
+
+    assert TypeAdapter(DC).validate_python([9]).id == 9
+
+
+def test_validation_alias_path_root_index_json_schema() -> None:
+    """The internal sequence wrapping must not leak into the JSON schema."""
+
+    class Row(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+
+    assert Row.model_json_schema() == {
+        'title': 'Row',
+        'type': 'object',
+        'properties': {'id': {'title': 'Id', 'type': 'integer'}},
+        'required': ['id'],
+    }
 
 
 def test_alias_generator_class() -> None:
