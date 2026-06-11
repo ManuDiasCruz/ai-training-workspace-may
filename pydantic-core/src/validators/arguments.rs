@@ -223,7 +223,9 @@ impl Validator for ArgumentsValidator {
                 && let Some((lookup_path, value)) =
                     lookup_path_collection.try_lookup(lookup_type, |path| kwargs.get_item(path))?
             {
-                used_kwargs.insert(lookup_path.first_key());
+                if let Some(first_key) = lookup_path.first_key() {
+                    used_kwargs.insert(first_key);
+                }
                 kw_value = Some((lookup_path, value));
             }
 
