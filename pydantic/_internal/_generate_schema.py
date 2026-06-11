@@ -872,6 +872,12 @@ class GenerateSchema:
                         extras_keys_schema=extras_keys_schema,
                         model_name=cls.__name__,
                     )
+                    if any(_has_root_sequence_alias(field_info) for field_info in fields.values()):
+                        # Some alias paths index into a top-level sequence input, which needs to be
+                        # wrapped in a dictionary before the fields are looked up:
+                        fields_schema = core_schema.no_info_before_validator_function(
+                            _wrap_root_sequence_input, fields_schema
+                        )
                     inner_schema = apply_validators(fields_schema, decorators.root_validators.values())
                     inner_schema = apply_model_validators(inner_schema, model_validators, 'inner')
 
@@ -1227,7 +1233,7 @@ class GenerateSchema:
             schema,
             required=False if not field_info.is_required() else required,
             serialization_exclude=field_info.exclude,
-            validation_alias=_convert_to_aliases(field_info.validation_alias),
+            validation_alias=_convert_to_validation_aliases(field_info.validation_alias),
             serialization_alias=field_info.serialization_alias,
             serialization_exclude_if=field_info.exclude_if,
             metadata=metadata,
@@ -1244,7 +1250,7 @@ class GenerateSchema:
         return core_schema.model_field(
             schema,
             serialization_exclude=field_info.exclude,
-            validation_alias=_convert_to_aliases(field_info.validation_alias),
+            validation_alias=_convert_to_validation_aliases(field_info.validation_alias),
             serialization_alias=field_info.serialization_alias,
             serialization_exclude_if=field_info.exclude_if,
             frozen=field_info.frozen,
@@ -1266,7 +1272,7 @@ class GenerateSchema:
             init_only=field_info.init_var or None,
             kw_only=None if field_info.kw_only else False,
             serialization_exclude=field_info.exclude,
-            validation_alias=_convert_to_aliases(field_info.validation_alias),
+            validation_alias=_convert_to_validation_aliases(field_info.validation_alias),
             serialization_alias=field_info.serialization_alias,
             serialization_exclude_if=field_info.exclude_if,
             frozen=field_info.frozen,
@@ -1449,6 +1455,7 @@ class GenerateSchema:
                     raise PydanticUndefinedAnnotation.from_name_error(e) from e
 
                 readonly_fields: list[str] = []
+                needs_root_sequence_wrapper = False
 
                 for field_name, annotation in annotations.items():
                     field_info = FieldInfo.from_annotation(annotation, _source=AnnotationSource.TYPED_DICT)
@@ -1467,6 +1474,7 @@ class GenerateSchema:
                     ):
                         field_info.description = field_docstrings[field_name]
                     update_field_from_config(self._config_wrapper, field_name, field_info)
+                    needs_root_sequence_wrapper = needs_root_sequence_wrapper or _has_root_sequence_alias(field_info)
 
                     fields[field_name] = self._generate_td_field_schema(
                         field_name, field_info, decorators, required=required
@@ -1511,7 +1519,7 @@ class GenerateSchema:
                     else:
                         extra_behavior = config_extra
 
-                td_schema = core_schema.typed_dict_schema(
+                td_schema: core_schema.CoreSchema = core_schema.typed_dict_schema(
                     fields,
                     cls=typed_dict_cls,
                     computed_fields=[
@@ -1523,6 +1531,13 @@ class GenerateSchema:
                     ref=typed_dict_ref,
                     config=core_config,
                 )
+                if needs_root_sequence_wrapper:
+                    # Some alias paths index into a top-level sequence input, which needs to be
+                    # wrapped in a dictionary before the fields are looked up:
+                    ref: str = td_schema.pop('ref')  # type: ignore
+                    td_schema = core_schema.no_info_before_validator_function(
+                        _wrap_root_sequence_input, td_schema, ref=ref
+                    )
 
                 schema = self._apply_model_serializers(td_schema, decorators.model_serializers.values())
                 schema = apply_model_validators(schema, decorators.model_validators.values(), 'all')
@@ -1918,7 +1933,7 @@ class GenerateSchema:
                 has_post_init = hasattr(dataclass, '__post_init__')
                 has_slots = hasattr(dataclass, '__slots__')
 
-                args_schema = core_schema.dataclass_args_schema(
+                args_schema: core_schema.CoreSchema = core_schema.dataclass_args_schema(
                     dataclass.__name__,
                     args,
                     computed_fields=[
@@ -1927,6 +1942,10 @@ class GenerateSchema:
                     ],
                     collect_init_only=has_post_init,
                 )
+                if any(_has_root_sequence_alias(field_info) for field_info in fields.values()):
+                    # Some alias paths index into a top-level sequence input, which needs to be
+                    # wrapped in a dictionary before the fields are looked up:
+                    args_schema = core_schema.no_info_before_validator_function(_wrap_root_sequence_input, args_schema)
 
                 inner_schema = apply_validators(args_schema, decorators.root_validators.values())
 
@@ -2605,6 +2624,65 @@ def _convert_to_aliases(
         return alias.convert_to_aliases()
     else:
         return alias
+
+
+_ROOT_SEQUENCE_ALIAS_KEY: str = '__pydantic_root_sequence__'
+"""The key a top-level sequence input is wrapped under by `_wrap_root_sequence_input()`.
+
+`pydantic-core` requires alias paths to start with a string key, so an alias path with an
+integer first segment (e.g. `AliasPath(0)`, indexing into a top-level sequence input) is
+rewritten to start with this key instead (see `_convert_to_validation_aliases()`).
+"""
+
+
+def _convert_to_validation_aliases(
+    alias: str | AliasChoices | AliasPath | None,
+) -> str | list[str | int] | list[list[str | int]] | None:
+    """Like `_convert_to_aliases()`, but rewrites alias paths with an integer first segment.
+
+    Such paths index into a top-level sequence input, wrapped under `_ROOT_SEQUENCE_ALIAS_KEY`
+    by `_wrap_root_sequence_input()`.
+    """
+
+    def convert_path(path: list[str | int]) -> list[str | int]:
+        if path and isinstance(path[0], int):
+            return [_ROOT_SEQUENCE_ALIAS_KEY, *path]
+        return path
+
+    if isinstance(alias, AliasPath):
+        return convert_path(alias.convert_to_aliases())
+    if isinstance(alias, AliasChoices):
+        return [convert_path(choice) for choice in alias.convert_to_aliases()]
+    return alias
+
+
+def _has_root_sequence_alias(field_info: FieldInfo) -> bool:
+    """Whether the field's validation alias contains a path with an integer first segment.
+
+    Validators of classes with such fields need their input wrapped with `_wrap_root_sequence_input()`,
+    matching the alias rewrite performed by `_convert_to_validation_aliases()`.
+    """
+    validation_alias = field_info.validation_alias
+    if isinstance(validation_alias, AliasPath):
+        return bool(validation_alias.path) and isinstance(validation_alias.path[0], int)
+    if isinstance(validation_alias, AliasChoices):
+        return any(
+            isinstance(choice, AliasPath) and bool(choice.path) and isinstance(choice.path[0], int)
+            for choice in validation_alias.choices
+        )
+    return False
+
+
+def _wrap_root_sequence_input(input_value: Any) -> Any:
+    """Wrap a top-level `list` or `tuple` input in a dictionary.
+
+    Used as a `'function-before'` validation step for classes having fields with an alias
+    path with an integer first segment (e.g. `AliasPath(0)`), so that such paths (rewritten
+    by `_convert_to_validation_aliases()`) can index into the input sequence.
+    """
+    if isinstance(input_value, (list, tuple)):
+        return {_ROOT_SEQUENCE_ALIAS_KEY: input_value}
+    return input_value
 
 
 def apply_model_validators(

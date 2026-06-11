@@ -18,13 +18,16 @@ class AliasPath:
 
     A data class used by `validation_alias` as a convenience to create aliases.
 
+    An integer first path segment indexes into a top-level `list` or `tuple` input
+    (e.g. `AliasPath(0)` picks the first element of the input sequence).
+
     Attributes:
         path: A list of string or integer aliases.
     """
 
     path: list[int | str]
 
-    def __init__(self, first_arg: str, *args: str | int) -> None:
+    def __init__(self, first_arg: str | int, *args: str | int) -> None:
         self.path = [first_arg] + list(args)
 
     def convert_to_aliases(self) -> list[str | int]:

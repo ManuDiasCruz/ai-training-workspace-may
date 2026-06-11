@@ -47,6 +47,22 @@ print(user)
 In the `'first_name'` field, we are using the alias `'names'` and the index `0` to specify the path to the first name.
 In the `'last_name'` field, we are using the alias `'names'` and the index `1` to specify the path to the last name.
 
+An `AliasPath` with an integer first item indexes into a top-level `list` or `tuple` input,
+making it possible to validate a model from a sequence:
+
+```python {lint="skip"}
+from pydantic import BaseModel, Field, AliasPath
+
+
+class Row(BaseModel):
+    id: int = Field(validation_alias=AliasPath(0))
+    email: str = Field(validation_alias=AliasPath(1))
+
+row = Row.model_validate([42, 'john.doe@example.com'])
+print(row)
+#> id=42 email='john.doe@example.com'
+```
+
 `AliasChoices` is used to specify a list of choices of aliases. Choices that appear first in the list will have higher
 priority during validation. For example:
 
