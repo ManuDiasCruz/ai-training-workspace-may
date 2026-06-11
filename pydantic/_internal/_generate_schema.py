@@ -872,6 +872,11 @@ class GenerateSchema:
                         extras_keys_schema=extras_keys_schema,
                         model_name=cls.__name__,
                     )
+                    if any(_alias_has_int_first_segment(field.validation_alias) for field in fields.values()):
+                        fields_schema = core_schema.no_info_before_validator_function(
+                            _sequence_root_to_index_mapping,
+                            fields_schema,
+                        )
                     inner_schema = apply_validators(fields_schema, decorators.root_validators.values())
                     inner_schema = apply_model_validators(inner_schema, model_validators, 'inner')
 
@@ -1244,7 +1249,7 @@ class GenerateSchema:
         return core_schema.model_field(
             schema,
             serialization_exclude=field_info.exclude,
-            validation_alias=_convert_to_aliases(field_info.validation_alias),
+            validation_alias=_convert_to_model_aliases(field_info.validation_alias),
             serialization_alias=field_info.serialization_alias,
             serialization_exclude_if=field_info.exclude_if,
             frozen=field_info.frozen,
@@ -2605,6 +2610,42 @@ def _convert_to_aliases(
         return alias.convert_to_aliases()
     else:
         return alias
+
+
+def _convert_to_model_aliases(
+    alias: str | AliasChoices | AliasPath | None,
+) -> str | list[str | int] | list[list[str | int]] | None:
+    if isinstance(alias, AliasPath):
+        return _stringify_int_first_segment(alias.convert_to_aliases())
+    if isinstance(alias, AliasChoices):
+        return [_stringify_int_first_segment(path) for path in alias.convert_to_aliases()]
+    return alias
+
+
+def _stringify_int_first_segment(path: list[str | int]) -> list[str | int]:
+    if path and isinstance(path[0], int):
+        return [str(int(path[0])), *path[1:]]
+    return path
+
+
+def _alias_has_int_first_segment(alias: str | AliasChoices | AliasPath | None) -> bool:
+    if isinstance(alias, AliasPath):
+        return bool(alias.path) and isinstance(alias.path[0], int)
+    if isinstance(alias, AliasChoices):
+        return any(
+            isinstance(choice, AliasPath) and bool(choice.path) and isinstance(choice.path[0], int)
+            for choice in alias.choices
+        )
+    return False
+
+
+def _sequence_root_to_index_mapping(value: Any) -> Any:
+    if not isinstance(value, (list, tuple)):
+        return value
+
+    mapped = {str(index): item for index, item in enumerate(value)}
+    mapped.update({str(index - len(value)): item for index, item in enumerate(value)})
+    return mapped
 
 
 def apply_model_validators(
