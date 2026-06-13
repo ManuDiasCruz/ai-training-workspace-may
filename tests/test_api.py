@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+from sqlalchemy import delete
 
 pytestmark = pytest.mark.anyio
 
@@ -76,6 +77,43 @@ async def test_search_returns_matching_rows(client):
         ).lower()
         for it in body["items"]
     )
+
+
+async def test_search_ranks_more_relevant_rows_first(client):
+    from app.db import SessionLocal
+    from app.models import Customer
+
+    customer_ids = ["rank-alpha", "rank-alpha-alpha"]
+    with SessionLocal() as session:
+        session.add_all(
+            [
+                Customer(
+                    customer_id="rank-alpha",
+                    genre="Female",
+                    age=30,
+                    annual_income_k=70,
+                    spending_score=50,
+                ),
+                Customer(
+                    customer_id="rank-alpha-alpha",
+                    genre="Female",
+                    age=31,
+                    annual_income_k=71,
+                    spending_score=51,
+                ),
+            ]
+        )
+        session.commit()
+
+    try:
+        r = await client.get("/search", params={"q": "alpha", "page_size": 10})
+        assert r.status_code == 200
+        result_ids = [it["customer_id"] for it in r.json()["items"]]
+        assert result_ids.index("rank-alpha-alpha") < result_ids.index("rank-alpha")
+    finally:
+        with SessionLocal() as session:
+            session.execute(delete(Customer).where(Customer.customer_id.in_(customer_ids)))
+            session.commit()
 
 
 async def test_search_requires_q(client):

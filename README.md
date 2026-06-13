@@ -60,6 +60,18 @@ would add joins without meaningful benefit at this size.
 Schema definition lives in `app/models.py`. Import logic lives in
 `app/import_data.py`.
 
+## Search Index
+
+The `/search` endpoint is backed by a SQLite FTS5 virtual table named
+`customer_search`. It mirrors `customer_id`, `genre`, `age`,
+`annual_income_k`, and `spending_score` from `customers`.
+
+The app creates the FTS5 table and synchronization triggers at startup,
+and `python -m app.import_data` also bootstraps/rebuilds the index before
+loading the CSV so freshly imported data is searchable immediately.
+Results are ordered by `bm25(customer_search)` relevance with `id` as a
+stable tie-breaker.
+
 ## Setup
 
 Requires Python 3.11+.
@@ -175,7 +187,7 @@ Returns `404` when the customer id does not exist.
 ### Search
 
 Search matches `customer_id`, `genre`, `age`, `annual_income_k`, and
-`spending_score` using a simple case-insensitive match.
+`spending_score` using SQLite FTS5 and BM25 relevance ranking.
 
 ```bash
 curl "http://localhost:8000/search?q=Female&page_size=5"
@@ -214,7 +226,7 @@ per-genre breakdown.
 ## Known Limitations And Future Improvements
 
 - The API is read-only. Future work could add create/update/delete endpoints.
-- Search uses `ILIKE`-style matching. SQLite FTS5 would be better for larger datasets.
+- Search uses SQLite FTS5 for ranked full-text matching. Fuzzy typo tolerance is not implemented yet.
 - There is no authentication or authorization.
 - There is no rate limiting.
 - The default database is SQLite. A Postgres profile would be better for concurrent deployments.
