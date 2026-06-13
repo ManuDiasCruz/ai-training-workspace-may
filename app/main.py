@@ -1,21 +1,24 @@
 from __future__ import annotations
 
 import math
+import re
 from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query
-from sqlalchemy import String, cast, func, or_, select
+from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
 from .db import Base, engine, get_db
 from .models import Customer
+from .search_index import ensure_customer_search_index
 from .schemas import CustomerOut, CustomerPage, GenreStat, PageMeta, StatsOut
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(engine)
+    ensure_customer_search_index(engine)
     yield
 
 
@@ -84,6 +87,13 @@ def _page_response(
     )
 
 
+def _fts_query(q: str) -> str:
+    terms = re.findall(r"[A-Za-z0-9]+", q.lower())
+    if not terms:
+        raise HTTPException(status_code=400, detail="Search query must contain a word or number")
+    return " AND ".join(f"{term}*" for term in terms)
+
+
 @app.get("/customers", response_model=CustomerPage, tags=["customers"])
 async def list_customers(
     db: Annotated[Session, Depends(get_db)],
@@ -134,20 +144,34 @@ async def search_customers(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
 ) -> CustomerPage:
-    like = f"%{q}%"
-    cond = or_(
-        Customer.customer_id.ilike(like),
-        Customer.genre.ilike(like),
-        cast(Customer.age, String).ilike(like),
-        cast(Customer.annual_income_k, String).ilike(like),
-        cast(Customer.spending_score, String).ilike(like),
-    )
-    return _page_response(
-        db,
-        select(func.count(Customer.id)).where(cond),
-        select(Customer).where(cond),
-        page=page,
-        page_size=page_size,
+    match = _fts_query(q)
+    total = db.execute(
+        text(
+            """
+            SELECT count(*)
+            FROM customer_search
+            WHERE customer_search MATCH :match
+            """
+        ),
+        {"match": match},
+    ).scalar_one()
+    rows = db.execute(
+        text(
+            """
+            SELECT c.id, c.customer_id, c.genre, c.age, c.annual_income_k, c.spending_score
+            FROM customer_search
+            JOIN customers AS c ON c.id = customer_search.rowid
+            WHERE customer_search MATCH :match
+            ORDER BY bm25(customer_search), c.id
+            LIMIT :limit OFFSET :offset
+            """
+        ),
+        {"match": match, "limit": page_size, "offset": (page - 1) * page_size},
+    ).mappings()
+    pages = math.ceil(total / page_size) if total else 0
+    return CustomerPage(
+        meta=PageMeta(total=total, page=page, page_size=page_size, pages=pages),
+        items=[CustomerOut.model_validate(row) for row in rows],
     )
 
 
