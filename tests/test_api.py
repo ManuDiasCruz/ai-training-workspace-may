@@ -78,6 +78,46 @@ async def test_search_returns_matching_rows(client):
     )
 
 
+async def test_search_uses_sync_triggers_and_bm25_ranking(client):
+    from sqlalchemy import delete
+
+    from app.db import SessionLocal
+    from app.models import Customer
+
+    customer_ids = ["rankneedle-a", "rankneedle-b"]
+    with SessionLocal() as session:
+        session.add_all(
+            [
+                Customer(
+                    customer_id=customer_ids[0],
+                    genre="Rankneedle",
+                    age=30,
+                    annual_income_k=50,
+                    spending_score=50,
+                ),
+                Customer(
+                    customer_id=customer_ids[1],
+                    genre="Male",
+                    age=30,
+                    annual_income_k=50,
+                    spending_score=50,
+                ),
+            ]
+        )
+        session.commit()
+
+    try:
+        r = await client.get("/search", params={"q": "rankneedle"})
+        assert r.status_code == 200
+        body = r.json()
+        assert body["meta"]["total"] == 2
+        assert [item["customer_id"] for item in body["items"]] == customer_ids
+    finally:
+        with SessionLocal() as session:
+            session.execute(delete(Customer).where(Customer.customer_id.in_(customer_ids)))
+            session.commit()
+
+
 async def test_search_requires_q(client):
     r = await client.get("/search")
     assert r.status_code == 422
