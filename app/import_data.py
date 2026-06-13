@@ -18,6 +18,7 @@ from sqlalchemy import delete
 from .config import CSV_PATH
 from .db import Base, SessionLocal, engine
 from .models import Customer
+from .search_index import rebuild_search_index
 
 COLUMN_ALIASES = {
     "customer_id": {"customerid", "customer id"},
@@ -125,6 +126,12 @@ def import_csv(csv_path: Path = CSV_PATH, *, truncate: bool = True) -> int:
             session.add_all(batch)
             inserted = len(batch)
         session.commit()
+
+    # Bootstrap / refresh the FTS5 search index so freshly imported data is
+    # immediately searchable (issue #6, step 2).
+    with engine.begin() as conn:
+        rebuild_search_index(conn)
+
     return inserted
 
 

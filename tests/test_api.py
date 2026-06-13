@@ -98,3 +98,36 @@ async def test_stats_endpoint(client):
     assert body["min_annual_income_k"] == 15
     assert body["max_annual_income_k"] == 137
     assert len(body["by_genre"]) == 2
+
+
+def _search_capabilities():
+    from app import search_index
+    from app.db import engine
+
+    with engine.connect() as conn:
+        return search_index.detect_capabilities(conn)
+
+
+async def test_search_ranks_by_bm25_relevance(client):
+    # Customer 0076 is the only record whose annual_income_k and spending_score
+    # are BOTH 54, so the token "54" occurs twice for that row and FTS5 BM25
+    # ranks it ahead of the ~17 customers where "54" appears in a single field.
+    if not _search_capabilities()["fts5"]:
+        pytest.skip("SQLite build without FTS5; relevance ranking not applicable")
+    r = await client.get("/search", params={"q": "54", "page_size": 50})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["meta"]["total"] >= 2
+    ids = [it["customer_id"] for it in body["items"]]
+    assert ids[0] == "0076", f"expected 0076 ranked first by BM25, got {ids[:5]}"
+
+
+async def test_search_fuzzy_substring_match(client):
+    # Trigram fuzzy search matches on substrings: "ema" is contained in "Female".
+    if not _search_capabilities()["trigram"]:
+        pytest.skip("SQLite build without FTS5 trigram tokenizer")
+    r = await client.get("/search", params={"q": "ema", "fuzzy": "true", "page_size": 5})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["meta"]["total"] >= 1
+    assert all(it["genre"] == "Female" for it in body["items"])

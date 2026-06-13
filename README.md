@@ -174,12 +174,27 @@ Returns `404` when the customer id does not exist.
 
 ### Search
 
-Search matches `customer_id`, `genre`, `age`, `annual_income_k`, and
-`spending_score` using a simple case-insensitive match.
+Full-text search over `customer_id`, `genre`, `age`, `annual_income_k`, and
+`spending_score`, backed by a SQLite **FTS5** index and ranked by **BM25**
+relevance (most relevant rows first). Query tokens are prefix-matched, so
+`Fem` finds `Female`.
 
 ```bash
 curl "http://localhost:8000/search?q=Female&page_size=5"
 ```
+
+Add `fuzzy=true` for trigram-based substring / typo-tolerant matching:
+
+```bash
+curl "http://localhost:8000/search?q=ema&fuzzy=true"
+```
+
+The index is an external-content FTS5 table (`customers_fts`) kept in sync
+with `customers` via triggers and rebuilt automatically on every data
+import (`app/search_index.py`). If the running SQLite build lacks FTS5,
+`/search` transparently falls back to a simple `LIKE` query, and the
+trigram `fuzzy` mode degrades to standard matching when the trigram
+tokenizer is unavailable.
 
 ### Genres
 
@@ -214,7 +229,7 @@ per-genre breakdown.
 ## Known Limitations And Future Improvements
 
 - The API is read-only. Future work could add create/update/delete endpoints.
-- Search uses `ILIKE`-style matching. SQLite FTS5 would be better for larger datasets.
+- Search now uses SQLite FTS5 with BM25 ranking and an optional trigram fuzzy mode; on SQLite builds without FTS5 it falls back to `LIKE` matching.
 - There is no authentication or authorization.
 - There is no rate limiting.
 - The default database is SQLite. A Postgres profile would be better for concurrent deployments.
