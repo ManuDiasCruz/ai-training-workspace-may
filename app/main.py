@@ -5,10 +5,9 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query
-from sqlalchemy import String, cast, func, or_, select, text
+from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.orm import Session
 
-from . import search_index
 from .db import Base, engine, get_db
 from .models import Customer
 from .schemas import CustomerOut, CustomerPage, GenreStat, PageMeta, StatsOut
@@ -17,8 +16,6 @@ from .schemas import CustomerOut, CustomerPage, GenreStat, PageMeta, StatsOut
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(engine)
-    with engine.begin() as conn:
-        search_index.rebuild_search_index(conn)
     yield
 
 
@@ -130,10 +127,13 @@ async def get_customer(customer_id: str, db: Annotated[Session, Depends(get_db)]
     return CustomerOut.model_validate(obj)
 
 
-def _legacy_search(
-    db: Session, q: str, page: int, page_size: int
+@app.get("/search", response_model=CustomerPage, tags=["customers"])
+async def search_customers(
+    db: Annotated[Session, Depends(get_db)],
+    q: str = Query(..., min_length=1, max_length=64, description="Free-text search"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
 ) -> CustomerPage:
-    """ILIKE substring search, used when FTS5 is unavailable in this SQLite build."""
     like = f"%{q}%"
     cond = or_(
         Customer.customer_id.ilike(like),
@@ -148,74 +148,6 @@ def _legacy_search(
         select(Customer).where(cond),
         page=page,
         page_size=page_size,
-    )
-
-
-_SEARCH_CAPS: dict[str, bool] | None = None
-
-
-def _search_caps(db: Session) -> dict[str, bool]:
-    global _SEARCH_CAPS
-    if _SEARCH_CAPS is None:
-        _SEARCH_CAPS = search_index.detect_capabilities(db.connection())
-    return _SEARCH_CAPS
-
-
-@app.get("/search", response_model=CustomerPage, tags=["customers"])
-async def search_customers(
-    db: Annotated[Session, Depends(get_db)],
-    q: str = Query(..., min_length=1, max_length=64, description="Free-text search"),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=200),
-    fuzzy: bool = Query(
-        False, description="Trigram-based substring / typo-tolerant matching"
-    ),
-) -> CustomerPage:
-    """Full-text search over customers, ranked by BM25 relevance (FTS5).
-
-    Falls back to a simple ILIKE search if the running SQLite build has no
-    FTS5 support. ``fuzzy=true`` switches to the trigram index for
-    substring/typo tolerance when available.
-    """
-    caps = _search_caps(db)
-    if not caps["fts5"]:
-        return _legacy_search(db, q, page, page_size)
-
-    use_trgm = fuzzy and caps["trigram"]
-    match = search_index.build_match_query(q, fuzzy=use_trgm)
-    if match is None and use_trgm:
-        # Fuzzy query too short for trigram tokens; fall back to prefix match.
-        use_trgm = False
-        match = search_index.build_match_query(q, fuzzy=False)
-    if match is None:
-        return CustomerPage(
-            meta=PageMeta(total=0, page=page, page_size=page_size, pages=0), items=[]
-        )
-
-    table = search_index.FTS_TRGM_TABLE if use_trgm else search_index.FTS_TABLE
-    total = (
-        db.execute(
-            text(f"SELECT count(*) FROM {table} WHERE {table} MATCH :m"), {"m": match}
-        ).scalar()
-        or 0
-    )
-    rows = (
-        db.execute(
-            text(
-                f"SELECT c.id, c.customer_id, c.genre, c.age, c.annual_income_k, "
-                f"c.spending_score FROM {table} JOIN customers c ON c.id = {table}.rowid "
-                f"WHERE {table} MATCH :m ORDER BY bm25({table}), c.id "
-                f"LIMIT :limit OFFSET :offset"
-            ),
-            {"m": match, "limit": page_size, "offset": (page - 1) * page_size},
-        )
-        .mappings()
-        .all()
-    )
-    pages = math.ceil(total / page_size) if total else 0
-    return CustomerPage(
-        meta=PageMeta(total=total, page=page, page_size=page_size, pages=pages),
-        items=[CustomerOut.model_validate(dict(r)) for r in rows],
     )
 
 
