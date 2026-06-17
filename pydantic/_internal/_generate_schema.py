@@ -872,6 +872,11 @@ class GenerateSchema:
                         extras_keys_schema=extras_keys_schema,
                         model_name=cls.__name__,
                     )
+                    if any(_alias_has_root_index(field.validation_alias) for field in fields.values()):
+                        fields_schema = core_schema.no_info_before_validator_function(
+                            _wrap_root_sequence,
+                            fields_schema,
+                        )
                     inner_schema = apply_validators(fields_schema, decorators.root_validators.values())
                     inner_schema = apply_model_validators(inner_schema, model_validators, 'inner')
 
@@ -1244,7 +1249,7 @@ class GenerateSchema:
         return core_schema.model_field(
             schema,
             serialization_exclude=field_info.exclude,
-            validation_alias=_convert_to_aliases(field_info.validation_alias),
+            validation_alias=_convert_to_model_aliases(field_info.validation_alias),
             serialization_alias=field_info.serialization_alias,
             serialization_exclude_if=field_info.exclude_if,
             frozen=field_info.frozen,
@@ -2605,6 +2610,41 @@ def _convert_to_aliases(
         return alias.convert_to_aliases()
     else:
         return alias
+
+
+_ROOT_SEQUENCE_ALIAS = '__pydantic_root_sequence__'
+
+
+def _convert_to_model_aliases(
+    alias: str | AliasChoices | AliasPath | None,
+) -> str | list[str | int] | list[list[str | int]] | None:
+    def convert_path(path: list[str | int]) -> list[str | int]:
+        if path and isinstance(path[0], int):
+            return [_ROOT_SEQUENCE_ALIAS, *path]
+        return path
+
+    if isinstance(alias, AliasPath):
+        return convert_path(alias.convert_to_aliases())
+    if isinstance(alias, AliasChoices):
+        return [convert_path(path) for path in alias.convert_to_aliases()]
+    return alias
+
+
+def _alias_has_root_index(alias: str | AliasChoices | AliasPath | None) -> bool:
+    if isinstance(alias, AliasPath):
+        return bool(alias.path) and isinstance(alias.path[0], int)
+    if isinstance(alias, AliasChoices):
+        return any(
+            isinstance(choice, AliasPath) and bool(choice.path) and isinstance(choice.path[0], int)
+            for choice in alias.choices
+        )
+    return False
+
+
+def _wrap_root_sequence(value: Any) -> Any:
+    if isinstance(value, (list, tuple)):
+        return {_ROOT_SEQUENCE_ALIAS: value}
+    return value
 
 
 def apply_model_validators(

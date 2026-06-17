@@ -611,6 +611,38 @@ def test_search_dict_for_alias_path():
     assert ap.search_dict_for_path({'a': 'hello'}) is PydanticUndefined
 
 
+def test_validation_alias_path_with_root_list_index():
+    class Row(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+        name: str = Field(validation_alias=AliasPath(1))
+        email: str = Field(validation_alias=AliasPath(2))
+
+    data = [42, 'alice', 'a@example.com']
+    expected = {
+        'id': 42,
+        'name': 'alice',
+        'email': 'a@example.com',
+    }
+    assert Row.model_validate(data).model_dump() == expected
+    assert Row.model_validate(tuple(data)).model_dump() == expected
+    assert Row.model_validate_json('[42, "alice", "a@example.com"]').model_dump() == expected
+
+    class SparseRecord(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+        status: str = Field(validation_alias=AliasPath(7))
+
+    assert SparseRecord.model_validate([42, None, None, None, None, None, None, 'active']).model_dump() == {
+        'id': 42,
+        'status': 'active',
+    }
+
+    class ChoiceRecord(BaseModel):
+        id: int = Field(validation_alias=AliasChoices('id', AliasPath(0)))
+
+    assert ChoiceRecord.model_validate([42]).id == 42
+    assert ChoiceRecord.model_validate({'id': 43}).id == 43
+
+
 def test_validation_alias_invalid_value_type():
     m = 'Invalid `validation_alias` type. it should be `str`, `AliasChoices`, or `AliasPath`'
     with pytest.raises(TypeError, match=m):
