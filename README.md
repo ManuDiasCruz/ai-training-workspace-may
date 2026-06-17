@@ -1,7 +1,7 @@
 # Shopping Customers API
 
 A small production-style REST API built on top of the
-[Mall Customer Segmentation dataset](https://www.kaggle.com/datasets/vjchoudhary7/customer-segmentation-tutorial-in-python).
+[shopping dataset supplied for this project in Google Drive](https://drive.google.com/file/d/1-4dSFNppilPVbHeoTeuVS5-CSFMlREFm/view?usp=sharing).
 Records are imported from `data/Shopping_data.csv` into a local SQLite
 database and exposed through a FastAPI service.
 
@@ -19,6 +19,25 @@ dataset:
 - **Tests:** pytest + `TestClient` running against an isolated SQLite
   file per test run.
 
+## Dataset inspection
+
+The supplied CSV was read directly from its Google Drive file ID and checked
+against the copy committed in `data/Shopping_data.csv`. The observed dataset
+shape and value ranges are:
+
+| Property | Observed value |
+|----------|----------------|
+| Rows | 200 customers |
+| Columns | `CustomerID`, `Genre`, `Age`, `Annual Income (k$)`, `Spending Score (1-100)` |
+| `CustomerID` | `0001` through `0200`, stored as text to keep leading zeroes |
+| `Genre` | 112 `Female`, 88 `Male` |
+| `Age` range | 18–70 |
+| Annual income range | 15–137 k$ |
+| Spending score range | 1–99 |
+
+The API uses the clearer field name `gender` for the CSV's `Genre` column and
+uses `annual_income_k` to preserve the source unit in the public contract.
+
 ## Database design
 
 Single table `customers` (one row per customer).
@@ -26,8 +45,8 @@ Single table `customers` (one row per customer).
 | Column            | Type        | Notes                                            |
 |-------------------|-------------|--------------------------------------------------|
 | `id`              | INTEGER PK  | Auto-increment surrogate key.                    |
-| `customer_code`   | VARCHAR(8)  | Unique, indexed — original `CustomerID` (`0001`).|
-| `gender`          | VARCHAR(16) | `Male` or `Female` (source column `Genre`).      |
+| `customer_code`   | VARCHAR(8)  | Unique, indexed — original numeric-text `CustomerID` (`0001`).|
+| `gender`          | VARCHAR(16) | `CHECK` constrained to `Male` or `Female` (source column `Genre`).|
 | `age`             | INTEGER     | `CHECK age BETWEEN 0 AND 130`.                   |
 | `annual_income_k` | INTEGER     | Annual income in thousands of dollars (`>= 0`).  |
 | `spending_score`  | INTEGER     | `CHECK spending_score BETWEEN 1 AND 100`.        |
@@ -75,6 +94,10 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+Dependency ranges include compatible upper bounds for FastAPI, Starlette,
+AnyIO and HTTPX. Use the virtual environment shown above instead of a global
+Python environment to avoid conflicts with unrelated Python tools.
+
 ## Execution
 
 Import the dataset into a local SQLite database (`shopping.db` in the
@@ -82,6 +105,16 @@ repo root, created on first run):
 
 ```bash
 python -m scripts.import_data
+```
+
+The importer validates the expected CSV headers and every record before
+committing. An invalid row is reported with its CSV line number and the whole
+import is rolled back. Existing `customer_code` values are skipped, so the
+command is safe to rerun:
+
+```text
+Importing .../data/Shopping_data.csv into sqlite:///shopping.db
+Inserted 200 new customers.
 ```
 
 Run the API:
@@ -178,8 +211,12 @@ curl -X DELETE "http://127.0.0.1:8000/customers/201"
   input returns HTTP `422` with a structured detail payload.
 - Inconsistent range filters (`min_age > max_age`, etc.) return HTTP
   `400`.
+- Customer codes must contain 4–8 decimal digits so leading-zero source IDs
+  remain valid while malformed identifiers are rejected.
 - Missing resources return HTTP `404` with `{"detail": "..."}`.
 - Duplicate `customer_code` on create returns HTTP `409`.
+- The same range, gender and uniqueness rules are enforced by SQLite to
+  protect data loaded outside the HTTP API.
 
 ## Known limitations & future improvements
 
@@ -192,6 +229,8 @@ curl -X DELETE "http://127.0.0.1:8000/customers/201"
   Full-text search would need FTS5 or an external index.
 - **No rate limiting / observability.** Logging, metrics and request
   tracing are out of scope for this exercise.
+- **Offset pagination has scaling limits.** Cursor pagination would avoid
+  increasingly expensive offsets on a substantially larger table.
 - **Tiny dataset.** All 200 rows fit in memory; the design choices would
   differ for millions of records (server-side cursor pagination,
   caching, etc.).
