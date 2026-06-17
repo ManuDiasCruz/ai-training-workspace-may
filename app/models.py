@@ -14,6 +14,9 @@ class Customer(Base):
     spending_score = Column(Integer, nullable=False)
 
     __table_args__ = (
+        CheckConstraint(
+            "gender IN ('Male', 'Female')", name="ck_customer_gender_values"
+        ),
         CheckConstraint("age >= 0 AND age <= 130", name="ck_customer_age_range"),
         CheckConstraint("annual_income_k >= 0", name="ck_customer_income_nonneg"),
         CheckConstraint(

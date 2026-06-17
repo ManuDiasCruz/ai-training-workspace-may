@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi import Depends, FastAPI, HTTPException, Path, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -36,7 +36,7 @@ def create_app() -> FastAPI:
     def list_customers(
         page: int = Query(1, ge=1),
         page_size: int = Query(20, ge=1, le=200),
-        gender: Optional[str] = Query(None, pattern="^(Male|Female)$"),
+        gender: Optional[schemas.Gender] = None,
         min_age: Optional[int] = Query(None, ge=0, le=130),
         max_age: Optional[int] = Query(None, ge=0, le=130),
         min_income: Optional[int] = Query(None, ge=0),
@@ -85,7 +85,9 @@ def create_app() -> FastAPI:
         responses={404: {"model": schemas.ErrorOut}},
         tags=["customers"],
     )
-    def get_customer(customer_id: int, db: Session = Depends(get_db)):
+    def get_customer(
+        customer_id: int = Path(..., ge=1), db: Session = Depends(get_db)
+    ):
         obj = crud.get_customer(db, customer_id)
         if not obj:
             raise HTTPException(status_code=404, detail="Customer not found")
@@ -117,7 +119,9 @@ def create_app() -> FastAPI:
         responses={404: {"model": schemas.ErrorOut}},
         tags=["customers"],
     )
-    def delete_customer(customer_id: int, db: Session = Depends(get_db)):
+    def delete_customer(
+        customer_id: int = Path(..., ge=1), db: Session = Depends(get_db)
+    ):
         if not crud.delete_customer(db, customer_id):
             raise HTTPException(status_code=404, detail="Customer not found")
         return None

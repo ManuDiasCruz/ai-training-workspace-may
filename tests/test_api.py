@@ -33,6 +33,15 @@ def test_list_pagination_second_page(client):
     assert body["items"][0]["customer_code"] == "0051"
 
 
+def test_pagination_uses_stable_order_for_tied_values(client):
+    r = client.get("/customers?sort_by=age&order=asc&page=1&page_size=200")
+    assert r.status_code == 200
+    rows = r.json()["items"]
+    assert [(row["age"], row["id"]) for row in rows] == sorted(
+        (row["age"], row["id"]) for row in rows
+    )
+
+
 def test_filter_by_gender(client):
     r = client.get("/customers?gender=Female&page_size=200")
     assert r.status_code == 200
@@ -79,6 +88,11 @@ def test_get_missing_customer(client):
     assert r.status_code == 404
 
 
+def test_get_rejects_non_positive_id(client):
+    r = client.get("/customers/0")
+    assert r.status_code == 422
+
+
 def test_create_and_delete_customer(client):
     new_payload = {
         "customer_code": "9999",
@@ -106,6 +120,18 @@ def test_create_invalid_payload(client):
     bad = {
         "customer_code": "X",
         "gender": "Other",
+        "age": 25,
+        "annual_income_k": 30,
+        "spending_score": 50,
+    }
+    r = client.post("/customers", json=bad)
+    assert r.status_code == 422
+
+
+def test_create_requires_numeric_customer_code(client):
+    bad = {
+        "customer_code": "ABCD",
+        "gender": "Male",
         "age": 25,
         "annual_income_k": 30,
         "spending_score": 50,

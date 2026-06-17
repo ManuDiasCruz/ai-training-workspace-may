@@ -1,11 +1,17 @@
-from typing import List, Optional
+from enum import Enum
+from typing import List
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class Gender(str, Enum):
+    male = "Male"
+    female = "Female"
+
+
 class CustomerBase(BaseModel):
-    customer_code: str = Field(..., min_length=1, max_length=8)
-    gender: str = Field(..., pattern="^(Male|Female)$")
+    customer_code: str = Field(..., pattern=r"^\d{4,8}$")
+    gender: Gender
     age: int = Field(..., ge=0, le=130)
     annual_income_k: int = Field(..., ge=0)
     spending_score: int = Field(..., ge=1, le=100)
