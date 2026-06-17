@@ -19,6 +19,48 @@ from app.models import Customer  # noqa: E402
 
 
 DEFAULT_CSV = ROOT / "data" / "Shopping_data.csv"
+REQUIRED_COLUMNS = {
+    "CustomerID",
+    "Genre",
+    "Age",
+    "Annual Income (k$)",
+    "Spending Score (1-100)",
+}
+
+
+def parse_row(row: dict[str, str], line_number: int) -> dict[str, object]:
+    """Validate and convert one source row into the database field format."""
+    try:
+        code = row["CustomerID"].strip()
+        gender = row["Genre"].strip()
+        age = int(row["Age"])
+        income = int(row["Annual Income (k$)"])
+        score = int(row["Spending Score (1-100)"])
+    except (AttributeError, KeyError, TypeError, ValueError) as exc:
+        raise ValueError(f"Invalid row at CSV line {line_number}: {exc}") from exc
+
+    if not code or len(code) > 8:
+        raise ValueError(f"Invalid CustomerID at CSV line {line_number}: {code!r}")
+    if gender not in {"Male", "Female"}:
+        raise ValueError(f"Invalid Genre at CSV line {line_number}: {gender!r}")
+    if not 0 <= age <= 130:
+        raise ValueError(f"Invalid Age at CSV line {line_number}: {age}")
+    if income < 0:
+        raise ValueError(
+            f"Invalid Annual Income (k$) at CSV line {line_number}: {income}"
+        )
+    if not 1 <= score <= 100:
+        raise ValueError(
+            f"Invalid Spending Score (1-100) at CSV line {line_number}: {score}"
+        )
+
+    return {
+        "customer_code": code,
+        "gender": gender,
+        "age": age,
+        "annual_income_k": income,
+        "spending_score": score,
+    }
 
 
 def import_csv(csv_path: Path) -> int:
@@ -32,22 +74,19 @@ def import_csv(csv_path: Path) -> int:
         existing = {c[0] for c in session.query(Customer.customer_code).all()}
         with csv_path.open("r", newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
-            for row in reader:
-                code = (row.get("CustomerID") or "").strip()
-                if not code or code in existing:
+            missing_columns = REQUIRED_COLUMNS - set(reader.fieldnames or [])
+            if missing_columns:
+                raise ValueError(
+                    "Dataset is missing required columns: "
+                    + ", ".join(sorted(missing_columns))
+                )
+
+            for line_number, row in enumerate(reader, start=2):
+                values = parse_row(row, line_number)
+                code = values["customer_code"]
+                if code in existing:
                     continue
-                try:
-                    customer = Customer(
-                        customer_code=code,
-                        gender=(row.get("Genre") or "").strip(),
-                        age=int(row["Age"]),
-                        annual_income_k=int(row["Annual Income (k$)"]),
-                        spending_score=int(row["Spending Score (1-100)"]),
-                    )
-                except (KeyError, ValueError) as exc:
-                    print(f"Skipping malformed row {row}: {exc}", file=sys.stderr)
-                    continue
-                session.add(customer)
+                session.add(Customer(**values))
                 existing.add(code)
                 inserted += 1
         session.commit()
