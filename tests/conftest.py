@@ -37,3 +37,5 @@ def client(tmp_path, monkeypatch):
 
     with TestClient(app) as c:
         yield c
+
+    engine.dispose()

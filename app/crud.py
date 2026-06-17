@@ -68,7 +68,9 @@ def list_customers(
     sort_col = sortable.get(sort_by, models.Customer.id)
     if order.lower() == "desc":
         sort_col = sort_col.desc()
-    q = q.order_by(sort_col)
+    # Every sort includes the unique primary key as a tiebreaker so that a
+    # record cannot move between pages when several customers share a value.
+    q = q.order_by(sort_col, models.Customer.id)
 
     total = q.count()
     items = q.offset((page - 1) * page_size).limit(page_size).all()
