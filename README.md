@@ -1,9 +1,10 @@
 # Shopping Customers API
 
-A small production-style REST API built on top of the
-[Mall Customer Segmentation dataset](https://www.kaggle.com/datasets/vjchoudhary7/customer-segmentation-tutorial-in-python).
-Records are imported from `data/Shopping_data.csv` into a local SQLite
-database and exposed through a FastAPI service.
+A small production-style REST API built on top of the provided
+[shopping dataset in Google Drive](https://drive.google.com/file/d/1-4dSFNppilPVbHeoTeuVS5-CSFMlREFm/view?usp=sharing),
+a copy of the Mall Customer Segmentation dataset. Records are imported from
+`data/Shopping_data.csv` into a local SQLite database and exposed through a
+FastAPI service.
 
 ## Project description
 
@@ -16,8 +17,25 @@ dataset:
   `CHECK` constraints and indexes.
 - **API:** FastAPI with Pydantic v2 schemas, pagination, filtering,
   search, sorting and basic write operations.
-- **Tests:** pytest + `TestClient` running against an isolated SQLite
-  file per test run.
+- **Tests:** pytest + `httpx.ASGITransport` running against an isolated SQLite
+  file per test run, with requests sent directly to the ASGI application.
+
+### Dataset inspection
+
+The supplied CSV has one header row and 200 unique customer rows. There are no
+empty values in the source fields. The observed values are:
+
+| Source field | Imported field | Observed values / range |
+|---|---|---|
+| `CustomerID` | `customer_code` | `0001`–`0200`, unique |
+| `Genre` | `gender` | `Male`, `Female` |
+| `Age` | `age` | 18–70 |
+| `Annual Income (k$)` | `annual_income_k` | 15–137 |
+| `Spending Score (1-100)` | `spending_score` | 1–99 |
+
+`CustomerID` is loaded as text so leading zeros are preserved. The importer
+requires all five columns, validates each row, and rolls the transaction back
+instead of persisting a partially malformed source file.
 
 ## Database design
 
@@ -27,7 +45,7 @@ Single table `customers` (one row per customer).
 |-------------------|-------------|--------------------------------------------------|
 | `id`              | INTEGER PK  | Auto-increment surrogate key.                    |
 | `customer_code`   | VARCHAR(8)  | Unique, indexed — original `CustomerID` (`0001`).|
-| `gender`          | VARCHAR(16) | `Male` or `Female` (source column `Genre`).      |
+| `gender`          | VARCHAR(16) | `Male` or `Female`; enforced by `CHECK`.         |
 | `age`             | INTEGER     | `CHECK age BETWEEN 0 AND 130`.                   |
 | `annual_income_k` | INTEGER     | Annual income in thousands of dollars (`>= 0`).  |
 | `spending_score`  | INTEGER     | `CHECK spending_score BETWEEN 1 AND 100`.        |
@@ -67,7 +85,7 @@ written so a future order/transaction table could reference
 
 ## Setup
 
-Requires Python 3.10+ (tested on 3.11).
+Requires Python 3.10+ (tested on 3.10).
 
 ```bash
 python -m venv .venv
@@ -83,6 +101,10 @@ repo root, created on first run):
 ```bash
 python -m scripts.import_data
 ```
+
+The import is idempotent: rows already present under the same
+`customer_code` are skipped. A successful first import reports 200 inserted
+customers; another run reports zero.
 
 Run the API:
 
@@ -112,6 +134,9 @@ e.g. `DATABASE_URL=sqlite:////tmp/shopping.db`.
 ```bash
 curl "http://127.0.0.1:8000/customers?page=1&page_size=5"
 ```
+
+The response includes `total`, `page`, `page_size`, `total_pages`, `has_next`,
+`has_previous`, and the current page's `items`.
 
 ### Filter
 
@@ -161,6 +186,14 @@ curl -X POST "http://127.0.0.1:8000/customers" \
 curl -X DELETE "http://127.0.0.1:8000/customers/201"
 ```
 
+### Update
+
+```bash
+curl -X PATCH "http://127.0.0.1:8000/customers/42" \
+     -H "Content-Type: application/json" \
+     -d '{"annual_income_k":45,"spending_score":95}'
+```
+
 ## Endpoints summary
 
 | Method | Path                  | Description                                |
@@ -170,6 +203,7 @@ curl -X DELETE "http://127.0.0.1:8000/customers/201"
 | GET    | `/customers`          | Paginated, filterable, searchable list.    |
 | GET    | `/customers/{id}`     | Fetch a single customer by surrogate id.   |
 | POST   | `/customers`          | Create a new customer.                     |
+| PATCH  | `/customers/{id}`     | Update selected fields on a customer.      |
 | DELETE | `/customers/{id}`     | Delete a customer.                         |
 
 ## Validation & error handling
@@ -179,19 +213,23 @@ curl -X DELETE "http://127.0.0.1:8000/customers/201"
 - Inconsistent range filters (`min_age > max_age`, etc.) return HTTP
   `400`.
 - Missing resources return HTTP `404` with `{"detail": "..."}`.
-- Duplicate `customer_code` on create returns HTTP `409`.
+- Duplicate `customer_code` on create/update returns HTTP `409`.
+- An empty update request returns HTTP `400`.
+- CSV imports fail atomically when columns are missing or values are outside
+  the model's allowed domains.
 
 ## Known limitations & future improvements
 
 - **Auth:** the API is fully open. A real deployment needs API keys or
   OAuth/JWT.
-- **No update endpoint.** Only create / read / delete are exposed.
 - **SQLite only.** Fine locally; for production swap in Postgres via
   `DATABASE_URL` and add Alembic migrations.
 - **Search is intentionally simple** (`LIKE` over a couple of columns).
   Full-text search would need FTS5 or an external index.
 - **No rate limiting / observability.** Logging, metrics and request
   tracing are out of scope for this exercise.
+- **No write audit trail or bulk import API.** Future versions could record
+  source/import metadata and expose authenticated, background import jobs.
 - **Tiny dataset.** All 200 rows fit in memory; the design choices would
   differ for millions of records (server-side cursor pagination,
   caching, etc.).
