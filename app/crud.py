@@ -83,6 +83,16 @@ def create_customer(db: Session, payload: schemas.CustomerCreate) -> models.Cust
     return obj
 
 
+def update_customer(
+    db: Session, customer: models.Customer, payload: schemas.CustomerUpdate
+) -> models.Customer:
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(customer, field, value)
+    db.commit()
+    db.refresh(customer)
+    return customer
+
+
 def delete_customer(db: Session, customer_id: int) -> bool:
     obj = get_customer(db, customer_id)
     if not obj:

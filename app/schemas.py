@@ -15,6 +15,14 @@ class CustomerCreate(CustomerBase):
     pass
 
 
+class CustomerUpdate(BaseModel):
+    customer_code: Optional[str] = Field(None, min_length=1, max_length=8)
+    gender: Optional[str] = Field(None, pattern="^(Male|Female)$")
+    age: Optional[int] = Field(None, ge=0, le=130)
+    annual_income_k: Optional[int] = Field(None, ge=0)
+    spending_score: Optional[int] = Field(None, ge=1, le=100)
+
+
 class CustomerOut(CustomerBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
@@ -24,6 +32,9 @@ class PaginatedCustomers(BaseModel):
     total: int
     page: int
     page_size: int
+    total_pages: int
+    has_next: bool
+    has_previous: bool
     items: List[CustomerOut]
 
 
