@@ -21,6 +21,9 @@ def test_list_default_pagination(client):
     assert body["total"] == 200
     assert body["page"] == 1
     assert body["page_size"] == 20
+    assert body["total_pages"] == 10
+    assert body["has_next"] is True
+    assert body["has_previous"] is False
     assert len(body["items"]) == 20
     assert body["items"][0]["customer_code"] == "0001"
 
@@ -77,6 +80,22 @@ def test_get_single_customer(client):
 def test_get_missing_customer(client):
     r = client.get("/customers/999999")
     assert r.status_code == 404
+
+
+def test_update_customer(client):
+    r = client.patch(
+        "/customers/1", json={"annual_income_k": 25, "spending_score": 75}
+    )
+    assert r.status_code == 200
+    assert r.json()["customer_code"] == "0001"
+    assert r.json()["annual_income_k"] == 25
+    assert r.json()["spending_score"] == 75
+
+    empty_update = client.patch("/customers/1", json={})
+    assert empty_update.status_code == 400
+
+    missing = client.patch("/customers/999999", json={"age": 30})
+    assert missing.status_code == 404
 
 
 def test_create_and_delete_customer(client):

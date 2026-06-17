@@ -21,11 +21,11 @@ def create_app() -> FastAPI:
     )
 
     @app.get("/health", tags=["meta"])
-    def health():
+    async def health():
         return {"status": "ok"}
 
     @app.get("/stats", response_model=schemas.StatsOut, tags=["customers"])
-    def get_stats(db: Session = Depends(get_db)):
+    async def get_stats(db: Session = Depends(get_db)):
         return crud.stats(db)
 
     @app.get(
@@ -33,7 +33,7 @@ def create_app() -> FastAPI:
         response_model=schemas.PaginatedCustomers,
         tags=["customers"],
     )
-    def list_customers(
+    async def list_customers(
         page: int = Query(1, ge=1),
         page_size: int = Query(20, ge=1, le=200),
         gender: Optional[str] = Query(None, pattern="^(Male|Female)$"),
@@ -77,7 +77,16 @@ def create_app() -> FastAPI:
             sort_by=sort_by,
             order=order,
         )
-        return {"total": total, "page": page, "page_size": page_size, "items": items}
+        total_pages = (total + page_size - 1) // page_size
+        return {
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": total_pages,
+            "has_next": page < total_pages,
+            "has_previous": page > 1 and total_pages > 0,
+            "items": items,
+        }
 
     @app.get(
         "/customers/{customer_id}",
@@ -85,7 +94,7 @@ def create_app() -> FastAPI:
         responses={404: {"model": schemas.ErrorOut}},
         tags=["customers"],
     )
-    def get_customer(customer_id: int, db: Session = Depends(get_db)):
+    async def get_customer(customer_id: int, db: Session = Depends(get_db)):
         obj = crud.get_customer(db, customer_id)
         if not obj:
             raise HTTPException(status_code=404, detail="Customer not found")
@@ -98,7 +107,7 @@ def create_app() -> FastAPI:
         responses={409: {"model": schemas.ErrorOut}},
         tags=["customers"],
     )
-    def create_customer(
+    async def create_customer(
         payload: schemas.CustomerCreate, db: Session = Depends(get_db)
     ):
         if crud.get_customer_by_code(db, payload.customer_code):
@@ -111,13 +120,43 @@ def create_app() -> FastAPI:
             db.rollback()
             raise HTTPException(status_code=409, detail="Could not create customer")
 
+    @app.patch(
+        "/customers/{customer_id}",
+        response_model=schemas.CustomerOut,
+        responses={404: {"model": schemas.ErrorOut}, 409: {"model": schemas.ErrorOut}},
+        tags=["customers"],
+    )
+    async def update_customer(
+        customer_id: int,
+        payload: schemas.CustomerUpdate,
+        db: Session = Depends(get_db),
+    ):
+        customer = crud.get_customer(db, customer_id)
+        if not customer:
+            raise HTTPException(status_code=404, detail="Customer not found")
+
+        changes = payload.model_dump(exclude_unset=True)
+        if not changes:
+            raise HTTPException(status_code=400, detail="No fields supplied for update")
+        if "customer_code" in changes:
+            duplicate = crud.get_customer_by_code(db, changes["customer_code"])
+            if duplicate and duplicate.id != customer_id:
+                raise HTTPException(
+                    status_code=409, detail="customer_code already exists"
+                )
+        try:
+            return crud.update_customer(db, customer, payload)
+        except IntegrityError:
+            db.rollback()
+            raise HTTPException(status_code=409, detail="Could not update customer")
+
     @app.delete(
         "/customers/{customer_id}",
         status_code=status.HTTP_204_NO_CONTENT,
         responses={404: {"model": schemas.ErrorOut}},
         tags=["customers"],
     )
-    def delete_customer(customer_id: int, db: Session = Depends(get_db)):
+    async def delete_customer(customer_id: int, db: Session = Depends(get_db)):
         if not crud.delete_customer(db, customer_id):
             raise HTTPException(status_code=404, detail="Customer not found")
         return None
