@@ -3,7 +3,7 @@ import useAsync from "../useAsync";
 import * as service from "../../services/recommendations";
 
 export default function useRecommendation() {
-  const { data, loading, act } = useAsync(service.get);
+  const { data, loading, error, act } = useAsync(service.get);
 
   const update = (id) => {
     act(id);
@@ -12,6 +12,7 @@ export default function useRecommendation() {
   return {
     recommendation: data,
     loadingRecommendation: loading,
+    errorLoadingRecommendation: error,
     getRecommendation: act,
     updateRecommendation: update
   };

@@ -7,26 +7,38 @@ import CreateNewRecommendation from "../../../components/CreateNewRecommendation
 import Recommendation from "../../../components/Recommendation";
 
 export default function Home() {
-  const { recommendations, loadingRecommendations, listRecommendations } = useRecommendations();
+  const {
+    recommendations,
+    errorLoadingRecommendations,
+    listRecommendations
+  } = useRecommendations();
   const { loadingCreatingRecommendation, createRecommendation, creatingRecommendationError } = useCreateRecommendation();
 
   const handleCreateRecommendation = async (recommendation) => {
-    await createRecommendation({
-      name: recommendation.name,
-      youtubeLink: recommendation.link,
-    });
+    try {
+      await createRecommendation({
+        name: recommendation.name,
+        youtubeLink: recommendation.link,
+      });
 
-    listRecommendations();
+      await listRecommendations();
+    } catch (_error) {
+      // Errors are exposed by the hooks and rendered below.
+    }
   };
 
   useEffect(() => {
     if (creatingRecommendationError) {
-      alert("Error creating recommendation!");
+      alert(creatingRecommendationError.response?.data?.message || "Error creating recommendation!");
     }
   }, [creatingRecommendationError]);
 
-  if ((loadingRecommendations && !recommendations) || !recommendations) {
+  if (!recommendations && !errorLoadingRecommendations) {
     return <div>Loading...</div>;
+  }
+
+  if (errorLoadingRecommendations && !recommendations) {
+    return <div>Could not load recommendations. Check the API connection and try again.</div>;
   }
 
   return (
