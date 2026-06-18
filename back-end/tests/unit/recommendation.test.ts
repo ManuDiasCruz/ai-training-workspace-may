@@ -6,6 +6,10 @@ import { createRandomSong } from "../factories/recommendationFactory.js";
 
 describe("UNIT TESTS SUITE", () => {
 
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     const recommendation1 = createRandomSong();
 
     const recommendation2 = {
