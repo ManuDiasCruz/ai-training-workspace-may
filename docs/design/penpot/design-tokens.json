@@ -1,0 +1,49 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "meta": {
+    "project": "Shopping Customers API",
+    "page": "Customer Intelligence",
+    "stakeholder": "Mary"
+  },
+  "color": {
+    "canvas": { "$type": "color", "$value": "#F4F7F7" },
+    "surface": { "$type": "color", "$value": "#FFFFFF" },
+    "ink": { "$type": "color", "$value": "#132A2E" },
+    "muted": { "$type": "color", "$value": "#627579" },
+    "border": { "$type": "color", "$value": "#D9E4E3" },
+    "brand": { "$type": "color", "$value": "#0F766E" },
+    "brandHover": { "$type": "color", "$value": "#115E59" },
+    "brandSoft": { "$type": "color", "$value": "#CCFBF1" },
+    "navy": { "$type": "color", "$value": "#16383E" },
+    "male": { "$type": "color", "$value": "#1D4ED8" },
+    "maleSoft": { "$type": "color", "$value": "#DBEAFE" },
+    "female": { "$type": "color", "$value": "#BE185D" },
+    "femaleSoft": { "$type": "color", "$value": "#FCE7F3" },
+    "danger": { "$type": "color", "$value": "#B42318" },
+    "dangerSoft": { "$type": "color", "$value": "#FEE4E2" },
+    "warning": { "$type": "color", "$value": "#B54708" },
+    "warningSoft": { "$type": "color", "$value": "#FEF0C7" },
+    "success": { "$type": "color", "$value": "#067647" },
+    "successSoft": { "$type": "color", "$value": "#DCFAE6" }
+  },
+  "font": {
+    "family": { "$type": "fontFamily", "$value": "Inter, sans-serif" },
+    "body": { "$type": "fontSize", "$value": "14px" },
+    "caption": { "$type": "fontSize", "$value": "12px" },
+    "heading": { "$type": "fontSize", "$value": "24px" },
+    "metric": { "$type": "fontSize", "$value": "32px" }
+  },
+  "space": {
+    "xs": { "$type": "spacing", "$value": "4px" },
+    "sm": { "$type": "spacing", "$value": "8px" },
+    "md": { "$type": "spacing", "$value": "12px" },
+    "lg": { "$type": "spacing", "$value": "16px" },
+    "xl": { "$type": "spacing", "$value": "24px" },
+    "2xl": { "$type": "spacing", "$value": "32px" }
+  },
+  "radius": {
+    "control": { "$type": "borderRadius", "$value": "10px" },
+    "card": { "$type": "borderRadius", "$value": "16px" },
+    "pill": { "$type": "borderRadius", "$value": "999px" }
+  }
+}

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Customer Intelligence — Stakeholder: Mary</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-bar">
+    <a class="brand" href="#" aria-label="Shopping Customers home">
+      <span aria-hidden="true">SC</span> Shopping Customers
+    </a>
+    <div class="app-actions">
+      <span class="health"><i aria-hidden="true"></i> API online</span>
+      <button class="secondary">Help &amp; API docs</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Customer intelligence</p>
+        <h1 id="page-title">Understand the customers behind the numbers.</h1>
+        <p>Browse all 200 records, compare spending behavior, and manage this retail analytics dataset.</p>
+      </div>
+      <button class="primary">+ Add customer</button>
+    </section>
+
+    <section class="metrics" aria-label="Dataset overview">
+      <article class="metric"><p>Total customers</p><strong>200</strong><span><b class="female">112 Female</b> · <b class="male">88 Male</b></span></article>
+      <article class="metric"><p>Average age</p><strong>38.9</strong><span>years</span></article>
+      <article class="metric"><p>Average annual income</p><strong>60.6 k$</strong><span>per customer</span></article>
+      <article class="metric"><p>Average spending score</p><strong>50.2</strong><span>of 100</span></article>
+    </section>
+
+    <section class="customer-panel" aria-labelledby="customers-title">
+      <div class="panel-title"><div><p class="eyebrow">Directory</p><h2 id="customers-title">Customers <span>200</span></h2></div><button class="export">Export current view</button></div>
+      <form class="filters" aria-label="Customer filters">
+        <label class="search"><span>Search</span><input type="search" placeholder="Code or gender" value=""></label>
+        <label><span>Gender</span><select><option>All</option><option>Female</option><option>Male</option></select></label>
+        <label><span>Age</span><select><option>Any age</option><option selected>18–25</option><option>26–40</option><option>41+</option></select></label>
+        <label><span>Score</span><select><option>Any score</option><option>High: 67–100</option></select></label>
+        <label><span>Sort by</span><select><option>Customer code</option><option>Spending score</option><option>Income</option></select></label>
+      </form>
+      <div class="active-filters"><span>Active filters</span><button>Age: 18–25 ×</button><button class="clear">Clear all</button></div>
+      <div class="table-scroll"><table>
+        <caption>Customer records from Shopping Customers API</caption>
+        <thead><tr><th scope="col">Customer code ↕</th><th scope="col">Gender</th><th scope="col">Age ↕</th><th scope="col">Annual income ↕</th><th scope="col" aria-sort="descending">Spending score ↓</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+        <tbody>
+          <tr><td><b>0002</b></td><td><span class="pill male-bg">Male</span></td><td>21 years</td><td>15 k$</td><td><span class="score high"><i style="width:81%"></i></span><b>81</b> <small>High</small></td><td><button class="row-action" aria-label="More actions for customer 0002">•••</button></td></tr>
+          <tr><td><b>0004</b></td><td><span class="pill female-bg">Female</span></td><td>23 years</td><td>16 k$</td><td><span class="score high"><i style="width:77%"></i></span><b>77</b> <small>High</small></td><td><button class="row-action" aria-label="More actions for customer 0004">•••</button></td></tr>
+          <tr><td><b>0006</b></td><td><span class="pill female-bg">Female</span></td><td>22 years</td><td>17 k$</td><td><span class="score high"><i style="width:76%"></i></span><b>76</b> <small>High</small></td><td><button class="row-action" aria-label="More actions for customer 0006">•••</button></td></tr>
+          <tr><td><b>0008</b></td><td><span class="pill female-bg">Female</span></td><td>23 years</td><td>18 k$</td><td><span class="score high"><i style="width:94%"></i></span><b>94</b> <small>High</small></td><td><button class="row-action" aria-label="More actions for customer 0008">•••</button></td></tr>
+          <tr><td><b>0001</b></td><td><span class="pill male-bg">Male</span></td><td>19 years</td><td>15 k$</td><td><span class="score mid"><i style="width:39%"></i></span><b>39</b> <small>Developing</small></td><td><button class="row-action" aria-label="More actions for customer 0001">•••</button></td></tr>
+        </tbody>
+      </table></div>
+      <footer class="pager"><p>Showing <b>1–20</b> of 200 customers</p><nav aria-label="Customer pages"><button disabled>Previous</button><button class="current" aria-current="page">1</button><button>2</button><button>3</button><button>…</button><button>10</button><button>Next</button></nav></footer>
+    </section>
+    <p class="handoff">Developer design reference · Stakeholder: Mary · Related branch: <code>task002/shopping-api-dataset3</code></p>
+  </main>
+</body>
+</html>

@@ -19,6 +19,27 @@ dataset:
 - **Tests:** pytest + `TestClient` running against an isolated SQLite
   file per test run.
 
+## Design
+
+Stakeholder: Mary
+
+The developer-ready, first-page **Customer Intelligence** design is documented
+in [`docs/design/penpot/`](docs/design/penpot/README.md). It is intentionally
+limited to the first page requested for this sprint and is mapped to the
+existing FastAPI contracts; no speculative backend endpoints are required.
+
+- [Public Penpot reference](https://design.penpot.app/#/view/8344a9c9-994c-8094-8008-267c16d0d3a6?page-id=8344a9c9-994c-8094-8008-267c16d0d3a7&index=0&share-id=8344a9c9-994c-8094-8008-267c294600df)
+- [Penpot-ready SVG canvas](docs/design/penpot/customer-intelligence.svg)
+- [Runnable browser reference](docs/design/penpot/prototype/index.html)
+- [Developer handoff and API mapping](docs/design/penpot/implementation-spec.md)
+- [Design tokens](docs/design/penpot/design-tokens.json)
+
+The public Penpot dashboard was used as a starting frame. The final reference
+has been customized for this repository with a teal/navy analyst workspace,
+real customer fields and sample records, API-health feedback, score-band
+indicators, the service's exact filters and sort options, and implementation
+states for loading, empty results, validation errors, and failed requests.
+
 ## Database design
 
 Single table `customers` (one row per customer).
