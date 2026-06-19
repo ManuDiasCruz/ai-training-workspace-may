@@ -16,9 +16,9 @@ from typing import Iterable
 from sqlalchemy import delete
 
 from .config import CSV_PATH
+from .customer_search import rebuild_index
 from .db import Base, SessionLocal, engine
 from .models import Customer
-from .search_index import rebuild_search_index
 
 COLUMN_ALIASES = {
     "customer_id": {"customerid", "customer id"},
@@ -127,11 +127,10 @@ def import_csv(csv_path: Path = CSV_PATH, *, truncate: bool = True) -> int:
             inserted = len(batch)
         session.commit()
 
-    # Bootstrap / refresh the FTS5 search index so freshly imported data is
-    # immediately searchable (issue #6, step 2).
+    # The FTS projection is intentionally rebuilt after a successful import so
+    # interrupted/invalid imports can never leave a partially refreshed index.
     with engine.begin() as conn:
-        rebuild_search_index(conn)
-
+        rebuild_index(conn)
     return inserted
 
 

@@ -174,27 +174,22 @@ Returns `404` when the customer id does not exist.
 
 ### Search
 
-Full-text search over `customer_id`, `genre`, `age`, `annual_income_k`, and
-`spending_score`, backed by a SQLite **FTS5** index and ranked by **BM25**
-relevance (most relevant rows first). Query tokens are prefix-matched, so
-`Fem` finds `Female`.
+Search matches `customer_id`, `genre`, `age`, `annual_income_k`, and
+`spending_score` through the standalone SQLite FTS5 `customer_search`
+projection. Tokens are prefix matched and the response is ordered by weighted
+BM25 relevance (customer IDs and genre matches receive more weight than numeric
+facets). The projection contains its own searchable content and is synchronized
+atomically by SQLite insert/update/delete triggers. A successful CSV import
+explicitly rebuilds the full projection.
 
 ```bash
 curl "http://localhost:8000/search?q=Female&page_size=5"
 ```
 
-Add `fuzzy=true` for trigram-based substring / typo-tolerant matching:
-
-```bash
-curl "http://localhost:8000/search?q=ema&fuzzy=true"
-```
-
-The index is an external-content FTS5 table (`customers_fts`) kept in sync
-with `customers` via triggers and rebuilt automatically on every data
-import (`app/search_index.py`). If the running SQLite build lacks FTS5,
-`/search` transparently falls back to a simple `LIKE` query, and the
-trigram `fuzzy` mode degrades to standard matching when the trigram
-tokenizer is unavailable.
+If the active SQLite library does not provide FTS5, or if an existing index is
+unavailable/corrupt, the endpoint falls back to the original case-insensitive
+SQL search so the API remains usable. Prefix matching is token-based rather
+than arbitrary substring or typo-tolerant matching.
 
 ### Genres
 
@@ -229,7 +224,9 @@ per-genre breakdown.
 ## Known Limitations And Future Improvements
 
 - The API is read-only. Future work could add create/update/delete endpoints.
-- Search now uses SQLite FTS5 with BM25 ranking and an optional trigram fuzzy mode; on SQLite builds without FTS5 it falls back to `LIKE` matching.
+- FTS5 prefix search improves performance and relevance ranking, but it does not
+  provide typo tolerance; a dedicated search engine is still preferable for
+  fuzzy search and language-aware ranking at larger scales.
 - There is no authentication or authorization.
 - There is no rate limiting.
 - The default database is SQLite. A Postgres profile would be better for concurrent deployments.
