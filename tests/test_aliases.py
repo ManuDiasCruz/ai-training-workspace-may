@@ -611,6 +611,55 @@ def test_search_dict_for_alias_path():
     assert ap.search_dict_for_path({'a': 'hello'}) is PydanticUndefined
 
 
+def test_validation_alias_path_with_integer_first_segment():
+    """Regression test for https://github.com/pydantic/pydantic/issues/13112.
+
+    `AliasPath(0)` (integer as the first path segment) should let a model
+    validate from a top-level list/tuple input by indexing into it.
+    """
+
+    class Row(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+        name: str = Field(validation_alias=AliasPath(1))
+
+    assert Row.model_fields['id'].validation_alias == AliasPath(0)
+    assert Row.model_fields['name'].validation_alias == AliasPath(1)
+
+    row = Row.model_validate([42, 'alice', 'extra-trailing-ignored'])
+    assert row.id == 42
+    assert row.name == 'alice'
+
+    # Tuples behave the same as lists.
+    row = Row.model_validate((7, 'bob'))
+    assert row.id == 7
+    assert row.name == 'bob'
+
+    # AliasPath(int) inside AliasChoices works alongside string-keyed aliases.
+    class Row2(BaseModel):
+        id: int = Field(validation_alias=AliasChoices('id', AliasPath(0)))
+        name: str = Field(validation_alias=AliasChoices('name', AliasPath(1)))
+
+    assert Row2.model_validate({'id': 1, 'name': 'x'}).model_dump() == {'id': 1, 'name': 'x'}
+    assert Row2.model_validate([2, 'y']).model_dump() == {'id': 2, 'name': 'y'}
+
+
+def test_validation_alias_path_integer_first_segment_missing_index():
+    """A list shorter than the requested index should report the field as missing."""
+
+    class Row(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+        name: str = Field(validation_alias=AliasPath(1))
+
+    with pytest.raises(ValidationError) as exc_info:
+        Row.model_validate([42])
+
+    errors = exc_info.value.errors(include_url=False)
+    assert len(errors) == 1
+    assert errors[0]['type'] == 'missing'
+    # The reported location is the alias path (the index that wasn't present).
+    assert errors[0]['loc'] in {('name',), (1,), ('1',)}
+
+
 def test_validation_alias_invalid_value_type():
     m = 'Invalid `validation_alias` type. it should be `str`, `AliasChoices`, or `AliasPath`'
     with pytest.raises(TypeError, match=m):
