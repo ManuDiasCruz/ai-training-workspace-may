@@ -24,7 +24,7 @@ class AliasPath:
 
     path: list[int | str]
 
-    def __init__(self, first_arg: str, *args: str | int) -> None:
+    def __init__(self, first_arg: str | int, *args: str | int) -> None:
         self.path = [first_arg] + list(args)
 
     def convert_to_aliases(self) -> list[str | int]:
@@ -41,7 +41,7 @@ class AliasPath:
         Returns:
             The value at the specified path, or `PydanticUndefined` if the path is not found.
         """
-        v = d
+        v: Any = d
         for k in self.path:
             if isinstance(v, str):
                 # disallow indexing into a str, like for AliasPath('x', 0) and x='abc'
