@@ -599,6 +599,34 @@ def test_alias_path(py_and_json: PyAndJson, input_value, expected):
         assert output == expected
 
 
+def test_alias_path_root_list(py_and_json: PyAndJson):
+    v = py_and_json(
+        {
+            'type': 'model-fields',
+            'fields': {
+                'field_a': {'validation_alias': [0], 'type': 'model-field', 'schema': {'type': 'int'}},
+                'field_b': {'validation_alias': [1], 'type': 'model-field', 'schema': {'type': 'str'}},
+            },
+        }
+    )
+
+    assert v.validate_test(['123', 'hello']) == ({'field_a': 123, 'field_b': 'hello'}, None, {'field_a', 'field_b'})
+
+    python_validator = SchemaValidator(
+        core_schema.model_fields_schema(
+            fields={
+                'field_a': core_schema.model_field(validation_alias=[0], schema=core_schema.int_schema()),
+                'field_b': core_schema.model_field(validation_alias=[1], schema=core_schema.str_schema()),
+            }
+        )
+    )
+    assert python_validator.validate_python(('123', 'hello')) == (
+        {'field_a': 123, 'field_b': 'hello'},
+        None,
+        {'field_a', 'field_b'},
+    )
+
+
 @pytest.mark.parametrize(
     'input_value,expected',
     [
@@ -763,8 +791,8 @@ def test_paths_allow_by_name(py_and_json: PyAndJson, input_value):
     [
         ({'validation_alias': []}, 'Lookup paths should have at least one element'),
         ({'validation_alias': [[]]}, 'Each alias path should have at least one element'),
-        ({'validation_alias': [123]}, "TypeError: 'int' object is not an instance of 'list'"),
-        ({'validation_alias': [[1, 'foo']]}, 'TypeError: The first item in an alias path should be a string'),
+        ({'validation_alias': [1.0]}, 'TypeError: Item in an alias path should be a string or int'),
+        ({'validation_alias': [[1.0, 'foo']]}, 'TypeError: Item in an alias path should be a string or int'),
     ],
     ids=repr,
 )

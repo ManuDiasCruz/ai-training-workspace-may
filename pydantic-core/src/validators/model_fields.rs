@@ -8,7 +8,7 @@ use pyo3::exceptions::PyKeyError;
 use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::pybacked::PyBackedStr;
-use pyo3::types::{PyDict, PySet, PyString, PyType};
+use pyo3::types::{PyDict, PyList, PySet, PyString, PyTuple, PyType};
 
 use crate::build_tools::py_schema_err;
 use crate::build_tools::{ExtraBehavior, is_strict, schema_or_config_same};
@@ -144,40 +144,63 @@ impl Validator for ModelFieldsValidator {
         let from_attributes = state.extra().from_attributes.unwrap_or(self.from_attributes);
 
         let (model_dict, mut model_extra_dict_op, fields_set) = if let Some(json_input) = input.as_json() {
-            let JsonValue::Object(json_object) = json_input else {
-                return Err(ValError::new(
-                    ErrorType::ModelType {
-                        context: None,
-                        class_name: self.model_name.clone(),
-                    },
-                    input,
-                ));
-            };
-            self.validate_json_by_iteration(py, json_input, json_object, state)?
+            if let JsonValue::Object(json_object) = json_input {
+                self.validate_json_by_iteration(py, json_input, json_object, state)?
+            } else {
+                let validate_by_alias = state.validate_by_alias_or(self.validate_by_alias);
+                let validate_by_name = state.validate_by_name_or(self.validate_by_name);
+                let lookup_type = LookupType::from_bools(validate_by_alias, validate_by_name)?;
+
+                if matches!(json_input, JsonValue::Array(_)) && self.has_int_first_alias(lookup_type) {
+                    self.validate_json_by_get_item(py, json_input, state)?
+                } else {
+                    return Err(ValError::new(
+                        ErrorType::ModelType {
+                            context: None,
+                            class_name: self.model_name.clone(),
+                        },
+                        input,
+                    ));
+                }
+            }
         } else {
             // we convert the DictType error to a ModelType error
-            let dict = match input.validate_model_fields(strict, from_attributes) {
-                Ok(d) => d,
-                Err(ValError::LineErrors(errors)) => {
-                    let errors: Vec<ValLineError> = errors
-                        .into_iter()
-                        .map(|e| match e.error_type {
-                            ErrorType::DictType { .. } => {
-                                let mut e = e;
-                                e.error_type = ErrorType::ModelType {
-                                    class_name: self.model_name.clone(),
-                                    context: None,
-                                };
-                                e
+            match input.validate_model_fields(strict, from_attributes) {
+                Ok(dict) => self.validate_by_get_item(py, input, dict, state)?,
+                Err(err) => {
+                    let validate_by_alias = state.validate_by_alias_or(self.validate_by_alias);
+                    let validate_by_name = state.validate_by_name_or(self.validate_by_name);
+                    let lookup_type = LookupType::from_bools(validate_by_alias, validate_by_name)?;
+
+                    if let Some(py_input) = input.as_python()
+                        && Self::is_sequence_input(py_input)
+                        && self.has_int_first_alias(lookup_type)
+                    {
+                        self.validate_by_get_item_from_py(py, input, py_input, state)?
+                    } else {
+                        match err {
+                            ValError::LineErrors(errors) => {
+                                let errors: Vec<ValLineError> = errors
+                                    .into_iter()
+                                    .map(|e| match e.error_type {
+                                        ErrorType::DictType { .. } => {
+                                            let mut e = e;
+                                            e.error_type = ErrorType::ModelType {
+                                                class_name: self.model_name.clone(),
+                                                context: None,
+                                            };
+                                            e
+                                        }
+                                        _ => e,
+                                    })
+                                    .collect();
+                                return Err(ValError::LineErrors(errors));
                             }
-                            _ => e,
-                        })
-                        .collect();
-                    return Err(ValError::LineErrors(errors));
+                            err => return Err(err),
+                        }
+                    }
                 }
-                Err(err) => return Err(err),
-            };
-            self.validate_by_get_item(py, input, dict, state)?
+            }
         };
         state.add_fields_set(fields_set.len());
 
@@ -300,6 +323,197 @@ impl Validator for ModelFieldsValidator {
 type ValidatedModelFields<'py> = (Bound<'py, PyDict>, Option<Bound<'py, PyDict>>, Bound<'py, PySet>);
 
 impl ModelFieldsValidator {
+    fn is_sequence_input(input: &Bound<'_, PyAny>) -> bool {
+        input.cast::<PyList>().is_ok() || input.cast::<PyTuple>().is_ok()
+    }
+
+    fn has_int_first_alias(&self, lookup_type: LookupType) -> bool {
+        self.fields.iter().any(|field| {
+            field
+                .lookup_path_collection
+                .lookup_paths(lookup_type)
+                .any(|path| path.starts_with_int())
+        })
+    }
+
+    fn validate_by_get_item_from_py<'py>(
+        &self,
+        py: Python<'py>,
+        input: &(impl Input<'py> + ?Sized),
+        py_input: &Bound<'py, PyAny>,
+        state: &mut ValidationState<'_, 'py>,
+    ) -> ValResult<ValidatedModelFields<'py>> {
+        let extra_behavior = state.extra_behavior_or(self.extra_behavior);
+        let model_dict = PyDict::new(py);
+        let mut errors: Vec<ValLineError> = Vec::with_capacity(self.fields.len());
+        let mut fields_set_vec = Vec::with_capacity(self.fields.len());
+        let mut fields_set_count: usize = 0;
+
+        let validate_by_alias = state.validate_by_alias_or(self.validate_by_alias);
+        let validate_by_name = state.validate_by_name_or(self.validate_by_name);
+        let lookup_type = LookupType::from_bools(validate_by_alias, validate_by_name)?;
+
+        {
+            let state = &mut state.scoped_set_data(Some(model_dict.clone()));
+            let state = &mut state.scoped_clear_field_error();
+
+            for field in &self.fields {
+                let state = &mut state.scoped_set_field_name(Some(field.name.as_py_str().bind(py).clone()));
+
+                if let Some((lookup_path, lookup_result)) = field
+                    .lookup_path_collection
+                    .lookup_paths(lookup_type)
+                    .find_map(|path| Some((path, path.py_get_item(py_input).map_err(Into::into).transpose()?)))
+                {
+                    let value = match lookup_result {
+                        Ok(value) => value,
+                        Err(ValError::LineErrors(line_errors)) => {
+                            for err in line_errors {
+                                errors.push(err.with_outer_location(field.name.clone()));
+                            }
+                            continue;
+                        }
+                        Err(e) => return Err(e),
+                    };
+
+                    match field.validator.validate(py, value.borrow_input(), state) {
+                        Ok(value) => {
+                            model_dict.set_item(&field.name, value)?;
+                            fields_set_vec.push(field.name.clone());
+                            fields_set_count += 1;
+                        }
+                        Err(e) => {
+                            state.has_field_error = true;
+                            match e {
+                                ValError::Omit => continue,
+                                ValError::LineErrors(line_errors) => {
+                                    for err in line_errors {
+                                        errors.push(lookup_path.apply_error_loc(err, self.loc_by_alias, &field.name));
+                                    }
+                                }
+                                err => return Err(err),
+                            }
+                        }
+                    }
+                    continue;
+                }
+
+                match field.validator.default_value(py, Some(field.name.clone()), state) {
+                    Ok(Some(value)) => {
+                        model_dict.set_item(&field.name, value)?;
+                    }
+                    Ok(None) => {
+                        state.has_field_error = true;
+                        let error_type = ErrorTypeDefaults::Missing;
+                        let error_loc = field.lookup_path_collection.error_loc(lookup_type, self.loc_by_alias);
+                        errors.push(ValLineError::new_with_full_loc(error_type, input, error_loc));
+                    }
+                    Err(ValError::Omit) => {}
+                    Err(ValError::LineErrors(line_errors)) => {
+                        state.has_field_error = true;
+                        errors.extend(line_errors);
+                    }
+                    Err(err) => return Err(err),
+                }
+            }
+        }
+
+        if !errors.is_empty() {
+            Err(ValError::LineErrors(errors))
+        } else {
+            let fields_set = PySet::new(py, &fields_set_vec)?;
+            state.add_fields_set(fields_set_count);
+            let model_extra_dict_op = if matches!(extra_behavior, ExtraBehavior::Allow) {
+                Some(PyDict::new(py))
+            } else {
+                None
+            };
+            Ok((model_dict, model_extra_dict_op, fields_set))
+        }
+    }
+
+    fn validate_json_by_get_item<'py>(
+        &self,
+        py: Python<'py>,
+        json_input: &JsonValue<'_>,
+        state: &mut ValidationState<'_, 'py>,
+    ) -> ValResult<ValidatedModelFields<'py>> {
+        let extra_behavior = state.extra_behavior_or(self.extra_behavior);
+        let validate_by_alias = state.validate_by_alias_or(self.validate_by_alias);
+        let validate_by_name = state.validate_by_name_or(self.validate_by_name);
+        let lookup_type = LookupType::from_bools(validate_by_alias, validate_by_name)?;
+
+        let model_dict = PyDict::new(py);
+        let fields_set = PySet::empty(py)?;
+        let mut errors: Vec<ValLineError> = Vec::new();
+
+        {
+            let state = &mut state.scoped_set_data(Some(model_dict.clone()));
+            let state = &mut state.scoped_clear_field_error();
+
+            for field in &self.fields {
+                let state = &mut state.scoped_set_field_name(Some(field.name.as_py_str().bind(py).clone()));
+
+                if let Some((lookup_path, lookup_result)) = field
+                    .lookup_path_collection
+                    .lookup_paths(lookup_type)
+                    .find_map(|path| Some((path, path.json_get_value(json_input).transpose()?)))
+                {
+                    let field_json_value = match lookup_result {
+                        Ok(value) => value,
+                        Err(e) => return Err(e),
+                    };
+
+                    match field.validator.validate(py, field_json_value, state) {
+                        Ok(value) => {
+                            fields_set.add(&field.name)?;
+                            model_dict.set_item(&field.name, value)?;
+                        }
+                        Err(ValError::Omit) => continue,
+                        Err(ValError::LineErrors(line_errors)) => {
+                            state.has_field_error = true;
+                            for err in line_errors {
+                                errors.push(lookup_path.apply_error_loc(err, self.loc_by_alias, &field.name));
+                            }
+                        }
+                        Err(err) => return Err(err),
+                    }
+                    continue;
+                }
+
+                match field.validator.default_value(py, Some(&*field.name), state) {
+                    Ok(Some(default_value)) => {
+                        model_dict.set_item(&field.name, default_value)?;
+                    }
+                    Ok(None) => {
+                        state.has_field_error = true;
+                        let error_type = ErrorTypeDefaults::Missing;
+                        let error_loc = field.lookup_path_collection.error_loc(lookup_type, self.loc_by_alias);
+                        errors.push(ValLineError::new_with_full_loc(error_type, json_input, error_loc));
+                    }
+                    Err(ValError::Omit) => {}
+                    Err(ValError::LineErrors(line_errors)) => {
+                        state.has_field_error = true;
+                        errors.extend(line_errors);
+                    }
+                    Err(err) => return Err(err),
+                }
+            }
+        }
+
+        if !errors.is_empty() {
+            return Err(ValError::LineErrors(errors));
+        }
+
+        let model_extra_dict_op = if matches!(extra_behavior, ExtraBehavior::Allow) {
+            Some(PyDict::new(py))
+        } else {
+            None
+        };
+
+        Ok((model_dict, model_extra_dict_op, fields_set))
+    }
+
     fn validate_by_get_item<'py>(
         &self,
         py: Python<'py>,
@@ -355,7 +569,9 @@ impl ModelFieldsValidator {
                     if let Some(ref mut used_keys) = used_keys {
                         // key is "used" whether or not validation passes, since we want to skip this key in
                         // extra logic either way
-                        used_keys.insert(lookup_path.first_key());
+                        if let Some(first_key) = lookup_path.first_key() {
+                            used_keys.insert(first_key);
+                        }
                     }
 
                     match field.validator.validate(py, value.borrow_input(), state) {
