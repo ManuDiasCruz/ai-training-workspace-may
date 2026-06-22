@@ -42,14 +42,17 @@ import typing_extensions
 from pydantic_core import (
     MISSING,
     CoreSchema,
+    InitErrorDetails,
     MultiHostUrl,
     PydanticCustomError,
     PydanticSerializationUnexpectedValue,
     PydanticUndefined,
     Url,
+    ValidationError,
     core_schema,
     to_jsonable_python,
 )
+from pydantic_core.core_schema import ValidatorFunctionWrapHandler
 from typing_extensions import (  # noqa: UP035 (for `get_args` and `get_origin`)
     TypeAliasType,
     get_args,
@@ -872,6 +875,10 @@ class GenerateSchema:
                         extras_keys_schema=extras_keys_schema,
                         model_name=cls.__name__,
                     )
+                    if any(_alias_path_has_int_first(f.validation_alias) for f in fields.values()):
+                        fields_schema = core_schema.no_info_wrap_validator_function(
+                            _list_root_wrap_validator, fields_schema
+                        )
                     inner_schema = apply_validators(fields_schema, decorators.root_validators.values())
                     inner_schema = apply_model_validators(inner_schema, model_validators, 'inner')
 
@@ -2598,11 +2605,61 @@ def _validators_require_validate_default(validators: Iterable[Decorator[Validato
     return False
 
 
+_LIST_ROOT_ALIAS_KEY = '__pydantic_list_root__'
+"""Internal sentinel key used to wrap top-level list/tuple inputs into a dict
+so that ``AliasPath`` paths starting with an integer (e.g. ``AliasPath(0)``)
+can be resolved by pydantic-core, which only accepts a string as the first
+alias segment. See `_alias_path_has_int_first` and `_list_root_wrap_validator`."""
+
+
+def _alias_path_has_int_first(alias: Any) -> bool:
+    """Return True if `alias` is an ``AliasPath`` (or an ``AliasChoices`` containing one)
+    whose first segment is an integer — i.e. it indexes a top-level list input."""
+    if isinstance(alias, AliasPath):
+        return bool(alias.path) and isinstance(alias.path[0], int)
+    if isinstance(alias, AliasChoices):
+        return any(_alias_path_has_int_first(c) for c in alias.choices)
+    return False
+
+
+def _list_root_wrap_validator(value: Any, handler: ValidatorFunctionWrapHandler) -> Any:
+    """Wrap list/tuple inputs so that integer-first ``AliasPath`` lookups can succeed,
+    and strip the internal sentinel from any resulting validation error locations so
+    that users see ``(1,)`` rather than ``(_LIST_ROOT_ALIAS_KEY, 1)``."""
+    if not isinstance(value, (list, tuple)):
+        return handler(value)
+    try:
+        return handler({_LIST_ROOT_ALIAS_KEY: value})
+    except ValidationError as exc:
+        new_errors: list[InitErrorDetails] = []
+        for err in exc.errors(include_url=False):
+            loc = err['loc']
+            if loc and loc[0] == _LIST_ROOT_ALIAS_KEY:
+                loc = loc[1:]
+            err_input = err.get('input')
+            if isinstance(err_input, dict) and list(err_input.keys()) == [_LIST_ROOT_ALIAS_KEY]:
+                err_input = err_input[_LIST_ROOT_ALIAS_KEY]
+            details: dict[str, Any] = {'type': err['type'], 'loc': loc, 'input': err_input}
+            if err.get('ctx'):
+                details['ctx'] = err['ctx']
+            new_errors.append(InitErrorDetails(**details))
+        raise ValidationError.from_exception_data(exc.title, new_errors) from None
+
+
 def _convert_to_aliases(
     alias: str | AliasChoices | AliasPath | None,
 ) -> str | list[str | int] | list[list[str | int]] | None:
-    if isinstance(alias, (AliasChoices, AliasPath)):
-        return alias.convert_to_aliases()
+    if isinstance(alias, AliasPath):
+        path = alias.convert_to_aliases()
+        if path and isinstance(path[0], int):
+            return [_LIST_ROOT_ALIAS_KEY, *path]
+        return path
+    elif isinstance(alias, AliasChoices):
+        choices = alias.convert_to_aliases()
+        return [
+            [_LIST_ROOT_ALIAS_KEY, *c] if c and isinstance(c[0], int) else c
+            for c in choices
+        ]
     else:
         return alias
 

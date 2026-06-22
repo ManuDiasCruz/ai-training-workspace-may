@@ -675,6 +675,61 @@ def test_validation_alias_priority_json():
     assert Model.model_validate_json(b'{"a": "a"}').a == 'a'
 
 
+def test_alias_path_int_first_segment():
+    """Regression test for https://github.com/pydantic/pydantic/issues/13112.
+
+    ``AliasPath`` should accept an integer as the first path segment so that a
+    model can be validated from a top-level list/tuple input.
+    """
+
+    class Row(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+        name: str = Field(validation_alias=AliasPath(1))
+
+    row = Row.model_validate([42, 'alice'])
+    assert row.id == 42
+    assert row.name == 'alice'
+
+    # tuples should work too
+    row = Row.model_validate((7, 'bob'))
+    assert row.id == 7
+    assert row.name == 'bob'
+
+    # JSON arrays as the top-level input
+    row = Row.model_validate_json(b'[100, "carol"]')
+    assert row.id == 100
+    assert row.name == 'carol'
+
+    # Out-of-bounds indices yield the usual "missing" error with a clean loc
+    with pytest.raises(ValidationError) as exc_info:
+        Row.model_validate([42])
+    errors = exc_info.value.errors(include_url=False)
+    assert any(e['type'] == 'missing' and e['loc'] == (1,) for e in errors)
+
+
+def test_alias_path_int_first_with_choices():
+    """``AliasChoices`` containing an int-first ``AliasPath`` should also work."""
+
+    class Model(BaseModel):
+        x: str = Field(validation_alias=AliasChoices('x', AliasPath(0)))
+
+    # int-first AliasPath resolves against a top-level list
+    assert Model.model_validate(['from_list']).x == 'from_list'
+    # named alias still resolves against a top-level dict
+    assert Model.model_validate({'x': 'from_dict'}).x == 'from_dict'
+
+
+def test_alias_path_int_first_mixed_with_named_alias():
+    """Multiple int-first ``AliasPath`` aliases on the same model coexist."""
+
+    class Model(BaseModel):
+        model_config = ConfigDict(validate_by_alias=True, validate_by_name=True)
+        first: str = Field(validation_alias=AliasPath(0))
+        second: str = Field(validation_alias=AliasPath(1))
+
+    assert Model.model_validate(['x', 'y']).model_dump() == {'first': 'x', 'second': 'y'}
+
+
 def test_alias_generator_class() -> None:
     class Model(BaseModel):
         a: str
