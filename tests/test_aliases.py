@@ -639,6 +639,40 @@ def test_validation_alias_parse_data():
     ]
 
 
+def test_validation_alias_path_root_list():
+    class Row(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+        name: str = Field(validation_alias=AliasPath(1))
+        email: str = Field(validation_alias=AliasPath(2))
+
+    assert Row.model_validate([42, 'alice', 'a@example.com']).model_dump() == {
+        'id': 42,
+        'name': 'alice',
+        'email': 'a@example.com',
+    }
+    assert Row.model_validate((42, 'alice', 'a@example.com')).model_dump() == {
+        'id': 42,
+        'name': 'alice',
+        'email': 'a@example.com',
+    }
+    assert Row.model_validate_json(b'[42, "alice", "a@example.com"]').model_dump() == {
+        'id': 42,
+        'name': 'alice',
+        'email': 'a@example.com',
+    }
+
+
+def test_validation_alias_path_root_list_sparse():
+    class Record(BaseModel):
+        id: int = Field(validation_alias=AliasPath(0))
+        status: str = Field(validation_alias=AliasPath(7))
+
+    assert Record.model_validate([1, None, None, None, None, None, None, 'active']).model_dump() == {
+        'id': 1,
+        'status': 'active',
+    }
+
+
 def test_validation_alias_priority():
     class Model(BaseModel):
         model_config = ConfigDict(validate_by_alias=True, validate_by_name=True)

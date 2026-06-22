@@ -212,7 +212,9 @@ impl Validator for DataclassArgsValidator {
                     .lookup_path_collection
                     .try_lookup(lookup_type, |path| kwargs.get_item(path))?
             {
-                used_keys.insert(lookup_path.first_key());
+                if let Some(first_key) = lookup_path.first_key() {
+                    used_keys.insert(first_key);
+                }
                 kw_value = Some((lookup_path, value));
             }
             let kw_value = kw_value.as_ref().map(|(path, value)| (path, value.borrow_input()));

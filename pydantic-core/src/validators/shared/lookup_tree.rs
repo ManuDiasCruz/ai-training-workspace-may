@@ -148,7 +148,10 @@ fn add_field_to_map<K: Hash + Eq>(map: &mut AHashMap<K, LookupTreeNode>, key: K,
 }
 
 fn add_path_to_map(map: &mut AHashMap<PathItemString, LookupTreeNode>, path: &LookupPath, info: LookupFieldInfo) {
-    let base_key = path.first_item().to_owned();
+    let PathItem::S(base_key) = path.first_item() else {
+        return;
+    };
+    let base_key = base_key.to_owned();
     let mut path_iter = path.rest().iter();
 
     let Some(mut current) = path_iter.next() else {

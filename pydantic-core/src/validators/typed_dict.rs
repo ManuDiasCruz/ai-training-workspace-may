@@ -204,11 +204,17 @@ impl Validator for TypedDictValidator {
                     if let Some(ref mut used_keys) = used_keys {
                         // key is "used" whether or not validation passes, since we want to skip this key in
                         // extra logic either way
-                        used_keys.insert(lookup_path.first_key());
+                        if let Some(first_key) = lookup_path.first_key() {
+                            used_keys.insert(first_key);
+                        }
                     }
                     let is_last_partial = if let Some(ref last_key) = partial_last_key {
-                        let first_key_loc: LocItem = lookup_path.first_key().into();
-                        &first_key_loc == last_key
+                        if let Some(first_key) = lookup_path.first_key() {
+                            let first_key_loc: LocItem = first_key.into();
+                            &first_key_loc == last_key
+                        } else {
+                            false
+                        }
                     } else {
                         false
                     };
