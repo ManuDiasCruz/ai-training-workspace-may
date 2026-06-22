@@ -24,7 +24,7 @@ class AliasPath:
 
     path: list[int | str]
 
-    def __init__(self, first_arg: str, *args: str | int) -> None:
+    def __init__(self, first_arg: str | int, *args: str | int) -> None:
         self.path = [first_arg] + list(args)
 
     def convert_to_aliases(self) -> list[str | int]:
