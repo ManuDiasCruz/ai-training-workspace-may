@@ -19,6 +19,31 @@ dataset:
 - **Tests:** pytest + `TestClient` running against an isolated SQLite
   file per test run.
 
+## Design
+
+**Stakeholder: Grace**
+
+A developer-ready, **first-page** UI/UX reference — a **Customer Directory /
+segmentation dashboard** — has been designed in Penpot for this repository. It
+is mapped 1:1 to the existing FastAPI contracts (no new backend endpoints are
+required) and is intentionally limited to the single first page requested for
+this sprint. It relates to the application on branch
+[`task002/shopping-api-dataset3`](https://github.com/ManuDiasCruz/ai-training-workspace-may/tree/task002/shopping-api-dataset3).
+
+- **Penpot prototype (view-only, no account needed):**
+  <https://design.penpot.app/#/view/e35751e0-8829-45c8-a191-ab5fcd6565ff?page-id=f0485fb1-4e63-8165-8008-38abbef6c0a5&share-id=f0485fb1-4e63-8165-8008-38acfc2c729a&index=0>
+- **Static preview:** [`docs/design/penpot/preview.png`](docs/design/penpot/preview.png)
+- **Design overview:** [`docs/design/penpot/README.md`](docs/design/penpot/README.md)
+- **Developer handoff & API mapping:** [`docs/design/penpot/implementation-spec.md`](docs/design/penpot/implementation-spec.md)
+- **Design tokens:** [`docs/design/penpot/design-tokens.json`](docs/design/penpot/design-tokens.json)
+
+The page surfaces `GET /stats` (KPI cards + gender split), the
+`GET /customers` filters/sort/pagination (toolbar + table), and the
+create/view/delete write paths. A free/public SaaS admin-dashboard layout was
+used as the starting frame and then customized for this project: the dataset's
+real fields and sample records, the service's exact query parameters, gender
+badges and score-band indicators, and an indigo/navy theme captured as tokens.
+
 ## Database design
 
 Single table `customers` (one row per customer).

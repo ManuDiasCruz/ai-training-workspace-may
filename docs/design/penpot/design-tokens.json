@@ -1,0 +1,76 @@
+{
+  "$meta": {
+    "name": "Shopping Customers — Customer Directory (First Page)",
+    "stakeholder": "Grace",
+    "source": "Penpot prototype (view-only share link in README)",
+    "canvas": { "width": 1440, "height": 1104 }
+  },
+  "color": {
+    "brand": {
+      "primary": "#4F46E5",
+      "primaryHover": "#4338CA",
+      "onPrimary": "#FFFFFF"
+    },
+    "sidebar": {
+      "bg": "#111827",
+      "textActive": "#FFFFFF",
+      "textMuted": "#9CA3AF",
+      "sectionLabel": "#4B5563",
+      "iconInactive": "#374151"
+    },
+    "surface": {
+      "appBg": "#F4F5F7",
+      "card": "#FFFFFF",
+      "tableHeader": "#F9FAFB",
+      "rowAlt": "#FBFCFD",
+      "rowSeparator": "#F0F1F4",
+      "track": "#EDEFF2"
+    },
+    "text": {
+      "ink": "#111827",
+      "secondary": "#6B7280",
+      "muted": "#9CA3AF",
+      "control": "#374151"
+    },
+    "border": { "default": "#E5E7EB", "card": "#EEF0F3" },
+    "badge": {
+      "femaleBg": "#FCE7F3", "femaleText": "#BE185D",
+      "maleBg": "#DBEAFE", "maleText": "#1D4ED8"
+    },
+    "spendingScore": {
+      "high": "#16A34A",  "highRange": "67-100",
+      "mid":  "#4F46E5",  "midRange":  "34-66",
+      "low":  "#D97706",  "lowRange":  "1-33"
+    },
+    "status": { "danger": "#DC2626", "success": "#16A34A" },
+    "kpiChip": {
+      "totalBg": "#DBEAFE", "totalDot": "#1D4ED8",
+      "ageBg": "#FCE7F3", "ageDot": "#BE185D",
+      "incomeBg": "#DCFCE7", "incomeDot": "#16A34A",
+      "spendingBg": "#FEF3C7", "spendingDot": "#D97706"
+    }
+  },
+  "typography": {
+    "fontFamily": "Source Sans Pro",
+    "scale": {
+      "kpiValue": { "size": 28, "weight": 700 },
+      "pageTitle": { "size": 22, "weight": 700 },
+      "brand": { "size": 17, "weight": 700 },
+      "cardTitle": { "size": 16, "weight": 700 },
+      "body": { "size": 14, "weight": 400 },
+      "bodyStrong": { "size": 14, "weight": 600 },
+      "control": { "size": 13, "weight": 500 },
+      "secondary": { "size": 12, "weight": 400 },
+      "overline": { "size": 11, "weight": 600, "letterSpacing": 0.5 }
+    }
+  },
+  "radius": { "card": 14, "control": 10, "pill": 13, "chip": 10, "button": 10, "pagerBtn": 8 },
+  "spacing": { "pagePadding": 32, "cardGap": 24, "controlGap": 12, "rowHeight": 56, "kpiCardHeight": 108 },
+  "layout": {
+    "sidebarWidth": 248,
+    "topbarHeight": 80,
+    "contentWidth": 1192,
+    "kpiCards": 4,
+    "tableColumns": ["#", "Customer Code", "Gender", "Age", "Annual Income (k$)", "Spending Score", "Actions"]
+  }
+}
