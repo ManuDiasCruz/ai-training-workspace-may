@@ -15,6 +15,7 @@ from typing import Iterable
 
 from sqlalchemy import delete
 
+from . import search_index
 from .config import CSV_PATH
 from .db import Base, SessionLocal, engine
 from .models import Customer
@@ -125,6 +126,12 @@ def import_csv(csv_path: Path = CSV_PATH, *, truncate: bool = True) -> int:
             session.add_all(batch)
             inserted = len(batch)
         session.commit()
+
+    # Rebuild the FTS5 search index so freshly imported rows are immediately
+    # searchable -- this covers importer-only runs and the test suite, which
+    # populate the database without going through app startup.
+    with engine.begin() as conn:
+        search_index.rebuild_search_index(conn)
     return inserted
 
 

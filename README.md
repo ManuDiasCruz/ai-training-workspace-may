@@ -110,6 +110,9 @@ python -m pytest -q
 The tests use an isolated temporary SQLite database, import
 `data/shopping.csv`, and cover health checks, listing, pagination,
 filtering, validation errors, search, single-record lookup, and stats.
+`tests/test_search_fts.py` additionally covers the FTS5 search: the MATCH
+query builder, BM25 ranking order on a controlled dataset, and the
+standard/fuzzy `/search` endpoint behaviour.
 
 ## API Examples
 
@@ -174,12 +177,30 @@ Returns `404` when the customer id does not exist.
 
 ### Search
 
-Search matches `customer_id`, `genre`, `age`, `annual_income_k`, and
-`spending_score` using a simple case-insensitive match.
+`/search` is backed by a **SQLite FTS5** full-text index over `customer_id`,
+`genre`, `age`, `annual_income_k`, and `spending_score`. Matches are ordered by
+**BM25 relevance** (most relevant first; ties broken by `id`). The index is an
+external-content FTS5 table kept in sync with `customers` via triggers, and it
+is rebuilt automatically on import and on app startup.
 
 ```bash
 curl "http://localhost:8000/search?q=Female&page_size=5"
 ```
+
+Query parameters:
+
+- `q`: free-text query (required). Tokens are prefix-matched and combined with
+  implicit AND, so `q=fem 70` matches rows containing a `fem*` token and a
+  `70*` token.
+- `fuzzy`: when `true`, switches to a trigram index for substring / typo
+  tolerant matching (e.g. `q=ale&fuzzy=true` matches both `Male` and `Female`).
+  Requires at least three characters; shorter queries fall back to standard
+  matching.
+- `page`, `page_size`: pagination, identical to `/customers`.
+
+If the running SQLite build lacks FTS5 (or the trigram tokenizer), the endpoint
+transparently falls back to the previous `ILIKE` substring search, so it keeps
+working everywhere.
 
 ### Genres
 
@@ -214,7 +235,12 @@ per-genre breakdown.
 ## Known Limitations And Future Improvements
 
 - The API is read-only. Future work could add create/update/delete endpoints.
-- Search uses `ILIKE`-style matching. SQLite FTS5 would be better for larger datasets.
+- Search uses a SQLite **FTS5** index with BM25 ranking and an optional trigram
+  fuzzy mode (issue #6). Because the dataset is the flat `customers` table
+  rather than the `purchases` / `item_purchased` schema named in the issue, the
+  index covers the customer columns that actually exist. Standard matching is
+  token/prefix based (not arbitrary substring); use `fuzzy=true` for substring
+  matches. A trigram tokenizer requires a reasonably recent SQLite build.
 - There is no authentication or authorization.
 - There is no rate limiting.
 - The default database is SQLite. A Postgres profile would be better for concurrent deployments.
