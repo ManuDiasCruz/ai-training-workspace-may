@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Local database (regenerated via scripts/import_data.py)
+*.db
+
+# Test / tooling caches
+.pytest_cache/
+.coverage
