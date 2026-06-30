@@ -1,124 +1,142 @@
-# 🦜 Parrot Memory Card Game
+# Shopping Dataset REST API
 
-A small browser memory game: flip the cards two at a time and find every
-matching pair of parrots in as few moves as possible. Built with plain
-**HTML, CSS and JavaScript** — no build step and no dependencies.
+A small, production-style Python REST API that imports a 200-row customer shopping dataset from Google Drive into SQLite and exposes it through validated, read-only endpoints. The original repository's front-end assets are left in place; the backend application for this branch is contained in [shopping_api](shopping_api).
 
-![Desktop preview](img/desktop.png)
+## Dataset
 
-## How to play
+Source: [Shopping_data.csv on Google Drive](https://drive.google.com/file/d/1-4dSFNppilPVbHeoTeuVS5-CSFMlREFm/view?usp=sharing)
 
-1. On load you're asked **how many cards** to play with — an even number
-   between **4 and 14**.
-2. Click a card to flip it, then flip a second card:
-   - if the two match, they stay revealed;
-   - if not, they flip back after a moment.
-3. The header tracks your number of moves (**Jogadas**) and the elapsed time
-   (**relógio**).
-4. Match every pair to win — you can then start a new game.
+The CSV contains 200 customer records and these source columns:
 
-> ℹ️ The in-game text is in Brazilian Portuguese (the original author's language).
+| Source column | Database/API field | Type and rules |
+| --- | --- | --- |
+| CustomerID | customer_id | Four-digit text primary key (keeps leading zeroes) |
+| Genre | gender | Male or Female (the original dataset appears to use “Genre” for gender) |
+| Age | age | Integer, 0–120 |
+| Annual Income (k$) | annual_income_k | Non-negative integer, thousands of USD |
+| Spending Score (1-100) | spending_score | Integer, 1–100 |
+
+The checked-in copy is at shopping_api/data/Shopping_data.csv, so setup does not require Drive access.
+
+## Database design
+
+The app uses one normalized SQLite table because each source row represents one customer and the dataset has no repeating groups or relationships that warrant additional tables.
+
+~~~sql
+CREATE TABLE customers (
+    customer_id TEXT PRIMARY KEY CHECK (...four digits...),
+    gender TEXT NOT NULL CHECK (gender IN ('Male', 'Female')),
+    age INTEGER NOT NULL CHECK (age BETWEEN 0 AND 120),
+    annual_income_k INTEGER NOT NULL CHECK (annual_income_k >= 0),
+    spending_score INTEGER NOT NULL CHECK (spending_score BETWEEN 1 AND 100)
+);
+~~~
+
+Indexes on gender, age, annual_income_k, and spending_score support the API's filters. The import command validates headers and values, rejects duplicate IDs, and applies all inserts/upserts in one transaction.
+
+## Local setup
+
+Python 3.10 or later is recommended.
+
+~~~bash
+cd shopping_api
+python -m venv .venv
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+# macOS/Linux: source .venv/bin/activate
+python -m pip install -r requirements.txt
+~~~
+
+Create the local database and import the CSV:
+
+~~~bash
+python -m app.import_data
+~~~
+
+By default this reads data/Shopping_data.csv and writes data/shopping.db. Both paths can be overridden:
+
+~~~bash
+python -m app.import_data --csv path/to/file.csv --db path/to/shopping.db
+~~~
+
+The importer is idempotent: running it again upserts the source rows. Use --replace to clear the table first.
+
+## Run the API
+
+From shopping_api/:
+
+~~~bash
+python -m uvicorn app.main:app --reload
+~~~
+
+The API is served at http://127.0.0.1:8000. Interactive OpenAPI documentation is at /docs and the schema is at /openapi.json. Set SHOPPING_DB_PATH to use a different SQLite file.
+
+## API usage
+
+### Health and record lookup
+
+~~~bash
+curl "http://127.0.0.1:8000/health"
+curl "http://127.0.0.1:8000/customers/0001"
+~~~
+
+### Listing and pagination
+
+~~~bash
+curl "http://127.0.0.1:8000/customers?page=2&page_size=10"
+~~~
+
+A list response includes items, total, page, page_size, total_pages, and has_next.
+
+### Filters
+
+All filters are optional and can be combined:
+
+~~~bash
+curl "http://127.0.0.1:8000/customers?gender=Female&min_age=25&max_age=35"
+curl "http://127.0.0.1:8000/customers?min_income=70&max_income=100&min_spending_score=75"
+~~~
+
+Supported filters: gender, min_age, max_age, min_income, max_income, min_spending_score, and max_spending_score. Invalid ranges return HTTP 422.
+
+### Search
+
+Search performs a case-insensitive partial match across customer ID and gender:
+
+~~~bash
+curl "http://127.0.0.1:8000/customers?search=001"
+curl "http://127.0.0.1:8000/customers?search=female&page_size=5"
+~~~
+
+## Automated tests
+
+~~~bash
+cd shopping_api
+python -m pytest
+~~~
+
+The tests create an isolated temporary database and cover import persistence, pagination, combined filters/search, single-record lookup, missing-record handling, and invalid input.
 
 ## Project structure
 
-```text
-.
-├── index.html        # markup, meta tags and asset links
-├── css/
-│   └── style.css     # colour palette + responsive layout
-├── src/
-│   └── script.js     # game logic (shuffle, flip, match, timer)
-└── img/              # parrot artwork + preview screenshots
-```
+~~~text
+shopping_api/
+├── app/
+│   ├── db.py           # SQLite schema and connection helper
+│   ├── import_data.py  # Validated, transactional CSV importer
+│   └── main.py         # FastAPI application and endpoints
+├── data/
+│   └── Shopping_data.csv
+├── tests/
+│   └── test_api.py
+├── pyproject.toml
+└── requirements.txt
+~~~
 
-## Running locally
+## Known limitations and future improvements
 
-This is a static site, so all you need is a browser.
-
-**Option A — open directly**
-
-Double-click `index.html`, or open it in your browser.
-
-**Option B — local server (recommended)**
-
-A tiny static server avoids any path/caching quirks:
-
-```bash
-# from the project root
-python3 -m http.server 8000
-# then open http://localhost:8000/ in your browser
-```
-
-Any static server works (`npx serve`, the VS Code *Live Server* extension,
-etc.). An internet connection is used only to load the Google Fonts.
-
-## UI / responsiveness improvements
-
-This round of work delivered the client's two requests — a mobile-friendly
-layout and a **white / light-green / black** colour scheme — plus a few small
-correctness fixes.
-
-### Colour palette
-
-Colours are centralised as CSS variables in `css/style.css`:
-
-| Token             | Value     | Use                                            |
-| ----------------- | --------- | ---------------------------------------------- |
-| `--color-bg`      | `#ffffff` | page background (was pale-lime `#EEF9BF`)      |
-| `--color-surface` | `#a7e9af` | cards / faces — light green                    |
-| `--color-border`  | `#8ed29a` | card edges — same green family                 |
-| `--color-text`    | `#000000` | all text (was teal `#75B79E` and gray)         |
-
-The old teal title, lime background and gray counters are gone — the UI now
-uses only white, light green and a black font, as requested.
-
-### Responsiveness
-
-- `box-sizing: border-box` applied globally.
-- Replaced the fixed `main { margin: auto 116px }` with a centred max-width
-  container and fluid `clamp()` padding.
-- Cards now size with `clamp()` widths + `aspect-ratio: 117/146` and lay out
-  using `gap`, so they **scale and wrap on any screen** instead of overflowing.
-- Fluid `clamp()` typography for the title, header counters and end message.
-- Removed the lone `@media (max-width: 335px)` rule — it left typical phones
-  (~360–430px) stuck on the desktop layout. The fluid system now covers
-  everything from small phones to large desktops.
-- `@media (hover: hover)` card-lift effect, so touch devices don't get
-  "sticky" hover states.
-
-Verified at **1280px** (desktop), **390px** and **360px** (mobile):
-
-| Desktop                     | Mobile                    |
-| --------------------------- | ------------------------- |
-| ![Desktop](img/desktop.png) | ![Mobile](img/mobile.png) |
-
-### Small fixes
-
-- `index.html` linked `css\style.css` with a backslash; corrected to
-  `css/style.css` (browsers tolerate it, but stricter static servers 404).
-- Removed a stray `print(...)` debug call in `script.js` that resolved to
-  `window.print()` and opened the browser print dialog on invalid input.
-- Added an inline parrot-emoji favicon (removes the `/favicon.ico` 404) and a
-  `theme-color` meta tag matching the palette.
-
-## Known limitations & future improvements
-
-- **Card count via `prompt()`** — the game still asks for the number of cards
-  through a native `prompt()` on load. It works on mobile, but an in-page
-  start screen / selector would be friendlier. Left as-is to keep the change
-  scoped to the requested UI work.
-- **Parrot artwork is intentionally unchanged** — the colourful parrot images
-  are game *content*, so the white/light-green/black palette applies to the UI
-  chrome, not the artwork.
-- **Win / replay dialogs** use native `alert()` / `prompt()`; these could
-  become styled in-page modals.
-- **No persistence** — moves and elapsed time reset on every reload; there is
-  no high-score / best-time tracking.
-- **UI copy is Portuguese only** — no internationalisation yet.
-
-## Credits
-
-Original game by
-[@ManuDiasCruz](https://github.com/ManuDiasCruz/parrots-memory-card-game).
-Parrot GIFs come from the community "Party Parrot" set. This branch adds the
-responsive layout and the white/light-green/black palette.
+- This version intentionally offers a read-only API with no authentication or authorization.
+- SQLite is appropriate for a small local dataset, but production deployments should use a managed database with migrations and connection pooling.
+- Search is a simple SQL substring match; full-text search or typed field-specific search would be more scalable and expressive.
+- The app does not yet expose aggregate analytics, bulk imports through the API, or background data-refresh jobs.
+- The source's Genre header is mapped to gender for clarity, but demographic terminology and allowed values should be verified with the dataset owner.
+- The dataset's provenance and license should be documented before redistribution or production use.
