@@ -142,4 +142,3 @@ def create_app(database_path: str | Path | None = None) -> FastAPI:
 
 
 app = create_app()
-

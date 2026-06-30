@@ -98,4 +98,3 @@ def count_customers(database_path: str | Path) -> int:
 
     with connect(database_path) as connection:
         return connection.execute("SELECT COUNT(*) FROM customers").fetchone()[0]
-

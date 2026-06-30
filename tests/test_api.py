@@ -134,4 +134,3 @@ def test_query_limits_are_validated(client: TestClient) -> None:
     assert client.get("/customers", params={"gender": "Unknown"}).status_code == 422
     assert client.get("/customers", params={"search": "   "}).status_code == 422
     assert client.get("/customers/not-an-id").status_code == 422
-

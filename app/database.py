@@ -41,4 +41,3 @@ def initialize_database(database_path: str | Path = DEFAULT_DATABASE_PATH) -> No
 
     with connect(database_path) as connection:
         connection.executescript(SCHEMA_SQL)
-

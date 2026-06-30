@@ -32,4 +32,3 @@ class HealthStatus(BaseModel):
     status: Literal["ok"]
     database: Literal["ready"]
     customer_count: int = Field(ge=0)
-
