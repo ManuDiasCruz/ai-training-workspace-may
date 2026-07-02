@@ -1,0 +1,10 @@
+.DS_Store
+**/.DS_Store
+**/node_modules/
+back-end/dist/
+back-end/coverage/
+front-end/build/
+front-end/coverage/
+**/.env
+**/.env.*
+!**/.env.example
