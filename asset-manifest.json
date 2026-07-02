@@ -1,0 +1,29 @@
+{
+  "files": {
+    "main.css": "/ai-training-workspace-may/static/css/main.7bade542.css",
+    "main.js": "/ai-training-workspace-may/static/js/main.9adfadf5.js",
+    "static/js/942.f20b510e.chunk.js": "/ai-training-workspace-may/static/js/942.f20b510e.chunk.js",
+    "static/js/932.3a299608.chunk.js": "/ai-training-workspace-may/static/js/932.3a299608.chunk.js",
+    "static/js/984.57637d28.chunk.js": "/ai-training-workspace-may/static/js/984.57637d28.chunk.js",
+    "static/js/128.6c0ca210.chunk.js": "/ai-training-workspace-may/static/js/128.6c0ca210.chunk.js",
+    "static/js/957.6aa63519.chunk.js": "/ai-training-workspace-may/static/js/957.6aa63519.chunk.js",
+    "static/js/948.0169beeb.chunk.js": "/ai-training-workspace-may/static/js/948.0169beeb.chunk.js",
+    "static/js/478.634357ae.chunk.js": "/ai-training-workspace-may/static/js/478.634357ae.chunk.js",
+    "static/js/71.dc97c4a8.chunk.js": "/ai-training-workspace-may/static/js/71.dc97c4a8.chunk.js",
+    "index.html": "/ai-training-workspace-may/index.html",
+    "main.7bade542.css.map": "/ai-training-workspace-may/static/css/main.7bade542.css.map",
+    "main.9adfadf5.js.map": "/ai-training-workspace-may/static/js/main.9adfadf5.js.map",
+    "942.f20b510e.chunk.js.map": "/ai-training-workspace-may/static/js/942.f20b510e.chunk.js.map",
+    "932.3a299608.chunk.js.map": "/ai-training-workspace-may/static/js/932.3a299608.chunk.js.map",
+    "984.57637d28.chunk.js.map": "/ai-training-workspace-may/static/js/984.57637d28.chunk.js.map",
+    "128.6c0ca210.chunk.js.map": "/ai-training-workspace-may/static/js/128.6c0ca210.chunk.js.map",
+    "957.6aa63519.chunk.js.map": "/ai-training-workspace-may/static/js/957.6aa63519.chunk.js.map",
+    "948.0169beeb.chunk.js.map": "/ai-training-workspace-may/static/js/948.0169beeb.chunk.js.map",
+    "478.634357ae.chunk.js.map": "/ai-training-workspace-may/static/js/478.634357ae.chunk.js.map",
+    "71.dc97c4a8.chunk.js.map": "/ai-training-workspace-may/static/js/71.dc97c4a8.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.7bade542.css",
+    "static/js/main.9adfadf5.js"
+  ]
+}
