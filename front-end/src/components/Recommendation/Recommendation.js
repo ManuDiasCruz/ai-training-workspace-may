@@ -12,13 +12,21 @@ export default function Recommendation({ name, youtubeLink, score, id, onUpvote 
   const { downvoteRecommendation, errorDownvotingRecommendation } = useDownvoteRecommendation();
 
   const handleUpvote = async () => {
-    await upvoteRecommendation(id);
-    onUpvote();
+    try {
+      await upvoteRecommendation(id);
+      onUpvote();
+    } catch {
+      // The request hook drives the error alert below.
+    }
   };
 
   const handleDownvote = async () => {
-    await downvoteRecommendation(id);
-    onDownvote();
+    try {
+      await downvoteRecommendation(id);
+      onDownvote();
+    } catch {
+      // The request hook drives the error alert below.
+    }
   };
 
   useEffect(() => {

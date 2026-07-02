@@ -6,28 +6,35 @@ import { IoReturnUpForwardOutline } from "react-icons/io5";
 export default function CreateNewRecommendation({ onCreateNewRecommendation = () => 0, disabled = false }) {
   const [name, setName] = useState("");
   const [link, setLink] = useState("");
+  const canSubmit = name.trim() && link.trim();
 
-  const handleCreateRecommendation = () => {
-    onCreateNewRecommendation({
-      name,
-      link
-    });
-    setLink("");
-    setName("");
-  }
+  const handleCreateRecommendation = async (event) => {
+    event.preventDefault();
+
+    try {
+      await onCreateNewRecommendation({
+        name: name.trim(),
+        link: link.trim()
+      });
+      setLink("");
+      setName("");
+    } catch {
+      // The request hook exposes the error to the page without clearing user input.
+    }
+  };
   
   return (
-    <Container>
-      <Input type="text" placeholder="Name" value={name} onChange={e => setName(e.target.value)} disabled={disabled} />
-      <Input type="text" placeholder="https://youtu.be/..." value={link} onChange={e => setLink(e.target.value)} disabled={disabled} />
-      <Button onClick={() => handleCreateRecommendation()} disabled={disabled}>
+    <Container onSubmit={handleCreateRecommendation}>
+      <Input aria-label="Recommendation name" type="text" placeholder="Name" value={name} onChange={e => setName(e.target.value)} disabled={disabled} required />
+      <Input aria-label="YouTube URL" type="url" placeholder="https://youtu.be/..." value={link} onChange={e => setLink(e.target.value)} disabled={disabled} required />
+      <Button aria-label="Create recommendation" type="submit" disabled={disabled || !canSubmit}>
         <IoReturnUpForwardOutline size="24px" color="#fff" />
       </Button>
     </Container>
   );
 }
 
-const Container = styled.div`
+const Container = styled.form`
   display: flex;
   gap: 9px;
   margin-bottom: 15px;

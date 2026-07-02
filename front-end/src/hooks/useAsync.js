@@ -5,21 +5,25 @@ export default function useAsync(handler, immediate = true) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const act = (...args) => {
+  const act = async (...args) => {
     setLoading(true);
     setError(null);
-    return handler(...args).then((data) => {
+
+    try {
+      const data = await handler(...args);
       setData(data);
-      setLoading(false);
-    }).catch((error) => {
+      return data;
+    } catch (error) {
       setError(error);
+      throw error;
+    } finally {
       setLoading(false);
-    });
+    }
   };
 
   useEffect(() => {
     if (immediate) {
-      act();
+      act().catch(() => undefined);
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps

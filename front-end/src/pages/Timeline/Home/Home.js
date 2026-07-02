@@ -7,7 +7,7 @@ import CreateNewRecommendation from "../../../components/CreateNewRecommendation
 import Recommendation from "../../../components/Recommendation";
 
 export default function Home() {
-  const { recommendations, loadingRecommendations, listRecommendations } = useRecommendations();
+  const { recommendations, errorLoadingRecommendations, listRecommendations } = useRecommendations();
   const { loadingCreatingRecommendation, createRecommendation, creatingRecommendationError } = useCreateRecommendation();
 
   const handleCreateRecommendation = async (recommendation) => {
@@ -16,7 +16,7 @@ export default function Home() {
       youtubeLink: recommendation.link,
     });
 
-    listRecommendations();
+    listRecommendations().catch(() => undefined);
   };
 
   useEffect(() => {
@@ -25,7 +25,15 @@ export default function Home() {
     }
   }, [creatingRecommendationError]);
 
-  if ((loadingRecommendations && !recommendations) || !recommendations) {
+  if (errorLoadingRecommendations && !recommendations) {
+    return (
+      <div role="alert">
+        Unable to load recommendations. <button onClick={() => listRecommendations().catch(() => undefined)}>Try again</button>
+      </div>
+    );
+  }
+
+  if (!recommendations) {
     return <div>Loading...</div>;
   }
 
@@ -37,8 +45,8 @@ export default function Home() {
           <Recommendation
             key={recommendation.id}
             {...recommendation}
-            onUpvote={() => listRecommendations()}
-            onDownvote={() => listRecommendations()}
+            onUpvote={() => listRecommendations().catch(() => undefined)}
+            onDownvote={() => listRecommendations().catch(() => undefined)}
           />
         ))
       }
