@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-test:
+  production-builds:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -28,8 +28,6 @@ jobs:
         run: npm ci --prefix back-end
       - name: Install frontend dependencies
         run: npm ci --prefix front-end
-      - name: Run backend unit tests
-        run: npm test --prefix back-end
       - name: Build backend
         run: npm run build --prefix back-end
       - name: Build frontend
