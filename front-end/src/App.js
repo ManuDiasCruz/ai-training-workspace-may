@@ -22,7 +22,7 @@ const Random = LazyWrapper(lazy(() => import("./pages/Timeline/Random")));
 
 export default function App() {
   return (
-    <Router>
+    <Router basename={process.env.PUBLIC_URL}>
       <Routes>
         <Route path="/" element={<Timeline />}>
           <Route path="/" element={<Home />} />

@@ -2,6 +2,7 @@
   "name": "sing-me-a-song-front",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://manudiascruz.github.io/ai-training-workspace-may",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.1.1",
@@ -19,8 +20,11 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "postbuild": "node -e \"require('fs').copyFileSync('build/index.html','build/404.html')\"",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
@@ -42,6 +46,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^7.3.0",
-    "cypress": "^10.3.1"
+    "cypress": "^10.3.1",
+    "gh-pages": "^6.3.0"
   }
 }
