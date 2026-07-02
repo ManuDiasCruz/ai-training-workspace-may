@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "cd front-end && npm install",
+  "buildCommand": "cd front-end && PUBLIC_URL=/ npm run build",
+  "outputDirectory": "front-end/build",
+  "build": {
+    "env": {
+      "REACT_APP_API_BASE_URL": "https://sing-me-a-song-api.onrender.com"
+    }
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

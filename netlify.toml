@@ -1,0 +1,22 @@
+# Netlify deployment config for the "Sing Me a Song" front-end.
+# Connect the repo in Netlify (New site from Git) — this file supplies the
+# build settings and the SPA fallback automatically. Works with private repos.
+#
+# After the back-end is hosted, update REACT_APP_API_BASE_URL below (or in the
+# Netlify UI) to the API's public origin and redeploy.
+
+[build]
+  base = "front-end"
+  command = "npm run build"
+  publish = "build"
+
+[build.environment]
+  # Serve assets from the domain root (overrides the Pages "homepage" subpath).
+  PUBLIC_URL = "/"
+  REACT_APP_API_BASE_URL = "https://sing-me-a-song-api.onrender.com"
+
+# SPA fallback: client-side routes (/top, /random) resolve to index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
