@@ -139,6 +139,7 @@ Free Render web services do not support a separate pre-deploy command. The API t
 - Returned created and updated records instead of empty mutation responses, restoring frontend success handling and integration tests.
 - Fixed the Random route's post-vote refresh so deletion below `-5` cannot leave it requesting a removed record.
 - Added client request timeout, valid local API fallback, retryable fetch failures, and mutation-aware form/list refresh behavior.
+- Made vote controls keyboard-operable and gave them accessible labels for stable end-to-end interaction.
 - Replaced an undeclared online random-video test dependency with offline-safe generated YouTube URLs.
 - Corrected integration ordering assertions, POST response coverage, invalid-parameter coverage, mock cleanup, and database disconnect behavior.
 - Added secret-safe ignores/environment examples and removed committed macOS metadata.

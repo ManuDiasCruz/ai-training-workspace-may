@@ -21,6 +21,13 @@ export default function Recommendation({ name, youtubeLink, score, id, onUpvote 
     if (updated !== undefined) onDownvote();
   };
 
+  const handleVoteKeyDown = (handler) => (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handler();
+    }
+  };
+
   useEffect(() => {
     if (errorUpvotingRecommendation) {
       alert("Error upvoting recommendation!");
@@ -39,9 +46,23 @@ export default function Recommendation({ name, youtubeLink, score, id, onUpvote 
       <Row>{name}</Row>
       <ReactPlayer url={youtubeLink} width="100%" height="100%" />
       <Row>
-        <GoArrowUp size="24px" onClick={handleUpvote} />
+        <GoArrowUp
+          size="24px"
+          role="button"
+          tabIndex="0"
+          aria-label={`Upvote ${name}`}
+          onClick={handleUpvote}
+          onKeyDown={handleVoteKeyDown(handleUpvote)}
+        />
         {score}
-        <GoArrowDown size="24px" onClick={handleDownvote} />
+        <GoArrowDown
+          size="24px"
+          role="button"
+          tabIndex="0"
+          aria-label={`Downvote ${name}`}
+          onClick={handleDownvote}
+          onKeyDown={handleVoteKeyDown(handleDownvote)}
+        />
       </Row>
     </Container>
   );
