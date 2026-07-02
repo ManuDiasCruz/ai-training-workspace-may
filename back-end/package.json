@@ -4,14 +4,20 @@
   "type": "module",
   "description": "",
   "main": "index.js",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
-    "start": "node dist/index.js",
+    "build": "prisma generate && tsc -p tsconfig.build.json",
+    "start": "node dist/server.js",
     "dev": "nodemon src/server.ts",
     "dev:test": "dotenv -e .env.test prisma migrate dev --skip-seed && dotenv -e .env.test nodemon src/server.ts",
-    "test:integration": "dotenv -e .env.test jest -- -i ./tests/integration",
-    "test:unit": "dotenv -e .env.test jest -- -i ./tests/unit",
+    "test:integration": "cross-env NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test jest -- -i ./tests/integration",
+    "test:unit": "cross-env DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sing_me_a_song_test NODE_OPTIONS=--experimental-vm-modules jest --runInBand tests/unit",
     "prisma-test": "dotenv -e .env.test prisma migrate reset --skip-seed",
-    "test": "npm run prisma-test && NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test jest -- -i"
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "test": "npm run test:unit"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
@@ -21,6 +27,7 @@
   "license": "ISC",
   "devDependencies": {
     "@faker-js/faker": "^7.3.0",
+    "@jest/globals": "^28.0.3",
     "@types/cors": "^2.8.12",
     "@types/dotenv": "^8.2.0",
     "@types/express": "^4.17.13",

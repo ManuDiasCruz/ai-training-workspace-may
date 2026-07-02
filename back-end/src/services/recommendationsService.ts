@@ -11,7 +11,19 @@ async function insert(createRecommendationData: CreateRecommendationData) {
   if (existingRecommendation)
     throw conflictError("Recommendations names must be unique");
 
-  await recommendationRepository.create(createRecommendationData);
+  try {
+    await recommendationRepository.create(createRecommendationData);
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      throw conflictError("Recommendations names must be unique");
+    }
+
+    throw error;
+  }
+}
+
+function isUniqueConstraintError(error: unknown) {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
 }
 
 async function upvote(id: number) {
