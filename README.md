@@ -112,8 +112,16 @@ The front-end and back-end deploy independently.
   Fly.io). Build command `npm run build`, start command `npm start`, and set
   `DATABASE_URL`. Run `npx prisma migrate deploy` on release to apply migrations.
 
-See [Known limitations](#known-limitations--future-improvements) for the
-current deployment status.
+### Current deployment status
+
+- The repaired production front-end bundle is built with relative asset paths
+  and **verified to serve correctly** (index + JS/CSS assets return `200`) via a
+  static server, and is published to the repo's **`gh-pages`** branch.
+- Serving it publicly via GitHub Pages is **blocked by the repository's plan**
+  (`GitHub Pages is not supported for this repository`). Any static host
+  (Vercel/Netlify/`npx serve build`) will serve the same bundle.
+- A live back-end is **not** deployed: the environment had no PostgreSQL or
+  hosting credentials. See [Known limitations](#known-limitations--future-improvements).
 
 ## Fixes & improvements made
 
