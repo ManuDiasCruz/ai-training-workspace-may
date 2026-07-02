@@ -1,0 +1,50 @@
+# Render.com Blueprint for the "Sing Me a Song" full-stack app.
+# Deploy: push this branch, then in the Render dashboard choose
+#   New +  ->  Blueprint  ->  connect this repo/branch.
+# Render provisions the Postgres DB, the Node API, and the static SPA and
+# wires the environment variables between them automatically.
+#
+# NOTE: the two services and the DB must share the same region so the
+# private DATABASE_URL resolves. Free Postgres instances expire after 30 days.
+
+databases:
+  - name: sing-me-a-song-db
+    databaseName: sing_me_a_song
+    user: sing
+    plan: free
+
+services:
+  # ---------- Back-end API (Express + Prisma) ----------
+  - type: web
+    name: sing-me-a-song-api
+    runtime: node
+    plan: free
+    rootDir: back-end
+    buildCommand: npm install && npm run build
+    # migrate:deploy applies committed migrations (idempotent) before boot.
+    startCommand: npm run migrate:deploy && npm start
+    healthCheckPath: /recommendations
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sing-me-a-song-db
+          property: connectionString
+      # PORT is injected by Render automatically; server.ts honours it.
+
+  # ---------- Front-end SPA (Create React App) ----------
+  - type: web
+    name: sing-me-a-song-web
+    runtime: static
+    rootDir: front-end
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    envVars:
+      # Point the SPA at the API's public URL. Update the host if you rename
+      # the service. REACT_APP_* vars are baked in at build time.
+      - key: REACT_APP_API_BASE_URL
+        value: https://sing-me-a-song-api.onrender.com
+    routes:
+      # SPA fallback so client-side routes (/top, /random) resolve to index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html
