@@ -21,7 +21,7 @@ async function createTwoSongsScenario() {
 }
   
 async function createMoreThanTenScenario(numberOfPosts: number) {
-    let song: Song;
+    let song: Song | null = null;
     for (let i = 0; i < numberOfPosts; i++) {
       song = createRandomSong();
       await createRecommendation(song);
