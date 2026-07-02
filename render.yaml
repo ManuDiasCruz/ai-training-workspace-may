@@ -7,7 +7,7 @@ services:
     repo: https://github.com/ManuDiasCruz/ai-training-workspace-may
     branch: H2H-red-sing
     autoDeploy: true
-    buildCommand: npm ci --prefix back-end && npm ci --prefix front-end && npm run build --prefix front-end && npm run build --prefix back-end
+    buildCommand: npm ci --include=dev --prefix back-end && npm ci --include=dev --prefix front-end && npm run build --prefix front-end && npm run build --prefix back-end
     startCommand: npm run db:migrate --prefix back-end && npm start --prefix back-end
     healthCheckPath: /health
     envVars:
