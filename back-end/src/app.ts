@@ -2,14 +2,25 @@
 import cors from "cors";
 import express from "express";
 import "express-async-errors";
+import { prisma } from "./database.js";
 import { errorHandlerMiddleware } from "./middlewares/errorHandlerMiddleware.js";
 
 import testsRouter from "./routers/testRouter.js";
 import recommendationRouter from "./routers/recommendationRouter.js";
 
 const app = express();
-app.use(cors());
+const corsOrigins = process.env.CORS_ORIGIN
+  ?.split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(cors({ origin: corsOrigins?.length ? corsOrigins : true }));
 app.use(express.json());
+
+app.get("/health", async (_req, res) => {
+  await prisma.$queryRaw`SELECT 1`;
+  res.send({ status: "ok" });
+});
 
 app.use("/recommendations", recommendationRouter);
 

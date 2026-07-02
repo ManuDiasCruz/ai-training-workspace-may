@@ -1,4 +1,4 @@
-import { Suspense, lazy, Component } from "react";
+import { Suspense, lazy } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -25,9 +25,9 @@ export default function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Timeline />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/top" element={<Top />} />
-          <Route path="/random" element={<Random />} />
+          <Route index element={<Home />} />
+          <Route path="top" element={<Top />} />
+          <Route path="random" element={<Random />} />
           <Route path="*" element={<div>Not found!</div>} />
         </Route>
       </Routes>

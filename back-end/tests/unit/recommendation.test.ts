@@ -1,11 +1,14 @@
 import { jest } from "@jest/globals";
-import { response } from "express";
 
 import { recommendationService } from "../../src/services/recommendationsService.js";
 import { recommendationRepository } from "../../src/repositories/recommendationRepository.js";
 import { createRandomSong } from "../factories/recommendationFactory.js";
 
 describe("UNIT TESTS SUITE", () => {
+
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
 
     const recommendation1 = createRandomSong();
 
@@ -26,7 +29,7 @@ describe("UNIT TESTS SUITE", () => {
 
             jest
                 .spyOn(recommendationRepository, "create")
-                .mockResolvedValueOnce(null);
+                .mockResolvedValueOnce(recommendation2);
 
             await recommendationService.insert(recommendation1);
             expect(recommendationRepository.findByName).toHaveBeenCalledWith(name);
@@ -96,7 +99,7 @@ describe("UNIT TESTS SUITE", () => {
 
             jest
                 .spyOn(recommendationRepository, "remove")
-                .mockResolvedValueOnce(null);
+                .mockResolvedValueOnce(recommendation2);
             
             await recommendationService.downvote(1);
             expect(recommendationRepository.find).toHaveBeenCalledWith(1);
@@ -192,6 +195,7 @@ describe("UNIT TESTS SUITE", () => {
 
             jest
                 .spyOn(recommendationRepository, "findAll")
+                .mockResolvedValueOnce([])
                 .mockResolvedValueOnce([]);
 
             expect(recommendationService.getRandom()).rejects.toEqual({
