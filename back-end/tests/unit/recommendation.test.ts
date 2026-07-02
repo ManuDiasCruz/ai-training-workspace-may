@@ -2,12 +2,17 @@ import { jest } from "@jest/globals";
 
 import { recommendationService } from "../../src/services/recommendationsService.js";
 import { recommendationRepository } from "../../src/repositories/recommendationRepository.js";
+import { prisma } from "../../src/database.js";
 import { createRandomSong } from "../factories/recommendationFactory.js";
 
 describe("UNIT TESTS SUITE", () => {
 
     afterEach(() => {
         jest.restoreAllMocks();
+    });
+
+    afterAll(async () => {
+        await prisma.$disconnect();
     });
 
     const recommendation1 = createRandomSong();
