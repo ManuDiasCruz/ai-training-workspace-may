@@ -23,7 +23,11 @@ async function insert(createRecommendationData: CreateRecommendationData) {
 }
 
 function isUniqueConstraintError(error: unknown) {
-  return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    (error as { code?: string }).code === "P2002"
+  );
 }
 
 async function upvote(id: number) {
