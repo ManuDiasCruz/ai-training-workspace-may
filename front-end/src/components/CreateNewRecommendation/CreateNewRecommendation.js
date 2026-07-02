@@ -1,0 +1,73 @@
+import { useState } from "react";
+import styled from "styled-components";
+
+import { IoReturnUpForwardOutline } from "react-icons/io5";
+
+export default function CreateNewRecommendation({ onCreateNewRecommendation = () => 0, disabled = false }) {
+  const [name, setName] = useState("");
+  const [link, setLink] = useState("");
+  const canSubmit = name.trim() && link.trim();
+
+  const handleCreateRecommendation = async (event) => {
+    event.preventDefault();
+
+    try {
+      await onCreateNewRecommendation({
+        name: name.trim(),
+        link: link.trim()
+      });
+      setLink("");
+      setName("");
+    } catch {
+      // The request hook exposes the error to the page without clearing user input.
+    }
+  };
+  
+  return (
+    <Container onSubmit={handleCreateRecommendation}>
+      <Input aria-label="Recommendation name" type="text" placeholder="Name" value={name} onChange={e => setName(e.target.value)} disabled={disabled} required />
+      <Input aria-label="YouTube URL" type="url" placeholder="https://youtu.be/..." value={link} onChange={e => setLink(e.target.value)} disabled={disabled} required />
+      <Button aria-label="Create recommendation" type="submit" disabled={disabled || !canSubmit}>
+        <IoReturnUpForwardOutline size="24px" color="#fff" />
+      </Button>
+    </Container>
+  );
+}
+
+const Container = styled.form`
+  display: flex;
+  gap: 9px;
+  margin-bottom: 15px;
+`;
+
+const Input = styled.input`
+  background-color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 9px 13px;
+  color: #141414;
+  width: 100%;
+  font-family: "Lexend Deca", sans-serif;
+
+  &:disabled {
+    opacity: .8;
+  }
+
+  &::placeholder {
+    color: #c4c4c4;
+  }
+`;
+
+const Button = styled.button`
+  background-color: #e90000;
+  border: none;
+  border-radius: 4px;
+  padding: 9px 13px;
+  width: 59px;
+  color: #fff;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: .8;
+  }
+`;

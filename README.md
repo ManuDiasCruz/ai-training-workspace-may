@@ -1,124 +1,113 @@
-# 🦜 Parrot Memory Card Game
+# Sing me a Song
 
-A small browser memory game: flip the cards two at a time and find every
-matching pair of parrots in as few moves as possible. Built with plain
-**HTML, CSS and JavaScript** — no build step and no dependencies.
+Sing me a Song is a full-stack music recommendation app. Visitors can submit YouTube songs, browse the latest recommendations, vote songs up or down, view the top ten, and request a weighted random recommendation. The React frontend calls an Express API backed by PostgreSQL through Prisma.
 
-![Desktop preview](img/desktop.png)
+The original Create React App documentation remains available at [`front-end/README.md`](front-end/README.md).
 
-## How to play
-
-1. On load you're asked **how many cards** to play with — an even number
-   between **4 and 14**.
-2. Click a card to flip it, then flip a second card:
-   - if the two match, they stay revealed;
-   - if not, they flip back after a moment.
-3. The header tracks your number of moves (**Jogadas**) and the elapsed time
-   (**relógio**).
-4. Match every pair to win — you can then start a new game.
-
-> ℹ️ The in-game text is in Brazilian Portuguese (the original author's language).
-
-## Project structure
+## Project structure and flow
 
 ```text
-.
-├── index.html        # markup, meta tags and asset links
-├── css/
-│   └── style.css     # colour palette + responsive layout
-├── src/
-│   └── script.js     # game logic (shuffle, flip, match, timer)
-└── img/              # parrot artwork + preview screenshots
+front-end/   React 18 UI, Axios API client, React Router, styled-components
+back-end/    Express API, TypeScript, Prisma client and PostgreSQL migrations
+render.yaml  One-service Render deployment plus managed PostgreSQL
 ```
 
-## Running locally
+In development, the frontend runs at `http://localhost:3000` and calls the API at `http://localhost:5000`. In production, Express serves the compiled React application and the API from one origin. Requests flow through the controller, service, repository, and Prisma layers before reaching PostgreSQL.
 
-This is a static site, so all you need is a browser.
+## Requirements
 
-**Option A — open directly**
+- Node.js 20 or 22 (the deployment is pinned to the version in `.node-version`)
+- npm
+- PostgreSQL 13 or newer
 
-Double-click `index.html`, or open it in your browser.
+## Local setup
 
-**Option B — local server (recommended)**
+1. Create a PostgreSQL database, such as `sing_me_a_song`.
+2. Install and configure the backend:
 
-A tiny static server avoids any path/caching quirks:
+   ```bash
+   cd back-end
+   npm ci
+   cp .env.example .env
+   npm run db:migrate
+   npm run dev
+   ```
+
+3. In a second terminal, install and start the frontend:
+
+   ```bash
+   cd front-end
+   npm ci
+   cp .env.example .env
+   npm start
+   ```
+
+On PowerShell, use `Copy-Item .env.example .env` instead of `cp`. Replace the example PostgreSQL URL with your own local connection details. Never commit `.env` files; both apps ignore them while keeping the safe `.env.example` files tracked.
+
+### Environment variables
+
+| Variable | App | Required | Purpose |
+| --- | --- | --- | --- |
+| `DATABASE_URL` | Backend | Yes | PostgreSQL connection string used by Prisma. |
+| `PORT` | Backend | No | HTTP port; defaults to `5000`. Hosting platforms usually inject this. |
+| `CORS_ORIGIN` | Backend | No | Comma-separated allowed origins for a separately hosted frontend. Omit for same-origin production hosting. |
+| `MODE` | Backend | No | Set to `TEST` only to expose the test reset route. Never enable it in production. |
+| `REACT_APP_API_BASE_URL` | Frontend | Development only | API origin, normally `http://localhost:5000`. Leave unset for the unified production service. |
+
+### Useful commands
 
 ```bash
-# from the project root
-python3 -m http.server 8000
-# then open http://localhost:8000/ in your browser
+npm test --prefix back-end
+npm run test:integration --prefix back-end  # requires back-end/.env.test and an isolated test database
+npm run build --prefix back-end
+npm run build --prefix front-end
 ```
 
-Any static server works (`npx serve`, the VS Code *Live Server* extension,
-etc.). An internet connection is used only to load the Google Fonts.
+For a local production-style run, build the frontend and backend, set `DATABASE_URL` and `NODE_ENV=production`, then run `npm start --prefix back-end`. The backend serves `front-end/build` and supports direct navigation to `/top` and `/random`.
 
-## UI / responsiveness improvements
+## API overview
 
-This round of work delivered the client's two requests — a mobile-friendly
-layout and a **white / light-green / black** colour scheme — plus a few small
-correctness fixes.
+| Method | Route | Description |
+| --- | --- | --- |
+| `GET` | `/health` | Confirms the server can query PostgreSQL. |
+| `GET` | `/recommendations` | Returns the ten newest recommendations. |
+| `POST` | `/recommendations` | Creates a named YouTube recommendation. |
+| `GET` | `/recommendations/random` | Returns a weighted random recommendation. |
+| `GET` | `/recommendations/top/:amount` | Returns up to 100 recommendations ordered by score. |
+| `GET` | `/recommendations/:id` | Returns one recommendation. |
+| `POST` | `/recommendations/:id/upvote` | Adds one vote. |
+| `POST` | `/recommendations/:id/downvote` | Removes one vote and deletes scores below -5. |
 
-### Colour palette
+## Deployment
 
-Colours are centralised as CSS variables in `css/style.css`:
+The included Render Blueprint creates one Node web service. The build installs both apps, compiles React and TypeScript, and the start command applies committed Prisma migrations before starting Express. Supply a direct PostgreSQL connection string from Render Postgres, Neon, or another compatible provider when the Blueprint asks for `DATABASE_URL`.
 
-| Token             | Value     | Use                                            |
-| ----------------- | --------- | ---------------------------------------------- |
-| `--color-bg`      | `#ffffff` | page background (was pale-lime `#EEF9BF`)      |
-| `--color-surface` | `#a7e9af` | cards / faces — light green                    |
-| `--color-border`  | `#8ed29a` | card edges — same green family                 |
-| `--color-text`    | `#000000` | all text (was teal `#75B79E` and gray)         |
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2FManuDiasCruz%2Fai-training-workspace-may%2Ftree%2FH2H-red-sing)
 
-The old teal title, lime background and gray counters are gone — the UI now
-uses only white, light green and a black font, as requested.
+To deploy manually in Render:
 
-### Responsiveness
+1. Provision PostgreSQL. For Prisma 3 migrations on Neon, use its direct (non-pooler) connection string with SSL enabled.
+2. Create a Blueprint from this repository and select branch `H2H-red-sing`.
+3. Enter the database URL as the secret `DATABASE_URL` value when prompted, review `render.yaml`, and apply the Blueprint.
+4. Wait for the migration, build, and health check to complete.
+5. Open the generated `onrender.com` URL and verify create, list, vote, top, and random flows.
 
-- `box-sizing: border-box` applied globally.
-- Replaced the fixed `main { margin: auto 116px }` with a centred max-width
-  container and fluid `clamp()` padding.
-- Cards now size with `clamp()` widths + `aspect-ratio: 117/146` and lay out
-  using `gap`, so they **scale and wrap on any screen** instead of overflowing.
-- Fluid `clamp()` typography for the title, header counters and end message.
-- Removed the lone `@media (max-width: 335px)` rule — it left typical phones
-  (~360–430px) stuck on the desktop layout. The fluid system now covers
-  everything from small phones to large desktops.
-- `@media (hover: hover)` card-lift effect, so touch devices don't get
-  "sticky" hover states.
+No database password or connection URL is committed. Render stores `DATABASE_URL` as an environment secret at deploy time.
 
-Verified at **1280px** (desktop), **390px** and **360px** (mobile):
+## Repairs and improvements
 
-| Desktop                     | Mobile                    |
-| --------------------------- | ------------------------- |
-| ![Desktop](img/desktop.png) | ![Mobile](img/mobile.png) |
+- Corrected the backend TypeScript build output and production start path.
+- Added runtime `.env` loading, safe environment examples, Node version bounds, and deploy-time Prisma migration commands.
+- Fixed ESM imports that broke compiled execution and repaired the unit-test setup.
+- Added request parameter validation and race-safe duplicate recommendation handling.
+- Added a PostgreSQL-aware health check and production SPA/static serving.
+- Corrected frontend API configuration, loading/error/retry states, and form submission behavior so failed requests no longer clear user input.
+- Added production metadata, a reproducible CI workflow, and Render infrastructure configuration.
 
-### Small fixes
+## Known limitations and future work
 
-- `index.html` linked `css\style.css` with a backslash; corrected to
-  `css/style.css` (browsers tolerate it, but stricter static servers 404).
-- Removed a stray `print(...)` debug call in `script.js` that resolved to
-  `window.print()` and opened the browser print dialog on invalid input.
-- Added an inline parrot-emoji favicon (removes the `/favicon.ico` 404) and a
-  `theme-color` meta tag matching the palette.
-
-## Known limitations & future improvements
-
-- **Card count via `prompt()`** — the game still asks for the number of cards
-  through a native `prompt()` on load. It works on mobile, but an in-page
-  start screen / selector would be friendlier. Left as-is to keep the change
-  scoped to the requested UI work.
-- **Parrot artwork is intentionally unchanged** — the colourful parrot images
-  are game *content*, so the white/light-green/black palette applies to the UI
-  chrome, not the artwork.
-- **Win / replay dialogs** use native `alert()` / `prompt()`; these could
-  become styled in-page modals.
-- **No persistence** — moves and elapsed time reset on every reload; there is
-  no high-score / best-time tracking.
-- **UI copy is Portuguese only** — no internationalisation yet.
-
-## Credits
-
-Original game by
-[@ManuDiasCruz](https://github.com/ManuDiasCruz/parrots-memory-card-game).
-Parrot GIFs come from the community "Party Parrot" set. This branch adds the
-responsive layout and the white/light-green/black palette.
+- Free Render services can cold-start after inactivity, and free database retention/limits should be reviewed before production use.
+- The app has no authentication, moderation, or rate limiting; it should not be exposed to untrusted high-volume traffic without those controls.
+- Several original dependencies are old or deprecated. Upgrade them in focused changes with regression testing instead of a broad rewrite.
+- Integration tests require an isolated PostgreSQL database and are intentionally excluded from the default unit-test command.
+- YouTube playback depends on third-party availability, embedding permissions, and browser privacy settings.

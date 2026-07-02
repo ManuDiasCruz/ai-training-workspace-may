@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  production-builds:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sing_me_a_song_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Jest 28/ts-jest 28 can stall during ESM bootstrap on newer Node releases.
+          node-version: 20.19.4
+          cache: npm
+          cache-dependency-path: |
+            back-end/package-lock.json
+            front-end/package-lock.json
+      - name: Install backend dependencies
+        run: npm ci --prefix back-end
+      - name: Install frontend dependencies
+        run: npm ci --prefix front-end
+      - name: Build backend
+        run: npm run build --prefix back-end
+      - name: Build frontend
+        run: npm run build --prefix front-end
+        env:
+          CI: true
