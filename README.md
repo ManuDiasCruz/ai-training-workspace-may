@@ -136,27 +136,45 @@ npx cypress open
 
 ## Deployment
 
-This repo ships a **Render.com Blueprint** ([`render.yaml`](render.yaml)) that
-provisions everything in one step:
+The app has two deployable pieces: the **static front-end** (any static host)
+and the **API + PostgreSQL** back-end (any Node host). Config files for the most
+common hosts are included.
 
-1. Push this branch to GitHub (already done for `H2H-medium-sing`).
-2. In Render: **New + → Blueprint**, connect this repository, and select the
-   `H2H-medium-sing` branch.
-3. Render creates:
-   - a **free PostgreSQL** database,
-   - the **API** web service (`buildCommand: npm install && npm run build`,
-     `startCommand: npm run migrate:deploy && npm start`) with `DATABASE_URL`
-     wired from the database automatically,
-   - the **static SPA** built from `front-end/` with the SPA rewrite rule.
-4. After the first deploy, set the front-end's `REACT_APP_API_BASE_URL` to the
-   API service's public URL (e.g. `https://sing-me-a-song-api.onrender.com`) and
-   redeploy the static site so the value is baked into the bundle.
+### Front-end (static host)
 
-Any equivalent host works: the API is a standard Node/Express service
-(`npm run build` then `npm start`) and the front-end is a static CRA bundle
-(`npm run build`, serve `front-end/build/`).
+The production bundle is a plain static site (`front-end/build/`). Ready-to-use
+configs are provided; all work with **private** repositories:
 
-### Post-deploy verification checklist
+- **Netlify** — [`netlify.toml`](netlify.toml). *New site from Git* → pick this
+  repo/branch; build settings and the SPA fallback are read from the file.
+- **Vercel** — [`vercel.json`](vercel.json). *Import Project* → deploy.
+- **Surge** (CLI): `cd front-end && PUBLIC_URL=/ npm run build && npx surge build`.
+- **GitHub Pages**: `cd front-end && npm run deploy` publishes to the `gh-pages`
+  branch (already done on this branch). ⚠️ Serving it requires a **public** repo
+  or a paid plan — Pages is disabled for private repos on the free plan.
+
+Set `REACT_APP_API_BASE_URL` (baked in at build time) to your API's public
+origin before/at build. The included configs default it to the Render API URL
+below; the SPA loads without the API but its data features need the API live.
+
+### Back-end (API + database)
+
+Ships a **Render.com Blueprint** ([`render.yaml`](render.yaml)): *New + →
+Blueprint*, connect this repo/branch, and Render provisions a free PostgreSQL
+DB and the API web service (`npm run build`, then
+`npm run migrate:deploy && npm start`), wiring `DATABASE_URL` automatically.
+Any Node host works — build with `npm run build` and start with `npm start`
+(run `npm run migrate:deploy` first).
+
+### Verification performed
+
+- **Front-end build** verified served over HTTP and over a public HTTPS tunnel:
+  `/` → `200` with the app shell, hashed JS/CSS assets → `200`, and the SPA
+  fallback (`/random`) → `200`. Root-relative assets and the baked API URL confirmed.
+- **Back-end build** verified to compile and boot (`Server is listening…`);
+  `GET /recommendations` returns `200` once `DATABASE_URL` points at a live DB.
+
+### Post-deploy checklist
 
 - `GET https://<api-host>/recommendations` returns `200` with a JSON array.
 - The SPA loads, and creating a recommendation makes it appear in the list.
@@ -191,13 +209,21 @@ broken setup defaults. The following minimal, targeted fixes were applied:
    Removed the dead config.
 7. **Non-portable test script.** Replaced the inline `NODE_OPTIONS=...` (which
    fails on Windows shells) with the already-present `cross-env`.
-8. **Added `render.yaml`** deployment blueprint and this README.
+8. **Deployment enablement.** Added `render.yaml` (back-end blueprint),
+   `netlify.toml` + `vercel.json` (front-end static hosts), GitHub Pages
+   support (`gh-pages` scripts, `homepage`, `404.html` fallback, Router
+   `basename`), and this README.
 
 ## ⚠️ Known limitations / future improvements
 
-- **Live hosted deployment requires a hosting account.** The blueprint and build
-  are verified locally; provisioning the live services needs the owner's
-  Render (or equivalent) account. See the open GitHub issues for follow-ups.
+- **Durable live hosting requires an account.** The front-end build is verified
+  served publicly (local static server + public HTTPS tunnel), and the `gh-pages`
+  branch is published — but GitHub Pages is disabled for this **private** repo on
+  the free plan, and Netlify/Vercel/Surge/Render each need the owner's (free)
+  account. Configs are provided so each is a one-step connect.
+- **Back-end not yet live**, so the deployed front-end loads but its data
+  features stay idle until the API is hosted (Render blueprint) and
+  `REACT_APP_API_BASE_URL` is pointed at it.
 - **Outdated dependencies.** Prisma 3.x, React 18 / CRA (deprecated), and a
   number of transitive packages report audit vulnerabilities. Upgrading is
   deliberately out of scope here to avoid an architectural rewrite.
