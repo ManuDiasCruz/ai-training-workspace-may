@@ -80,18 +80,19 @@ For a local production-style run, build the frontend and backend, set `DATABASE_
 
 ## Deployment
 
-The included Render Blueprint creates one Node web service and one PostgreSQL 14 database. The build installs both apps, compiles React and TypeScript, and the start command applies committed Prisma migrations before starting Express.
+The included Render Blueprint creates one Node web service. The build installs both apps, compiles React and TypeScript, and the start command applies committed Prisma migrations before starting Express. Supply a direct PostgreSQL connection string from Render Postgres, Neon, or another compatible provider when the Blueprint asks for `DATABASE_URL`.
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2FManuDiasCruz%2Fai-training-workspace-may%2Ftree%2FH2H-red-sing)
 
 To deploy manually in Render:
 
-1. Create a Blueprint from this repository and select branch `H2H-red-sing`.
-2. Review the resources from `render.yaml` and apply the Blueprint.
-3. Wait for the database, migration, build, and health check to complete.
-4. Open the generated `onrender.com` URL and verify create, list, vote, top, and random flows.
+1. Provision PostgreSQL. For Prisma 3 migrations on Neon, use its direct (non-pooler) connection string with SSL enabled.
+2. Create a Blueprint from this repository and select branch `H2H-red-sing`.
+3. Enter the database URL as the secret `DATABASE_URL` value when prompted, review `render.yaml`, and apply the Blueprint.
+4. Wait for the migration, build, and health check to complete.
+5. Open the generated `onrender.com` URL and verify create, list, vote, top, and random flows.
 
-No database password or connection URL is committed. `DATABASE_URL` is populated from the managed database at deploy time.
+No database password or connection URL is committed. Render stores `DATABASE_URL` as an environment secret at deploy time.
 
 ## Repairs and improvements
 
