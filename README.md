@@ -1,124 +1,164 @@
-# 🦜 Parrot Memory Card Game
+# 🎵 Sing Me a Song
 
-A small browser memory game: flip the cards two at a time and find every
-matching pair of parrots in as few moves as possible. Built with plain
-**HTML, CSS and JavaScript** — no build step and no dependencies.
+A full-stack song-recommendation app. Users post YouTube song recommendations,
+up/down-vote them, and browse them by *recency*, *top score*, or a
+score-weighted *random* pick. Recommendations that fall below **-5** points are
+automatically removed.
 
-![Desktop preview](img/desktop.png)
+> This branch (`H2H-low-sing`) imports the
+> [`sing-me-a-song`](https://github.com/ManuDiasCruz/sing-me-a-song) project and
+> repairs it into a runnable, documented state. See
+> [Fixes & improvements](#fixes--improvements-made) below.
 
-## How to play
+## Stack
 
-1. On load you're asked **how many cards** to play with — an even number
-   between **4 and 14**.
-2. Click a card to flip it, then flip a second card:
-   - if the two match, they stay revealed;
-   - if not, they flip back after a moment.
-3. The header tracks your number of moves (**Jogadas**) and the elapsed time
-   (**relógio**).
-4. Match every pair to win — you can then start a new game.
-
-> ℹ️ The in-game text is in Brazilian Portuguese (the original author's language).
+| Layer     | Tech                                                            |
+| --------- | -------------------------------------------------------------- |
+| Front-end | React 18 (Create React App), React Router 6, axios, styled-components, react-player |
+| Back-end  | Node.js + Express (TypeScript, ESM), Prisma ORM                |
+| Database  | PostgreSQL                                                     |
+| Tests     | Jest + Supertest (back-end), Cypress (front-end e2e)           |
 
 ## Project structure
 
 ```text
 .
-├── index.html        # markup, meta tags and asset links
-├── css/
-│   └── style.css     # colour palette + responsive layout
-├── src/
-│   └── script.js     # game logic (shuffle, flip, match, timer)
-└── img/              # parrot artwork + preview screenshots
+├── back-end/          # Express + Prisma API
+│   ├── prisma/        # schema + migrations
+│   └── src/
+│       ├── controllers/  routers/  services/  repositories/
+│       ├── schemas/       # joi validation
+│       ├── middlewares/   # centralised error handler
+│       ├── app.ts         # express app (exported for tests)
+│       └── server.ts      # http entry point
+└── front-end/         # React SPA
+    └── src/
+        ├── components/  pages/  hooks/  services/
 ```
 
-## Running locally
+## API overview
 
-This is a static site, so all you need is a browser.
+| Method | Route                          | Description                              |
+| ------ | ------------------------------ | ---------------------------------------- |
+| POST   | `/recommendations`             | Create a recommendation (`name`, `youtubeLink`) |
+| GET    | `/recommendations`             | Latest 10 recommendations                |
+| GET    | `/recommendations/top/:amount` | Top `:amount` by score                   |
+| GET    | `/recommendations/random`      | Score-weighted random recommendation     |
+| GET    | `/recommendations/:id`         | A single recommendation                  |
+| POST   | `/recommendations/:id/upvote`  | +1 score                                 |
+| POST   | `/recommendations/:id/downvote`| -1 score (auto-deleted below -5)         |
 
-**Option A — open directly**
+## Setup
 
-Double-click `index.html`, or open it in your browser.
+### Prerequisites
 
-**Option B — local server (recommended)**
+- Node.js 16+ (tested on Node 20)
+- A PostgreSQL database
 
-A tiny static server avoids any path/caching quirks:
+### 1. Back-end
 
 ```bash
-# from the project root
-python3 -m http.server 8000
-# then open http://localhost:8000/ in your browser
+cd back-end
+npm install
+cp .env.example .env          # then edit DATABASE_URL
+npx prisma migrate dev        # create tables
+npm run dev                   # dev server (nodemon) on :5000
 ```
 
-Any static server works (`npx serve`, the VS Code *Live Server* extension,
-etc.). An internet connection is used only to load the Google Fonts.
+For production:
 
-## UI / responsiveness improvements
+```bash
+npm run build                 # prisma generate + tsc -> dist/
+npm start                     # node dist/server.js
+```
 
-This round of work delivered the client's two requests — a mobile-friendly
-layout and a **white / light-green / black** colour scheme — plus a few small
-correctness fixes.
+### 2. Front-end
 
-### Colour palette
+```bash
+cd front-end
+npm install
+cp .env.example .env          # point REACT_APP_API_BASE_URL at the API
+npm start                     # dev server on :3000
+npm run build                 # production static bundle -> build/
+```
 
-Colours are centralised as CSS variables in `css/style.css`:
+## Required environment variables
 
-| Token             | Value     | Use                                            |
-| ----------------- | --------- | ---------------------------------------------- |
-| `--color-bg`      | `#ffffff` | page background (was pale-lime `#EEF9BF`)      |
-| `--color-surface` | `#a7e9af` | cards / faces — light green                    |
-| `--color-border`  | `#8ed29a` | card edges — same green family                 |
-| `--color-text`    | `#000000` | all text (was teal `#75B79E` and gray)         |
+### `back-end/.env`
 
-The old teal title, lime background and gray counters are gone — the UI now
-uses only white, light green and a black font, as requested.
+| Variable       | Required | Description                                              |
+| -------------- | -------- | -------------------------------------------------------- |
+| `DATABASE_URL` | yes      | PostgreSQL connection string used by Prisma              |
+| `PORT`         | no       | API port (defaults to `5000`)                            |
+| `MODE`         | no       | Set to `TEST` to expose the `/tests/reset` helper route  |
 
-### Responsiveness
+### `front-end/.env`
 
-- `box-sizing: border-box` applied globally.
-- Replaced the fixed `main { margin: auto 116px }` with a centred max-width
-  container and fluid `clamp()` padding.
-- Cards now size with `clamp()` widths + `aspect-ratio: 117/146` and lay out
-  using `gap`, so they **scale and wrap on any screen** instead of overflowing.
-- Fluid `clamp()` typography for the title, header counters and end message.
-- Removed the lone `@media (max-width: 335px)` rule — it left typical phones
-  (~360–430px) stuck on the desktop layout. The fluid system now covers
-  everything from small phones to large desktops.
-- `@media (hover: hover)` card-lift effect, so touch devices don't get
-  "sticky" hover states.
+| Variable                  | Required | Description                                    |
+| ------------------------- | -------- | ---------------------------------------------- |
+| `REACT_APP_API_BASE_URL`  | yes      | Base URL of the back-end API (e.g. `http://localhost:5000`) |
 
-Verified at **1280px** (desktop), **390px** and **360px** (mobile):
+> ⚠️ **Never commit real `.env` files.** They are git-ignored; only the
+> `.env.example` templates are tracked.
 
-| Desktop                     | Mobile                    |
-| --------------------------- | ------------------------- |
-| ![Desktop](img/desktop.png) | ![Mobile](img/mobile.png) |
+## Deployment
 
-### Small fixes
+The front-end and back-end deploy independently.
 
-- `index.html` linked `css\style.css` with a backslash; corrected to
-  `css/style.css` (browsers tolerate it, but stricter static servers 404).
-- Removed a stray `print(...)` debug call in `script.js` that resolved to
-  `window.print()` and opened the browser print dialog on invalid input.
-- Added an inline parrot-emoji favicon (removes the `/favicon.ico` 404) and a
-  `theme-color` meta tag matching the palette.
+- **Front-end** — any static host. Run `npm run build` and serve the `build/`
+  folder (Vercel, Netlify, GitHub Pages, `npx serve build`). Set
+  `REACT_APP_API_BASE_URL` **at build time** to the deployed API URL.
+- **Back-end** — any Node host with a PostgreSQL add-on (Render, Railway,
+  Fly.io). Build command `npm run build`, start command `npm start`, and set
+  `DATABASE_URL`. Run `npx prisma migrate deploy` on release to apply migrations.
+
+### Current deployment status
+
+- The repaired production front-end bundle is built with relative asset paths
+  and **verified to serve correctly** (index + JS/CSS assets return `200`) via a
+  static server, and is published to the repo's **`gh-pages`** branch.
+- Serving it publicly via GitHub Pages is **blocked by the repository's plan**
+  (`GitHub Pages is not supported for this repository`). Any static host
+  (Vercel/Netlify/`npx serve build`) will serve the same bundle.
+- A live back-end is **not** deployed: the environment had no PostgreSQL or
+  hosting credentials. See [Known limitations](#known-limitations--future-improvements).
+
+## Fixes & improvements made
+
+- **Back-end failed to start under Node ESM** — `testController.ts` and
+  `testService.ts` imported sibling modules without the required `.js`
+  extension. Because `app.ts` statically imports the test router, this threw
+  `ERR_MODULE_NOT_FOUND` and crashed the server on boot in every mode. Added the
+  missing extensions.
+- **Broken production/build scripts** — `start` pointed at a non-existent
+  `dist/index.js` and there was no `build` script, so the app could not be
+  compiled or run in production. Added `build` (`prisma generate && tsc`) and
+  fixed `start` to `node dist/server.js` (and `main` accordingly).
+- **Invalid front-end env template** — `front-end/.env.example` shipped the
+  truncated value `REACT_APP_API_BASE_URL=http://`, which produced a broken
+  axios base URL and made every request fail. Corrected to
+  `http://localhost:5000`.
+- **Missing back-end env template** — added `back-end/.env.example` documenting
+  `DATABASE_URL`, `PORT`, and `MODE`.
+- **Documentation** — added this project overview, setup, env-var, and
+  deployment guide.
 
 ## Known limitations & future improvements
 
-- **Card count via `prompt()`** — the game still asks for the number of cards
-  through a native `prompt()` on load. It works on mobile, but an in-page
-  start screen / selector would be friendlier. Left as-is to keep the change
-  scoped to the requested UI work.
-- **Parrot artwork is intentionally unchanged** — the colourful parrot images
-  are game *content*, so the white/light-green/black palette applies to the UI
-  chrome, not the artwork.
-- **Win / replay dialogs** use native `alert()` / `prompt()`; these could
-  become styled in-page modals.
-- **No persistence** — moves and elapsed time reset on every reload; there is
-  no high-score / best-time tracking.
-- **UI copy is Portuguese only** — no internationalisation yet.
+- **Database & live deployment** — the target environment had no PostgreSQL or
+  Docker available, so the back-end could not be run end-to-end locally. The
+  code is verified to type-check (`tsc --noEmit`) and the Prisma client
+  generates cleanly; a full deploy needs a hosted Postgres instance.
+- **No seed script** — `package.json` references `prisma/seed.ts`, which does
+  not exist. Voting/browsing works but starts from an empty database.
+- **No back-end input trimming / URL normalization** beyond the joi YouTube
+  regex.
+- **Front-end error UX** uses native `alert()` dialogs.
 
 ## Credits
 
-Original game by
-[@ManuDiasCruz](https://github.com/ManuDiasCruz/parrots-memory-card-game).
-Parrot GIFs come from the community "Party Parrot" set. This branch adds the
-responsive layout and the white/light-green/black palette.
+Original project by
+[@ManuDiasCruz](https://github.com/ManuDiasCruz/sing-me-a-song). This branch
+repairs setup/runtime issues and adds documentation. The original
+Create React App front-end notes are preserved in
+[`front-end/README.md`](front-end/README.md).
