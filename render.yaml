@@ -1,0 +1,42 @@
+services:
+  - type: web
+    runtime: node
+    name: sing-me-a-song-yellow-api
+    branch: H2H-yellow-sing
+    plan: free
+    rootDir: back-end
+    buildCommand: npm ci && npm run build
+    startCommand: npm run db:migrate && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 20.19.2
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sing-me-a-song-yellow-db
+          property: connectionString
+      - key: CORS_ORIGIN
+        sync: false
+
+  - type: web
+    runtime: static
+    name: sing-me-a-song-yellow
+    branch: H2H-yellow-sing
+    rootDir: front-end
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./build
+    envVars:
+      - key: NODE_VERSION
+        value: 20.19.2
+      - key: REACT_APP_API_BASE_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+databases:
+  - name: sing-me-a-song-yellow-db
+    plan: free
+    databaseName: sing_me_a_song
+    user: sing_me_a_song
