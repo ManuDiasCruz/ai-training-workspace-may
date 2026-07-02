@@ -11,6 +11,7 @@ concurrency:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sing_me_a_song_test
     steps:

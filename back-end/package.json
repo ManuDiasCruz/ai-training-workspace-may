@@ -13,7 +13,7 @@
     "dev": "nodemon src/server.ts",
     "dev:test": "dotenv -e .env.test prisma migrate dev --skip-seed && dotenv -e .env.test nodemon src/server.ts",
     "test:integration": "cross-env NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test jest -- -i ./tests/integration",
-    "test:unit": "cross-env DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sing_me_a_song_test NODE_OPTIONS=--experimental-vm-modules jest --runInBand --detectOpenHandles tests/unit",
+    "test:unit": "cross-env DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sing_me_a_song_test NODE_OPTIONS=--experimental-vm-modules jest --runInBand --forceExit tests/unit",
     "prisma-test": "dotenv -e .env.test prisma migrate reset --skip-seed",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
