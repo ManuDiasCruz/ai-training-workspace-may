@@ -172,6 +172,29 @@ curl -X DELETE "http://127.0.0.1:8000/customers/201"
 | POST   | `/customers`          | Create a new customer.                     |
 | DELETE | `/customers/{id}`     | Delete a customer.                         |
 
+## Design
+
+Stakeholder: Lisa
+
+The first-page UI direction is a responsive **Customer intelligence**
+dashboard grounded in this repository's `/stats`, `/customers`, `/health`, and
+`POST /customers` contracts.
+
+- [Open the first-page prototype](./design/shopping-customers-dashboard.svg)
+- [Read the developer-ready design specification](./design/DESIGN-SPEC.md)
+
+![Customer intelligence first-page preview](./design/shopping-customers-dashboard.svg)
+
+The prototype is a custom 1440 × 1024 SVG whose shapes, text, and groups remain
+editable when imported into Penpot. Import it into a new Penpot board named
+`01 · Customer intelligence`; then use the specification for components,
+tokens, responsive rules, accessibility states, and exact API bindings.
+
+Implementation should target the source branch
+`task002/shopping-api-dataset3` and keep search, filters, sort, and pagination
+in shareable URL state. The SVG is the visual reference; `DESIGN-SPEC.md` is the
+behavioural contract.
+
 ## Validation & error handling
 
 - Request bodies and query parameters are validated by Pydantic; invalid
@@ -195,3 +218,4 @@ curl -X DELETE "http://127.0.0.1:8000/customers/201"
 - **Tiny dataset.** All 200 rows fit in memory; the design choices would
   differ for millions of records (server-side cursor pagination,
   caching, etc.).
+
