@@ -19,6 +19,31 @@ dataset:
 - **Tests:** pytest + `TestClient` running against an isolated SQLite
   file per test run.
 
+## Design
+
+Stakeholder: Cora
+
+The developer-ready, first-page **Customer Overview** design for a UI on top of
+this API lives in [`docs/design/penpot/`](docs/design/penpot/README.md). It is a
+customer-segmentation analytics dashboard, mapped 1:1 to the existing FastAPI
+contracts — no speculative backend endpoints are required. Per this sprint it is
+intentionally limited to the **first page**.
+
+- [Public Penpot prototype](https://design.penpot.app/#/view?file-id=cf421b06-918b-81ac-8008-4bf96da5d669&page-id=cf421b06-918b-81ac-8008-4bf96da5d66a&section=interactions&index=0&share-id=279d72fe-2334-8043-8008-4bfe6fa40647)
+- [Penpot-importable SVG canvas](docs/design/penpot/customer-segmentation-dashboard.svg)
+- [Runnable browser prototype](docs/design/penpot/prototype/index.html)
+- [Developer handoff & API mapping](docs/design/penpot/implementation-spec.md)
+- [Design tokens](docs/design/penpot/design-tokens.json)
+
+The design relates to the reference app branch
+[`task002/shopping-api-dataset3`](../../tree/task002/shopping-api-dataset3) and is
+committed on the design branch `O48-H-prototype-penpot`. A free/public Penpot
+starter frame informed the base grid; the result is fully customised for this
+project — the **ShopSense / Customer Intelligence** brand, an indigo + amber
+analyst palette, the dataset's real fields and sample records, live `GET /health`
+feedback, the service's exact `GET /customers` filters and sort options,
+spending-score bands, and the classic five-segment income-vs-spending scatter.
+
 ## Database design
 
 Single table `customers` (one row per customer).

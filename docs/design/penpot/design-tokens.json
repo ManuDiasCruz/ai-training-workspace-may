@@ -1,0 +1,83 @@
+{
+  "$schema": "https://schemas.penpot.app/draft/tokens.json",
+  "meta": {
+    "name": "ShopSense Customer Intelligence",
+    "stakeholder": "Cora",
+    "page": "Customer Overview (first page)",
+    "source": "Mall Customer Segmentation dataset via Shopping Customers API",
+    "designBranch": "O48-H-prototype-penpot",
+    "referenceBranch": "task002/shopping-api-dataset3"
+  },
+  "color": {
+    "brand": {
+      "ink-900":   { "value": "#1E1B4B", "comment": "sidebar / darkest ink" },
+      "ink-800":   { "value": "#312E81" },
+      "indigo-600":{ "value": "#4F46E5", "comment": "primary action / active nav" },
+      "indigo-500":{ "value": "#6366F1", "comment": "mid-band accent" },
+      "indigo-100":{ "value": "#E0E7FF" }
+    },
+    "surface": {
+      "bg":     { "value": "#F5F6FA" },
+      "card":   { "value": "#FFFFFF" },
+      "muted":  { "value": "#F8FAFC", "comment": "table header / control fill" }
+    },
+    "border": {
+      "default": { "value": "#E5E8F0" },
+      "line":    { "value": "#F1F3F9", "comment": "row divider" }
+    },
+    "text": {
+      "primary":   { "value": "#0F172A" },
+      "secondary": { "value": "#475569" },
+      "muted":     { "value": "#64748B" },
+      "faint":     { "value": "#94A3B8" }
+    },
+    "status": {
+      "healthy-bg":  { "value": "#DCFCE7" },
+      "healthy-fg":  { "value": "#166534" }
+    },
+    "score-band": {
+      "low":  { "value": "#F59E0B", "fg": "#B45309", "range": "1-33" },
+      "mid":  { "value": "#6366F1", "fg": "#4338CA", "range": "34-66" },
+      "high": { "value": "#16A34A", "fg": "#166534", "range": "67-100" }
+    },
+    "gender": {
+      "female-bg": { "value": "#EEF0FF", "fg": "#4F46E5" },
+      "male-bg":   { "value": "#FEF3F0", "fg": "#C2410C" }
+    },
+    "segment-scatter": {
+      "low-income-high-score":  { "value": "#EC4899" },
+      "low-income-low-score":   { "value": "#06B6D4" },
+      "mid-income-mid-score":   { "value": "#6366F1" },
+      "high-income-high-score": { "value": "#16A34A" },
+      "high-income-low-score":  { "value": "#F59E0B" }
+    }
+  },
+  "font": {
+    "family": { "value": "Inter, 'Segoe UI', Helvetica, Arial, sans-serif" },
+    "size": {
+      "display": { "value": "30px", "comment": "KPI value" },
+      "h1":      { "value": "24px" },
+      "h2":      { "value": "18px" },
+      "h3":      { "value": "15px" },
+      "body":    { "value": "13px" },
+      "label":   { "value": "11px", "comment": "uppercase table/KPI labels, letter-spacing 0.5" }
+    },
+    "weight": { "regular": 400, "medium": 500, "semibold": 600, "bold": 700 }
+  },
+  "radius": {
+    "sm": { "value": "8px", "comment": "chips / controls" },
+    "md": { "value": "10px", "comment": "buttons / search" },
+    "lg": { "value": "14px", "comment": "cards / table" },
+    "pill": { "value": "19px" }
+  },
+  "space": {
+    "sidebar-width": { "value": "240px" },
+    "content-pad":   { "value": "32px" },
+    "card-gap":      { "value": "20px" },
+    "card-pad":      { "value": "20px" },
+    "row-height":    { "value": "40px" }
+  },
+  "shadow": {
+    "card": { "value": "0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06)" }
+  }
+}
