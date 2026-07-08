@@ -27,7 +27,11 @@ dataset:
 
 ![Customers dashboard preview](docs/design/penpot/dashboard-preview.png)
 
-- **Prototype link (Penpot file):**
+- **Prototype link (public Penpot view):**
+  <https://design.penpot.app/#/view?file-id=cf421b06-918b-81ac-8008-4bd215130bc8&page-id=5f4b88a1-d332-8050-8008-4bcbfa1ab5d7&section=interactions&index=1&share-id=cf421b06-918b-81ac-8008-4bd55d40171f>
+  — anyone with the link can view the prototype (board 2/2 is the dashboard,
+  board 1/2 is the hand-off notes).
+- **Editable Penpot file:**
   [`docs/design/penpot/shopping-customers-dashboard.penpot`](docs/design/penpot/shopping-customers-dashboard.penpot)
   — open [Penpot](https://design.penpot.app), go to *Drafts → Import file* and select
   the `.penpot` file to load the full editable design (board, layers, and the
