@@ -195,3 +195,59 @@ curl -X DELETE "http://127.0.0.1:8000/customers/201"
 - **Tiny dataset.** All 200 rows fit in memory; the design choices would
   differ for millions of records (server-side cursor pagination,
   caching, etc.).
+
+
+## Design
+
+**Stakeholder: Jim**
+
+A developer-ready, first-page UI/UX reference has been designed in Penpot for this
+repository: a **Customer Segmentation Dashboard** for the Shopping Customers API. It is
+intentionally limited to the single first page requested for this sprint and maps 1:1 to
+the existing FastAPI contracts, so no new backend endpoints are required.
+
+This design relates to the application on branch **`task002/shopping-api-dataset3`**.
+
+### Penpot prototype (view-only, no account needed)
+
+https://design.penpot.app/#/view?file-id=cf421b06-918b-81ac-8008-4c10558047df&page-id=cf421b06-918b-81ac-8008-4c10558047e0&section=interactions&index=0&share-id=cf421b06-918b-81ac-8008-4c1ad4a71359
+
+### What the page delivers
+
+The first page is a responsive admin dashboard (1440x1024 desktop frame) composed of:
+
+- **KPI header cards** backed by `GET /stats` - Total customers (200), Average age (38.9),
+  Average annual income ($60.6k), Average spending score (50.2), and the Female/Male gender
+  split (112 / 88).
+- **Filter / sort toolbar** mapped directly to `GET /customers` query params: `gender`,
+  `min_age`, `max_age`, `min_income`, `max_income`, `min_score`, `max_score`, `search`,
+  `sort_by`, `order`.
+- **Customers table** - the paginated list from `GET /customers` with columns Code, Gender
+  (color badge), Age, Annual income (k$), Spending score (0-100 progress bar) and a per-row
+  **View** action (`GET /customers/{id}`).
+- **Pagination footer** - `page` / `page_size` controls ("Showing 1-10 of 200").
+- **"+ New customer"** primary action mapped to `POST /customers`; row actions cover view
+  and delete (`DELETE /customers/{id}`).
+
+### Frontend developer notes
+
+- **Stack-agnostic**: the reference is framework-neutral. Suggested: React + TypeScript,
+  TanStack Query for data fetching, and a reusable table/pagination component.
+- **API base**: `http://127.0.0.1:8000` (Swagger UI at `/docs`). No auth today - the API is
+  fully open.
+- **Data contracts**: gender is `Male` / `Female`; `spending_score` 1-100;
+  `annual_income_k` is in thousands of USD; `customer_code` is the zero-padded original
+  CustomerID (e.g. `0001`).
+- **States to implement**: loading skeletons for cards/table, empty state (no matches),
+  `422` validation errors on create, `400` on inconsistent range filters (e.g.
+  min_age > max_age), `404` for a missing customer, and `409` on duplicate `customer_code`.
+- **Design tokens**: indigo primary `#6366F1`, teal accent `#0D9488`, surface `#FFFFFF`,
+  app background `#F4F6FA`, text `#111827` / `#6B7280`; gender badges pink
+  `#FCE7F3` / `#BE185D` (Female) and blue `#DBEAFE` / `#1D4ED8` (Male).
+
+### Starting point and customization
+
+A free/public SaaS admin-dashboard layout was used as the starting frame, then meaningfully
+adapted for this project: the dataset's real fields and sample records (0001-0010), the
+service's exact query parameters, gender badges and spending-score bars, and an indigo/navy
+theme. Only the first page was produced, as requested for this sprint.
