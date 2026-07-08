@@ -195,3 +195,27 @@ curl -X DELETE "http://127.0.0.1:8000/customers/201"
 - **Tiny dataset.** All 200 rows fit in memory; the design choices would
   differ for millions of records (server-side cursor pagination,
   caching, etc.).
+
+## Design
+
+Stakeholder: Grace
+
+- **Penpot prototype:** [Shopping Customers — Customer Intelligence](https://design.penpot.app/#/view?file-id=cf421b06-918b-81ac-8008-4be7e40e2c76&page-id=cf421b06-918b-81ac-8008-4be7e40e2c77&section=interactions&frame-id=bbca0677-d635-8005-8008-4be8984756c2&index=0&share-id=cf421b06-918b-81ac-8008-4be928784ac1)
+- **Editable repository reference:** [`docs/design/shopping-customers-first-page.svg`](docs/design/shopping-customers-first-page.svg)
+- **Implementation handoff:** [issue #284](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/284)
+- **Source branch:** `task002/shopping-api-dataset3`
+- **Design branch:** `48-EH-prototype-penpot`
+
+The single `Overview` page is a 1440 × 1024 customer-intelligence workspace adapted to the actual FastAPI contract. It combines a navigation rail, health summary, dataset KPI cards, the `by_gender` breakdown, query controls, and a paginated customer table.
+
+### Frontend implementation contract
+
+- Use `GET /stats` for `total_customers`, `by_gender`, `avg_age`, `avg_annual_income_k`, and `avg_spending_score`.
+- Use `GET /customers` for the table and keep `search`, `gender`, range filters, `sort_by`, `order`, `page`, and `page_size` in query state.
+- Format `annual_income_k` as thousands of USD and show `spending_score` both numerically and as a labelled 1–100 bar.
+- The “Add customer” action maps to `POST /customers`; do not expose an unsupported edit action.
+- Include loading, API-error/retry, zero-results, and populated states. Preserve active filters in empty and error states.
+- Maintain labelled inputs, semantic table headers, visible keyboard focus, non-colour value labels, and WCAG AA contrast.
+- At narrow breakpoints, collapse the 248 px navigation rail and stack the insight panels above the table.
+
+Visual tokens and detailed acceptance criteria are recorded in issue #284. The prototype board is named `Customer Intelligence — First Page` and is the starting point of the `Customer overview` Penpot flow.
