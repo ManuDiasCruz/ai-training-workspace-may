@@ -19,6 +19,71 @@ dataset:
 - **Tests:** pytest + `TestClient` running against an isolated SQLite
   file per test run.
 
+## Design
+
+**Stakeholder: Mary**
+
+### Penpot prototype — Customers Dashboard (first page)
+
+![Customers dashboard preview](docs/design/penpot/dashboard-preview.png)
+
+- **Prototype link (Penpot file):**
+  [`docs/design/penpot/shopping-customers-dashboard.penpot`](docs/design/penpot/shopping-customers-dashboard.penpot)
+  — open [Penpot](https://design.penpot.app), go to *Drafts → Import file* and select
+  the `.penpot` file to load the full editable design (board, layers, and the
+  color tokens in the file library).
+- **Also in this repo:**
+  [SVG canvas](docs/design/penpot/shopping-customers-dashboard.svg) (pixel-exact,
+  viewable in the browser and importable into Penpot as vector shapes),
+  [PNG preview](docs/design/penpot/dashboard-preview.png), and the
+  [generator script](docs/design/penpot/build-dashboard.mjs) that builds the
+  `.penpot` file with [`@penpot/library`](https://www.npmjs.com/package/@penpot/library).
+- **Application branch this design targets:**
+  [`task002/shopping-api-dataset3`](https://github.com/ManuDiasCruz/ai-training-workspace-may/tree/task002/shopping-api-dataset3)
+  (this Shopping Customers API).
+- **Scope:** first page only — the **Customers Dashboard**.
+
+### What the page contains
+
+1. **Sidebar** — product identity, navigation (Dashboard active), and an
+   API-health card wired to `GET /health`.
+2. **Top bar** — page title, global search (`GET /customers?search=`), and the
+   primary **"+ Add customer"** button (`POST /customers`).
+3. **KPI stat tiles** — driven by `GET /stats`: total customers (200), average
+   age (38.9), average annual income ($60.6k), average spending score (50.2,
+   with meter), and the gender split (112 F / 88 M, with ratio bar).
+4. **Filter bar** — maps 1:1 to `GET /customers` query params: `gender`,
+   `min_age`/`max_age`, `min_income`/`max_income`, `min_score`/`max_score`.
+5. **Customers table** — real records 1–8 from the dataset; columns: ID,
+   customer code, gender chip, age, annual income (k$), spending score with a
+   colored meter (≥70 emerald, 30–69 amber, <30 red), and a delete row action
+   (`DELETE /customers/{id}`). Sortable headers map to `sort_by` + `order`.
+6. **Pagination footer** — `page` / `page_size` (default 20), "Showing 1–20 of
+   200".
+
+### Notes for the frontend team
+
+- **Endpoints for this page:** just `GET /stats` and `GET /customers` (plus
+  `POST /customers` / `DELETE /customers/{id}` for the two actions). Run the
+  API locally with `python -m scripts.import_data` then
+  `python -m uvicorn app.main:app --reload --port 8000` (Swagger at `/docs`).
+- Debounce the search input; apply range filters on commit (Apply button), not
+  per keystroke.
+- Error handling: `400` for inconsistent ranges (e.g. `min_age > max_age`) and
+  `422` for invalid values → show inline on the filter bar; `409` on create is
+  a duplicate `customer_code` → field-level error; `404` on delete → row
+  already gone.
+- Include loading skeletons for tiles/table and an empty "no results for these
+  filters" state that keeps filter chips visible.
+- **Design tokens:** colors are registered in the Penpot file library
+  (Primary/Indigo 600 `#4F46E5`, Ink/Gray 900 `#111827`, Muted/Gray 500
+  `#6B7280`, Line/Gray 200 `#E5E7EB`, Canvas/Gray 100 `#F3F4F6`,
+  Accent/Amber 500 `#F59E0B`, Success/Emerald 500 `#10B981`, Danger/Red 500
+  `#EF4444`). Type: Source Sans Pro; 4px spacing grid; radius 8 (controls) /
+  12 (cards).
+- A second board on the same page, **"Hand-off notes"**, summarizes the
+  API-to-widget mapping for quick reference inside Penpot.
+
 ## Database design
 
 Single table `customers` (one row per customer).
