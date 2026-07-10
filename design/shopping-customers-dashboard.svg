@@ -1,0 +1,166 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1024" viewBox="0 0 1440 1024" fill="none">
+  <defs>
+    <linearGradient id="hero" x1="250" y1="120" x2="1320" y2="350" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#312E81"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#1E1B4B" flood-opacity="0.08"/>
+    </filter>
+    <style>
+      text { font-family: Inter, Arial, sans-serif; }
+      .label { font-size: 12px; font-weight: 700; letter-spacing: 1.2px; }
+      .muted { fill: #64748B; }
+    </style>
+  </defs>
+
+  <rect width="1440" height="1024" fill="#F7F8FC"/>
+
+  <!-- Sidebar -->
+  <rect width="224" height="1024" fill="#111827"/>
+  <rect x="24" y="28" width="40" height="40" rx="12" fill="#A3E635"/>
+  <path d="M34 48h20M44 38v20" stroke="#111827" stroke-width="3" stroke-linecap="round"/>
+  <text x="76" y="54" fill="white" font-size="20" font-weight="800">ShopScope</text>
+  <text x="24" y="112" fill="#9CA3AF" class="label">WORKSPACE</text>
+
+  <rect x="16" y="132" width="192" height="48" rx="12" fill="#272F3D"/>
+  <rect x="16" y="132" width="4" height="48" rx="2" fill="#A3E635"/>
+  <path d="M36 153h8v8h-8zM47 153h8v8h-8zM36 164h8v8h-8zM47 164h8v8h-8z" fill="#A3E635"/>
+  <text x="68" y="162" fill="white" font-size="15" font-weight="700">Overview</text>
+
+  <circle cx="46" cy="212" r="10" stroke="#9CA3AF" stroke-width="2"/>
+  <path d="M32 238c2-9 8-14 14-14s12 5 14 14" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"/>
+  <text x="68" y="218" fill="#D1D5DB" font-size="15" font-weight="600">Customers</text>
+
+  <path d="M36 267h20M36 274h20M36 281h12" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"/>
+  <text x="68" y="280" fill="#D1D5DB" font-size="15" font-weight="600">Reports</text>
+
+  <text x="24" y="344" fill="#9CA3AF" class="label">QUICK FILTERS</text>
+  <circle cx="37" cy="380" r="5" fill="#F472B6"/>
+  <text x="52" y="385" fill="#D1D5DB" font-size="14">High spenders</text>
+  <circle cx="37" cy="416" r="5" fill="#38BDF8"/>
+  <text x="52" y="421" fill="#D1D5DB" font-size="14">Income over $70k</text>
+  <circle cx="37" cy="452" r="5" fill="#A3E635"/>
+  <text x="52" y="457" fill="#D1D5DB" font-size="14">Age 18–25</text>
+
+  <rect x="16" y="878" width="192" height="122" rx="16" fill="#1F2937"/>
+  <text x="32" y="908" fill="#A3E635" font-size="12" font-weight="800" letter-spacing="1">DATA STATUS</text>
+  <circle cx="36" cy="936" r="5" fill="#22C55E"/>
+  <text x="50" y="941" fill="white" font-size="13" font-weight="600">API connected</text>
+  <text x="32" y="972" fill="#9CA3AF" font-size="12">200 records • v1.0</text>
+
+  <!-- Header -->
+  <rect x="224" y="0" width="1216" height="88" fill="white"/>
+  <text x="264" y="39" fill="#111827" font-size="14" font-weight="700">Customer Intelligence</text>
+  <text x="264" y="61" fill="#64748B" font-size="12">Mall segmentation dataset</text>
+  <rect x="895" y="22" width="294" height="44" rx="12" fill="#F1F5F9"/>
+  <circle cx="919" cy="44" r="7" stroke="#64748B" stroke-width="2"/>
+  <path d="M924 49l6 6" stroke="#64748B" stroke-width="2" stroke-linecap="round"/>
+  <text x="944" y="49" fill="#64748B" font-size="13">Search customer code…</text>
+  <rect x="1205" y="22" width="44" height="44" rx="12" fill="#F1F5F9"/>
+  <path d="M1220 43c0-5 3-9 7-9s7 4 7 9v4l3 4h-20l3-4v-4z" stroke="#475569" stroke-width="1.8"/>
+  <circle cx="1238" cy="30" r="5" fill="#EF4444"/>
+  <rect x="1265" y="19" width="151" height="50" rx="14" fill="#F8FAFC"/>
+  <circle cx="1292" cy="44" r="16" fill="#4F46E5"/>
+  <text x="1284" y="49" fill="white" font-size="13" font-weight="800">LI</text>
+  <text x="1318" y="42" fill="#111827" font-size="12" font-weight="700">Livia</text>
+  <text x="1318" y="57" fill="#64748B" font-size="10">Stakeholder</text>
+
+  <!-- Main hero -->
+  <rect x="256" y="120" width="1152" height="206" rx="24" fill="url(#hero)" filter="url(#shadow)"/>
+  <circle cx="1300" cy="222" r="152" fill="#6366F1" fill-opacity="0.22"/>
+  <circle cx="1300" cy="222" r="92" fill="#A5B4FC" fill-opacity="0.15"/>
+  <text x="288" y="160" fill="#C7D2FE" class="label">OVERVIEW • JULY 2026</text>
+  <text x="288" y="205" fill="white" font-size="34" font-weight="800">Know your customers.</text>
+  <text x="288" y="239" fill="#E0E7FF" font-size="16">Explore behavior, income, and spending patterns in one focused view.</text>
+  <rect x="288" y="267" width="162" height="40" rx="10" fill="#A3E635"/>
+  <text x="314" y="292" fill="#1A2E05" font-size="13" font-weight="800">Explore customers</text>
+  <path d="M424 287h12m-5-5 5 5-5 5" stroke="#1A2E05" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="464" y="267" width="132" height="40" rx="10" fill="white" fill-opacity="0.12" stroke="white" stroke-opacity="0.25"/>
+  <text x="489" y="292" fill="white" font-size="13" font-weight="700">View API docs</text>
+  <text x="1260" y="304" fill="#E0E7FF" font-size="11">Stakeholder: Livia</text>
+
+  <!-- KPI cards -->
+  <g filter="url(#shadow)">
+    <rect x="256" y="354" width="264" height="142" rx="18" fill="white"/>
+    <rect x="536" y="354" width="264" height="142" rx="18" fill="white"/>
+    <rect x="816" y="354" width="264" height="142" rx="18" fill="white"/>
+    <rect x="1096" y="354" width="312" height="142" rx="18" fill="white"/>
+  </g>
+  <rect x="280" y="378" width="40" height="40" rx="11" fill="#EEF2FF"/>
+  <path d="M290 407c1-7 5-11 10-11s9 4 10 11M300 382a7 7 0 1 0 0 14 7 7 0 0 0 0-14z" stroke="#4F46E5" stroke-width="2"/>
+  <text x="336" y="391" fill="#64748B" font-size="12" font-weight="700">TOTAL CUSTOMERS</text>
+  <text x="280" y="460" fill="#111827" font-size="36" font-weight="800">200</text>
+  <text x="362" y="457" fill="#16A34A" font-size="12" font-weight="700">Complete dataset</text>
+
+  <rect x="560" y="378" width="40" height="40" rx="11" fill="#FDF2F8"/>
+  <path d="M571 408h18M574 401l4-8 4 6 4-12" stroke="#DB2777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="616" y="391" fill="#64748B" font-size="12" font-weight="700">AVG. SPENDING SCORE</text>
+  <text x="560" y="460" fill="#111827" font-size="36" font-weight="800">50.2</text>
+  <text x="649" y="457" fill="#64748B" font-size="12">out of 100</text>
+
+  <rect x="840" y="378" width="40" height="40" rx="11" fill="#ECFEFF"/>
+  <path d="M851 408v-17M858 408v-25M865 408v-11M872 408v-30" stroke="#0891B2" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="896" y="391" fill="#64748B" font-size="12" font-weight="700">AVG. INCOME</text>
+  <text x="840" y="460" fill="#111827" font-size="36" font-weight="800">$60.6k</text>
+
+  <text x="1120" y="391" fill="#64748B" font-size="12" font-weight="700">GENDER DISTRIBUTION</text>
+  <circle cx="1146" cy="449" r="28" stroke="#E2E8F0" stroke-width="11"/>
+  <path d="M1146 421a28 28 0 1 1-27 36" stroke="#4F46E5" stroke-width="11" stroke-linecap="round"/>
+  <circle cx="1211" cy="432" r="5" fill="#4F46E5"/>
+  <text x="1224" y="437" fill="#334155" font-size="12">Female</text>
+  <text x="1342" y="437" fill="#111827" font-size="12" font-weight="800">112</text>
+  <circle cx="1211" cy="462" r="5" fill="#CBD5E1"/>
+  <text x="1224" y="467" fill="#334155" font-size="12">Male</text>
+  <text x="1348" y="467" fill="#111827" font-size="12" font-weight="800">88</text>
+
+  <!-- Segment panel -->
+  <rect x="256" y="524" width="362" height="452" rx="20" fill="white" filter="url(#shadow)"/>
+  <text x="280" y="560" fill="#111827" font-size="17" font-weight="800">Audience snapshot</text>
+  <text x="280" y="583" fill="#64748B" font-size="12">Income × spending score</text>
+  <rect x="280" y="610" width="314" height="230" rx="14" fill="#F8FAFC"/>
+  <line x1="306" y1="810" x2="572" y2="810" stroke="#CBD5E1"/>
+  <line x1="306" y1="638" x2="306" y2="810" stroke="#CBD5E1"/>
+  <line x1="306" y1="752" x2="572" y2="752" stroke="#E2E8F0" stroke-dasharray="4 4"/>
+  <line x1="306" y1="695" x2="572" y2="695" stroke="#E2E8F0" stroke-dasharray="4 4"/>
+  <circle cx="347" cy="744" r="7" fill="#818CF8"/><circle cx="375" cy="682" r="8" fill="#4F46E5"/><circle cx="410" cy="712" r="6" fill="#A5B4FC"/><circle cx="451" cy="660" r="9" fill="#A3E635"/><circle cx="476" cy="774" r="7" fill="#818CF8"/><circle cx="510" cy="687" r="6" fill="#4F46E5"/><circle cx="543" cy="645" r="8" fill="#A3E635"/><circle cx="554" cy="748" r="6" fill="#A5B4FC"/>
+  <text x="280" y="871" fill="#64748B" font-size="12">Average age</text>
+  <text x="280" y="904" fill="#111827" font-size="25" font-weight="800">38.9 years</text>
+  <rect x="472" y="864" width="122" height="40" rx="10" fill="#EEF2FF"/>
+  <text x="491" y="889" fill="#4338CA" font-size="12" font-weight="700">Open report →</text>
+  <text x="280" y="946" fill="#94A3B8" font-size="11">Updated from GET /stats</text>
+
+  <!-- Customer table -->
+  <rect x="642" y="524" width="766" height="452" rx="20" fill="white" filter="url(#shadow)"/>
+  <text x="670" y="560" fill="#111827" font-size="17" font-weight="800">Customer directory</text>
+  <text x="670" y="583" fill="#64748B" font-size="12">Preview of active records</text>
+  <rect x="1048" y="544" width="134" height="40" rx="10" fill="#F8FAFC" stroke="#E2E8F0"/>
+  <path d="M1068 559h16l-6 7v7l-4 2v-9z" stroke="#475569" stroke-width="1.6" stroke-linejoin="round"/>
+  <text x="1093" y="569" fill="#334155" font-size="12" font-weight="700">Filters</text>
+  <rect x="1194" y="544" width="186" height="40" rx="10" fill="#4F46E5"/>
+  <text x="1227" y="569" fill="white" font-size="12" font-weight="800">+ Add customer</text>
+
+  <rect x="666" y="610" width="718" height="42" rx="9" fill="#F8FAFC"/>
+  <text x="686" y="636" fill="#64748B" font-size="11" font-weight="800">CUSTOMER</text>
+  <text x="864" y="636" fill="#64748B" font-size="11" font-weight="800">GENDER</text>
+  <text x="983" y="636" fill="#64748B" font-size="11" font-weight="800">AGE</text>
+  <text x="1071" y="636" fill="#64748B" font-size="11" font-weight="800">INCOME</text>
+  <text x="1183" y="636" fill="#64748B" font-size="11" font-weight="800">SCORE</text>
+  <text x="1306" y="636" fill="#64748B" font-size="11" font-weight="800">ACTION</text>
+
+  <g font-size="12">
+    <line x1="666" y1="708" x2="1384" y2="708" stroke="#EEF2F7"/>
+    <line x1="666" y1="764" x2="1384" y2="764" stroke="#EEF2F7"/>
+    <line x1="666" y1="820" x2="1384" y2="820" stroke="#EEF2F7"/>
+    <line x1="666" y1="876" x2="1384" y2="876" stroke="#EEF2F7"/>
+    <circle cx="692" cy="681" r="16" fill="#E0E7FF"/><text x="681" y="685" fill="#4338CA" font-weight="800">001</text><text x="720" y="677" fill="#111827" font-weight="700">Customer 0001</text><text x="720" y="694" class="muted">ID #1</text><rect x="854" y="668" width="58" height="24" rx="12" fill="#E0F2FE"/><text x="869" y="684" fill="#0369A1" font-weight="700">Male</text><text x="985" y="684" fill="#334155">19</text><text x="1072" y="684" fill="#334155">$15k</text><rect x="1182" y="668" width="52" height="24" rx="12" fill="#FEF3C7"/><text x="1200" y="684" fill="#92400E" font-weight="800">39</text><text x="1317" y="684" fill="#4F46E5" font-weight="800">View →</text>
+    <circle cx="692" cy="737" r="16" fill="#FCE7F3"/><text x="681" y="741" fill="#BE185D" font-weight="800">002</text><text x="720" y="733" fill="#111827" font-weight="700">Customer 0002</text><text x="720" y="750" class="muted">ID #2</text><rect x="854" y="724" width="58" height="24" rx="12" fill="#E0F2FE"/><text x="869" y="740" fill="#0369A1" font-weight="700">Male</text><text x="985" y="740" fill="#334155">21</text><text x="1072" y="740" fill="#334155">$15k</text><rect x="1182" y="724" width="52" height="24" rx="12" fill="#DCFCE7"/><text x="1200" y="740" fill="#166534" font-weight="800">81</text><text x="1317" y="740" fill="#4F46E5" font-weight="800">View →</text>
+    <circle cx="692" cy="793" r="16" fill="#FCE7F3"/><text x="681" y="797" fill="#BE185D" font-weight="800">003</text><text x="720" y="789" fill="#111827" font-weight="700">Customer 0003</text><text x="720" y="806" class="muted">ID #3</text><rect x="854" y="780" width="66" height="24" rx="12" fill="#FCE7F3"/><text x="866" y="796" fill="#BE185D" font-weight="700">Female</text><text x="985" y="796" fill="#334155">20</text><text x="1072" y="796" fill="#334155">$16k</text><rect x="1182" y="780" width="52" height="24" rx="12" fill="#FEE2E2"/><text x="1204" y="796" fill="#991B1B" font-weight="800">6</text><text x="1317" y="796" fill="#4F46E5" font-weight="800">View →</text>
+    <circle cx="692" cy="849" r="16" fill="#E0E7FF"/><text x="681" y="853" fill="#4338CA" font-weight="800">004</text><text x="720" y="845" fill="#111827" font-weight="700">Customer 0004</text><text x="720" y="862" class="muted">ID #4</text><rect x="854" y="836" width="66" height="24" rx="12" fill="#FCE7F3"/><text x="866" y="852" fill="#BE185D" font-weight="700">Female</text><text x="985" y="852" fill="#334155">23</text><text x="1072" y="852" fill="#334155">$16k</text><rect x="1182" y="836" width="52" height="24" rx="12" fill="#DCFCE7"/><text x="1200" y="852" fill="#166534" font-weight="800">77</text><text x="1317" y="852" fill="#4F46E5" font-weight="800">View →</text>
+  </g>
+
+  <text x="670" y="924" fill="#64748B" font-size="12">Showing 1–4 of 200 customers</text>
+  <rect x="1266" y="902" width="36" height="36" rx="10" fill="#F8FAFC" stroke="#E2E8F0"/><text x="1280" y="925" fill="#64748B" font-size="15">‹</text>
+  <rect x="1310" y="902" width="36" height="36" rx="10" fill="#4F46E5"/><text x="1325" y="925" fill="white" font-size="12" font-weight="800">1</text>
+  <rect x="1354" y="902" width="36" height="36" rx="10" fill="#F8FAFC" stroke="#E2E8F0"/><text x="1368" y="925" fill="#64748B" font-size="15">›</text>
+</svg>

@@ -195,3 +195,56 @@ curl -X DELETE "http://127.0.0.1:8000/customers/201"
 - **Tiny dataset.** All 200 rows fit in memory; the design choices would
   differ for millions of records (server-side cursor pagination,
   caching, etc.).
+
+## Design
+
+Stakeholder: Livia
+
+The proposed first page is a customer-intelligence dashboard tailored to
+this repository's mall-segmentation API. It turns the existing `/stats` and
+`/customers` responses into an at-a-glance overview and a searchable customer
+directory without implying capabilities the backend does not provide.
+
+- **Penpot prototype:** [Shopping Customers — First-page Dashboard](https://design.penpot.app/#/view?file-id=bd542ff8-ca96-8077-8008-4e3234c73ebe&page-id=bd542ff8-ca96-8077-8008-4e3234c73ebf&section=interactions&frame-id=588bc1c3-3e59-801f-8008-4e3296f71ba5&index=0&share-id=86907e95-1cb8-8122-8008-4e32cd77d8a7)
+- **Editable source reference:** [`design/shopping-customers-dashboard.svg`](design/shopping-customers-dashboard.svg)
+- **Source branch:** `task002/shopping-api-dataset3`
+- **Design delivery branch:** `cyan-h-livia-prototype-penpot`
+
+### Page structure
+
+1. A persistent navigation rail for Overview, Customers, Reports, and saved
+   quick filters.
+2. A search-first header that maps to `GET /customers?search=`.
+3. A hero section with the primary task (`Explore customers`) and a secondary
+   link to API documentation.
+4. KPI cards backed by `GET /stats`: customer count, average spending score,
+   average annual income, average age, and gender distribution.
+5. A customer-directory preview backed by `GET /customers`, with filter,
+   sort, pagination, create, and record-detail affordances.
+
+### Developer handoff
+
+| Token | Value | Use |
+|---|---:|---|
+| `--color-brand` | `#4F46E5` | Primary actions, active states, and links |
+| `--color-accent` | `#A3E635` | High-emphasis CTA and live-data indicators |
+| `--color-sidebar` | `#111827` | Persistent navigation surface |
+| `--color-canvas` | `#F7F8FC` | Page background |
+| `--color-text` | `#111827` | Primary text |
+| `--color-muted` | `#64748B` | Supporting text and metadata |
+| `--radius-card` | `18px` | KPI, chart, and table containers |
+| `--space-page` | `32px` | Desktop content gutter |
+
+- Target the supplied desktop frame first (`1440 × 1024`). At widths below
+  `1024px`, collapse the left rail to icons; below `768px`, stack KPI cards and
+  move customer rows to cards with the same field order.
+- Keep a visible keyboard focus style (2px brand outline with 2px offset), use
+  semantic headings/table markup, and expose spending score meaning in text as
+  well as colour. Body text should remain at least 12px/16px depending on role.
+- Load aggregate cards from `GET /stats`. Load the directory from
+  `GET /customers?page=1&page_size=20`; debounce search by 300ms and preserve
+  filters and sorting in the URL query string.
+- Represent loading with card/table skeletons, show an inline retry state for
+  API errors, and use a clear zero-state when a filter returns no customers.
+- The first implementation milestone intentionally covers only this overview
+  page. Reports, authentication, and update flows remain out of scope.
