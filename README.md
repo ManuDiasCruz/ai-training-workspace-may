@@ -195,3 +195,45 @@ curl -X DELETE "http://127.0.0.1:8000/customers/201"
 - **Tiny dataset.** All 200 rows fit in memory; the design choices would
   differ for millions of records (server-side cursor pagination,
   caching, etc.).
+
+
+## Design
+
+**Stakeholder: Benny**
+
+A Penpot design reference for the frontend of this API was created as part of Sprint task 4. Only the **first page** (Customers Dashboard) is designed; further pages (customer detail, add-customer form, statistics) will follow in later iterations.
+
+### Prototype
+
+- **Penpot file:** [Shopping Customers — Frontend Prototype (Task 4 · Stakeholder: Benny)](https://design.penpot.app/#/workspace?team-id=8580c946-af19-8023-8008-18c60abb3381&project-id=8580c946-af19-8023-8008-18c60abb5635&file-id=86907e95-1cb8-8122-8008-4fc64a69a769&page-id=86907e95-1cb8-8122-8008-4fc64a69a76a)
+- **Page:** `01 · Dashboard (first page)` · **Board:** `01 · Customers Dashboard — Desktop 1440` (1440×1024)
+- Access: the file lives in the *Your Penpot* team Drafts of the design account; ask the design team for an invite if the link does not open.
+- Implementation ticket: [issue #290](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/290)
+- Related branches: source `task002/shopping-api-dataset3` · design docs `fable-eh-benny-prototype-penpot`
+
+### What the first page contains
+
+| Region | Contents | API mapping |
+|---|---|---|
+| Sidebar (248 px) | Logo, nav (Dashboard, Customers, Statistics, Add customer, Settings), health card | `GET /health` |
+| Top bar | Title + breadcrumb, global search, "+ Add customer" | `?search=`, `POST /customers` |
+| Stat cards | Total customers (gender split), avg. age, avg. income, avg. spending score | `GET /stats` |
+| Filter bar | Gender, age/income/score ranges, sort + order | `GET /customers` query params |
+| Table | Code, gender badge, age, income (k$), score progress bar, View/Delete | `GET /customers`, `DELETE /customers/{id}` |
+| Footer | "Showing 1–8 of 200", pagination | `page`, `page_size` |
+
+### Design tokens (for the frontend team)
+
+- Primary `#4F46E5` · sidebar/dark text `#101828` · muted text `#667085`
+- Page background `#F6F8FB` · cards `#FFFFFF` with border `#EAECF0`
+- Status colors: success `#12B76A` · warning `#F79009` · danger `#F04438`
+- Gender badges: Male `#EFF8FF`/`#175CD3` · Female `#FDF2FA`/`#C11574`
+- Spending-score bar thresholds: <40 danger · 40–69 warning · ≥70 success
+- Typography: Source Sans Pro (400/600/700) · radii: cards 12 px, controls 8 px
+
+### Notes for developers
+
+- Filter controls map 1:1 to the API query params: `gender`, `min_age`, `max_age`, `min_income`, `max_income`, `min_score`, `max_score`, `sort_by`, `order`.
+- Handle 400/404/409/422 responses with inline errors or toasts (see "Validation & error handling" above).
+- The API exposes no update endpoint — the UI deliberately has no edit action.
+- Mock data in the design uses the first 8 real rows of `data/Shopping_data.csv` and the real dataset aggregates (200 customers, 112 F / 88 M, avg age 38.9, avg income $60.6k, avg score 50.2).
