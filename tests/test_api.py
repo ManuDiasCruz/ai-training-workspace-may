@@ -60,10 +60,12 @@ def test_search_and_customer_lookup(client: TestClient) -> None:
 
 def test_invalid_range_and_missing_customer_are_handled(client: TestClient) -> None:
     invalid = client.get("/customers", params={"age_min": 50, "age_max": 20})
+    blank_search = client.get("/customers", params={"search": "   "})
     missing = client.get("/customers/9999")
 
     assert invalid.status_code == 422
     assert invalid.json()["detail"] == "age_min cannot be greater than age_max"
+    assert blank_search.status_code == 422
+    assert "non-whitespace" in blank_search.json()["detail"]
     assert missing.status_code == 404
     assert missing.json() == {"detail": "Customer not found"}
-

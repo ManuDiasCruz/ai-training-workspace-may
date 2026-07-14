@@ -81,7 +81,11 @@ def create_app(
     async def database_exception_handler(
         request: Request, exc: sqlite3.DatabaseError
     ) -> JSONResponse:
-        LOGGER.exception("Database error while handling %s", request.url.path, exc_info=exc)
+        LOGGER.error(
+            "Database error while handling %s",
+            request.url.path,
+            exc_info=(type(exc), exc, exc.__traceback__),
+        )
         return JSONResponse(
             status_code=500,
             content={"detail": "A database operation failed"},
@@ -115,6 +119,12 @@ def create_app(
         _validate_range("age", age_min, age_max)
         _validate_range("income", income_min, income_max)
         _validate_range("score", score_min, score_max)
+        normalized_search = search.strip() if search else None
+        if search is not None and not normalized_search:
+            raise HTTPException(
+                status_code=422,
+                detail="search must contain at least one non-whitespace character",
+            )
 
         filters = CustomerFilters(
             gender=gender.value if gender else None,
@@ -124,7 +134,7 @@ def create_app(
             income_max=income_max,
             score_min=score_min,
             score_max=score_max,
-            search=search.strip() if search else None,
+            search=normalized_search,
         )
         total = count_customers(connection, filters)
         rows = list_customers(
