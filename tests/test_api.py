@@ -1,30 +1,43 @@
 """End-to-end API tests using an isolated temporary SQLite database."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 
+import httpx
 import pytest
-from fastapi.testclient import TestClient
 
 from app.database import DEFAULT_DATASET_PATH
 from app.main import create_app
 
 
 @pytest.fixture
-def client(tmp_path) -> Generator[TestClient, None, None]:
+def anyio_backend() -> str:
+    return "asyncio"
+
+
+@pytest.fixture
+async def client(tmp_path) -> AsyncGenerator[httpx.AsyncClient, None]:
     application = create_app(tmp_path / "test-shopping.db", DEFAULT_DATASET_PATH)
-    with TestClient(application) as test_client:
-        yield test_client
+    transport = httpx.ASGITransport(app=application)
+    async with application.router.lifespan_context(application):
+        async with httpx.AsyncClient(
+            transport=transport,
+            base_url="http://test",
+        ) as test_client:
+            yield test_client
 
 
-def test_health_reports_imported_record_count(client: TestClient) -> None:
-    response = client.get("/health")
+pytestmark = pytest.mark.anyio
+
+
+async def test_health_reports_imported_record_count(client: httpx.AsyncClient) -> None:
+    response = await client.get("/health")
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok", "records": 200}
 
 
-def test_list_supports_pagination_and_filters(client: TestClient) -> None:
-    response = client.get(
+async def test_list_supports_pagination_and_filters(client: httpx.AsyncClient) -> None:
+    response = await client.get(
         "/customers",
         params={
             "page": 2,
@@ -47,9 +60,9 @@ def test_list_supports_pagination_and_filters(client: TestClient) -> None:
     assert all(item["spending_score"] >= 70 for item in body["items"])
 
 
-def test_search_and_customer_lookup(client: TestClient) -> None:
-    search_response = client.get("/customers", params={"search": "0001"})
-    customer_response = client.get("/customers/0001")
+async def test_search_and_customer_lookup(client: httpx.AsyncClient) -> None:
+    search_response = await client.get("/customers", params={"search": "0001"})
+    customer_response = await client.get("/customers/0001")
 
     assert search_response.status_code == 200
     assert search_response.json()["total"] == 1
@@ -58,10 +71,14 @@ def test_search_and_customer_lookup(client: TestClient) -> None:
     assert customer_response.json()["annual_income_kusd"] == 15
 
 
-def test_invalid_range_and_missing_customer_are_handled(client: TestClient) -> None:
-    invalid = client.get("/customers", params={"age_min": 50, "age_max": 20})
-    blank_search = client.get("/customers", params={"search": "   "})
-    missing = client.get("/customers/9999")
+async def test_invalid_range_and_missing_customer_are_handled(
+    client: httpx.AsyncClient,
+) -> None:
+    invalid = await client.get(
+        "/customers", params={"age_min": 50, "age_max": 20}
+    )
+    blank_search = await client.get("/customers", params={"search": "   "})
+    missing = await client.get("/customers/9999")
 
     assert invalid.status_code == 422
     assert invalid.json()["detail"] == "age_min cannot be greater than age_max"
