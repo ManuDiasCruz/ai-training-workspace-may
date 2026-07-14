@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Local database files (rebuilt from the CSV via `python -m app.import_data`)
+data/*.db
+data/*.db-journal
