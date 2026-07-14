@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.env
+shopping_api/data/*.db
+shopping_api/data/*.db-shm
+shopping_api/data/*.db-wal
