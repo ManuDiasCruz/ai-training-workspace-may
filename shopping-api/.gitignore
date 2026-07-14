@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Local SQLite database (regenerated from the CSV via the importer)
+*.db
+*.sqlite
+*.sqlite3
+
+# OS / editor noise
+.DS_Store
+.idea/
+.vscode/
