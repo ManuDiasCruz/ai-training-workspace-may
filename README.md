@@ -1,124 +1,218 @@
-# 🦜 Parrot Memory Card Game
+# Shopping Customer API
 
-A small browser memory game: flip the cards two at a time and find every
-matching pair of parrots in as few moves as possible. Built with plain
-**HTML, CSS and JavaScript** — no build step and no dependencies.
+A small, production-style read-only REST API for exploring a 200-row shopping
+customer dataset. It imports a validated CSV snapshot into SQLite and exposes
+paginated customer listing, combined filters, basic search, record lookup, health
+status, stable validation errors, and generated OpenAPI documentation.
 
-![Desktop preview](img/desktop.png)
+The source snapshot is [`Shopping_data.csv` on Google Drive](https://drive.google.com/file/d/1-4dSFNppilPVbHeoTeuVS5-CSFMlREFm/view?usp=sharing).
+The tracked copy is `data/shopping_customers.csv`; line endings were normalized
+without altering the source values. Its SHA-256 after normalization is
+`901bc46e68f7178e84b05638d919c7d4d8e2c8b5e00e828c351af75bbcf662b4`.
 
-## How to play
+## Dataset and database design
 
-1. On load you're asked **how many cards** to play with — an even number
-   between **4 and 14**.
-2. Click a card to flip it, then flip a second card:
-   - if the two match, they stay revealed;
-   - if not, they flip back after a moment.
-3. The header tracks your number of moves (**Jogadas**) and the elapsed time
-   (**relógio**).
-4. Match every pair to win — you can then start a new game.
+The CSV contains 200 customers with these columns:
 
-> ℹ️ The in-game text is in Brazilian Portuguese (the original author's language).
+| CSV field | SQLite/API field | Type | Observed range/values |
+| --- | --- | --- | --- |
+| `CustomerID` | `customer_id` | `TEXT` primary key | `0001`–`0200` |
+| `Genre` | `genre` | `TEXT NOT NULL` | `Female`, `Male` |
+| `Age` | `age` | `INTEGER NOT NULL` | 18–70 |
+| `Annual Income (k$)` | `annual_income_k` | `INTEGER NOT NULL` | 15–137 |
+| `Spending Score (1-100)` | `spending_score` | `INTEGER NOT NULL` | 1–99 |
+
+`CustomerID` is stored as text so its leading zeros are preserved. The SQLite
+schema adds checks for accepted `genre` values, ages from 0–120, non-negative
+income, and scores from 1–100. Individual indexes on each filterable field support
+the API's current query patterns. The importer validates every input row and all
+customer ID uniqueness before replacing the database snapshot in one transaction.
+
+The generated `data/shopping.db` is deliberately ignored. Recreating it from the
+tracked source avoids committing binary state and makes the import repeatable.
+
+## Setup
+
+Prerequisites: Python 3.10 or newer.
+
+```bash
+git clone https://github.com/ManuDiasCruz/ai-training-workspace-may.git
+cd ai-training-workspace-may
+git switch cyn-hi-shopping-api-dataset
+
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements-dev.txt
+```
+
+On Windows PowerShell, activate the environment with:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements-dev.txt
+```
+
+Create or refresh the database explicitly:
+
+```bash
+python -m app.import_data
+# Imported 200 customers into .../data/shopping.db
+```
+
+Custom locations can be supplied either as CLI arguments or environment variables:
+
+```bash
+python -m app.import_data --csv data/shopping_customers.csv --database data/shopping.db
+
+export SHOP_API_CSV_PATH=data/shopping_customers.csv
+export SHOP_API_DATABASE_PATH=data/shopping.db
+```
+
+PowerShell equivalents are `$env:SHOP_API_CSV_PATH` and
+`$env:SHOP_API_DATABASE_PATH`.
+
+## Run the API
+
+```bash
+uvicorn app.main:app --reload
+```
+
+The application creates the schema and imports the default CSV automatically when
+the database is empty. Useful local URLs:
+
+- API base: `http://127.0.0.1:8000`
+- Swagger UI: `http://127.0.0.1:8000/docs`
+- OpenAPI schema: `http://127.0.0.1:8000/openapi.json`
+
+## API
+
+| Method and path | Description |
+| --- | --- |
+| `GET /health` | Health status and persisted customer row count |
+| `GET /api/v1/customers` | Paginated customer list with optional filters/search |
+| `GET /api/v1/customers/{customer_id}` | Single customer lookup; returns 404 if absent |
+
+### List and paginate
+
+```bash
+curl 'http://127.0.0.1:8000/api/v1/customers?page=2&page_size=3'
+```
+
+Response:
+
+```json
+{
+  "items": [
+    {
+      "customer_id": "0004",
+      "genre": "Female",
+      "age": 23,
+      "annual_income_k": 16,
+      "spending_score": 77
+    },
+    {
+      "customer_id": "0005",
+      "genre": "Female",
+      "age": 31,
+      "annual_income_k": 17,
+      "spending_score": 40
+    },
+    {
+      "customer_id": "0006",
+      "genre": "Female",
+      "age": 22,
+      "annual_income_k": 17,
+      "spending_score": 76
+    }
+  ],
+  "total": 200,
+  "page": 2,
+  "page_size": 3,
+  "pages": 67
+}
+```
+
+`page` defaults to 1. `page_size` defaults to 20 and accepts 1–100. Empty pages
+are valid and return an empty `items` array with the requested page metadata.
+
+### Filters and search
+
+All filters are optional and can be combined:
+
+| Parameter | Validation and behavior |
+| --- | --- |
+| `genre` | Case-insensitive exact `male` or `female` |
+| `min_age`, `max_age` | Inclusive integer range, each 0–120 |
+| `min_income`, `max_income` | Inclusive non-negative integer range in k$ |
+| `min_spending_score`, `max_spending_score` | Inclusive integer range, each 1–100 |
+| `q` | Case-insensitive substring match on customer ID or genre, 1–50 characters |
+
+For example, find male customers with income of at least 120 k$, a spending score
+of at least 70, and a customer ID containing `020`:
+
+```bash
+curl 'http://127.0.0.1:8000/api/v1/customers?genre=male&min_income=120&min_spending_score=70&q=020'
+```
+
+Find customers in a bounded age and score range:
+
+```bash
+curl 'http://127.0.0.1:8000/api/v1/customers?min_age=25&max_age=35&min_spending_score=80&page_size=50'
+```
+
+Get one original CSV record:
+
+```bash
+curl 'http://127.0.0.1:8000/api/v1/customers/0001'
+```
+
+Invalid parameter types/ranges return HTTP 422 in a consistent `{"detail": "..."}`
+shape. Inverted ranges such as `min_age=50&max_age=30` return HTTP 400, and missing
+customers return HTTP 404. SQL query values are passed as bound parameters.
+
+## Automated tests
+
+```bash
+pytest -q
+```
+
+The suite uses a disposable SQLite database and exercises import-on-startup,
+health metadata, stable ordering/pagination, combined filters and search, record
+retrieval, not-found responses, and filter validation. It does not modify the
+development database.
 
 ## Project structure
 
 ```text
-.
-├── index.html        # markup, meta tags and asset links
-├── css/
-│   └── style.css     # colour palette + responsive layout
-├── src/
-│   └── script.js     # game logic (shuffle, flip, match, timer)
-└── img/              # parrot artwork + preview screenshots
+app/
+  config.py       Environment-aware file paths
+  database.py     SQLite schema, connections, and table initialization
+  import_data.py  CSV parsing, validation, and atomic snapshot replacement
+  main.py         Application factory, API lifecycle, routes, and errors
+  models.py       Pydantic response contracts
+  repository.py   Bound-parameter read queries and filters
+data/
+  shopping_customers.csv
+tests/
+  conftest.py
+  test_api.py
 ```
 
-## Running locally
+## Known limitations and future improvements
 
-This is a static site, so all you need is a browser.
+- SQLite and startup seeding suit a single-process local service and this small,
+  static dataset. Use PostgreSQL, versioned migrations, and an explicit ingestion
+  job before horizontally scaling or accepting frequent source updates.
+- Search intentionally covers only customer ID and genre. Full-text search is
+  unnecessary for the current five-column dataset, but a larger customer/product
+  source would benefit from normalized entities, searchable descriptive fields,
+  sortable results, and aggregate analytics endpoints.
+- The API is read-only and has no authentication, rate limiting, or tenant/data
+  access controls. Add these before exposing customer-linked data outside a
+  trusted local network.
+- There is no CI/CD pipeline or container packaging yet. Automated linting,
+  dependency/security scanning, tests, reproducible images, and a deployment
+  health check should be required before releases.
 
-**Option A — open directly**
-
-Double-click `index.html`, or open it in your browser.
-
-**Option B — local server (recommended)**
-
-A tiny static server avoids any path/caching quirks:
-
-```bash
-# from the project root
-python3 -m http.server 8000
-# then open http://localhost:8000/ in your browser
-```
-
-Any static server works (`npx serve`, the VS Code *Live Server* extension,
-etc.). An internet connection is used only to load the Google Fonts.
-
-## UI / responsiveness improvements
-
-This round of work delivered the client's two requests — a mobile-friendly
-layout and a **white / light-green / black** colour scheme — plus a few small
-correctness fixes.
-
-### Colour palette
-
-Colours are centralised as CSS variables in `css/style.css`:
-
-| Token             | Value     | Use                                            |
-| ----------------- | --------- | ---------------------------------------------- |
-| `--color-bg`      | `#ffffff` | page background (was pale-lime `#EEF9BF`)      |
-| `--color-surface` | `#a7e9af` | cards / faces — light green                    |
-| `--color-border`  | `#8ed29a` | card edges — same green family                 |
-| `--color-text`    | `#000000` | all text (was teal `#75B79E` and gray)         |
-
-The old teal title, lime background and gray counters are gone — the UI now
-uses only white, light green and a black font, as requested.
-
-### Responsiveness
-
-- `box-sizing: border-box` applied globally.
-- Replaced the fixed `main { margin: auto 116px }` with a centred max-width
-  container and fluid `clamp()` padding.
-- Cards now size with `clamp()` widths + `aspect-ratio: 117/146` and lay out
-  using `gap`, so they **scale and wrap on any screen** instead of overflowing.
-- Fluid `clamp()` typography for the title, header counters and end message.
-- Removed the lone `@media (max-width: 335px)` rule — it left typical phones
-  (~360–430px) stuck on the desktop layout. The fluid system now covers
-  everything from small phones to large desktops.
-- `@media (hover: hover)` card-lift effect, so touch devices don't get
-  "sticky" hover states.
-
-Verified at **1280px** (desktop), **390px** and **360px** (mobile):
-
-| Desktop                     | Mobile                    |
-| --------------------------- | ------------------------- |
-| ![Desktop](img/desktop.png) | ![Mobile](img/mobile.png) |
-
-### Small fixes
-
-- `index.html` linked `css\style.css` with a backslash; corrected to
-  `css/style.css` (browsers tolerate it, but stricter static servers 404).
-- Removed a stray `print(...)` debug call in `script.js` that resolved to
-  `window.print()` and opened the browser print dialog on invalid input.
-- Added an inline parrot-emoji favicon (removes the `/favicon.ico` 404) and a
-  `theme-color` meta tag matching the palette.
-
-## Known limitations & future improvements
-
-- **Card count via `prompt()`** — the game still asks for the number of cards
-  through a native `prompt()` on load. It works on mobile, but an in-page
-  start screen / selector would be friendlier. Left as-is to keep the change
-  scoped to the requested UI work.
-- **Parrot artwork is intentionally unchanged** — the colourful parrot images
-  are game *content*, so the white/light-green/black palette applies to the UI
-  chrome, not the artwork.
-- **Win / replay dialogs** use native `alert()` / `prompt()`; these could
-  become styled in-page modals.
-- **No persistence** — moves and elapsed time reset on every reload; there is
-  no high-score / best-time tracking.
-- **UI copy is Portuguese only** — no internationalisation yet.
-
-## Credits
-
-Original game by
-[@ManuDiasCruz](https://github.com/ManuDiasCruz/parrots-memory-card-game).
-Parrot GIFs come from the community "Party Parrot" set. This branch adds the
-responsive layout and the white/light-green/black palette.
+These items are tracked as separate repository issues associated with branch
+`cyn-hi-shopping-api-dataset`.
