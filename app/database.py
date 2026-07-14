@@ -165,4 +165,3 @@ def initialize_database(
         if current_count == 0 or force_import:
             return import_dataset(connection, csv_path, replace=force_import)
         return current_count
-

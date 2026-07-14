@@ -1,2 +1,1 @@
 """Shopping dataset API package."""
-

@@ -33,4 +33,3 @@ class CustomerPage(BaseModel):
 class HealthStatus(BaseModel):
     status: str
     records: int = Field(ge=0)
-
