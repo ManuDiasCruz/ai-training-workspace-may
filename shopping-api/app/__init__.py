@@ -1,0 +1,1 @@
+"""Shopping Customers API package."""
