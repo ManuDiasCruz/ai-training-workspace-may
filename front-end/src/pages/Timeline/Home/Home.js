@@ -7,16 +7,21 @@ import CreateNewRecommendation from "../../../components/CreateNewRecommendation
 import Recommendation from "../../../components/Recommendation";
 
 export default function Home() {
-  const { recommendations, loadingRecommendations, listRecommendations } = useRecommendations();
+  const { recommendations, recommendationsError, listRecommendations } = useRecommendations();
   const { loadingCreatingRecommendation, createRecommendation, creatingRecommendationError } = useCreateRecommendation();
 
   const handleCreateRecommendation = async (recommendation) => {
-    await createRecommendation({
-      name: recommendation.name,
-      youtubeLink: recommendation.link,
-    });
+    try {
+      await createRecommendation({
+        name: recommendation.name,
+        youtubeLink: recommendation.link,
+      });
 
-    listRecommendations();
+      await listRecommendations();
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   useEffect(() => {
@@ -25,7 +30,16 @@ export default function Home() {
     }
   }, [creatingRecommendationError]);
 
-  if ((loadingRecommendations && !recommendations) || !recommendations) {
+  if (recommendationsError) {
+    return (
+      <div role="alert">
+        Could not load recommendations.{' '}
+        <button onClick={() => listRecommendations().catch(() => undefined)}>Retry</button>
+      </div>
+    );
+  }
+
+  if (!recommendations) {
     return <div>Loading...</div>;
   }
 

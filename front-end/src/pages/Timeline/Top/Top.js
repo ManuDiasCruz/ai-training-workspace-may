@@ -2,10 +2,19 @@ import useTopRecommendations from "../../../hooks/api/useTopRecommendations";
 
 import Recommendation from "../../../components/Recommendation";
 
-export default function Home() {
-  const { recommendations, loadingRecommendations, listRecommendations } = useTopRecommendations();
+export default function Top() {
+  const { recommendations, recommendationsError, listRecommendations } = useTopRecommendations();
 
-  if ((loadingRecommendations && !recommendations) || !recommendations) {
+  if (recommendationsError) {
+    return (
+      <div role="alert">
+        Could not load the top recommendations.{' '}
+        <button onClick={() => listRecommendations().catch(() => undefined)}>Retry</button>
+      </div>
+    );
+  }
+
+  if (!recommendations) {
     return <div>Loading...</div>;
   }
 

@@ -1,29 +1,31 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export default function useAsync(handler, immediate = true) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const act = (...args) => {
+  const act = useCallback(async (...args) => {
     setLoading(true);
     setError(null);
-    return handler(...args).then((data) => {
+
+    try {
+      const data = await handler(...args);
       setData(data);
-      setLoading(false);
-    }).catch((error) => {
+      return data;
+    } catch (error) {
       setError(error);
+      throw error;
+    } finally {
       setLoading(false);
-    });
-  };
+    }
+  }, [handler]);
 
   useEffect(() => {
     if (immediate) {
-      act();
+      act().catch(() => undefined);
     }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [act, immediate]);
 
   return {
     data,

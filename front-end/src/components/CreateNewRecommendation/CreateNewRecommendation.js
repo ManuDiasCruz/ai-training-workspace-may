@@ -7,27 +7,31 @@ export default function CreateNewRecommendation({ onCreateNewRecommendation = ()
   const [name, setName] = useState("");
   const [link, setLink] = useState("");
 
-  const handleCreateRecommendation = () => {
-    onCreateNewRecommendation({
+  const handleCreateRecommendation = async (event) => {
+    event.preventDefault();
+
+    const created = await onCreateNewRecommendation({
       name,
       link
     });
+
+    if (created === false) return;
     setLink("");
     setName("");
   }
   
   return (
-    <Container>
+    <Container onSubmit={handleCreateRecommendation}>
       <Input type="text" placeholder="Name" value={name} onChange={e => setName(e.target.value)} disabled={disabled} />
       <Input type="text" placeholder="https://youtu.be/..." value={link} onChange={e => setLink(e.target.value)} disabled={disabled} />
-      <Button onClick={() => handleCreateRecommendation()} disabled={disabled}>
+      <Button type="submit" aria-label="Create recommendation" disabled={disabled}>
         <IoReturnUpForwardOutline size="24px" color="#fff" />
       </Button>
     </Container>
   );
 }
 
-const Container = styled.div`
+const Container = styled.form`
   display: flex;
   gap: 9px;
   margin-bottom: 15px;
