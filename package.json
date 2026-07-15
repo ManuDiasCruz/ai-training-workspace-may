@@ -1,0 +1,21 @@
+{
+  "name": "sing-me-a-song",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full-stack song recommendation application",
+  "engines": {
+    "node": ">=22.0.0 <23.0.0"
+  },
+  "scripts": {
+    "install:all": "npm ci --prefix back-end && npm ci --prefix front-end",
+    "build": "npm run build --prefix back-end && npm run build --prefix front-end",
+    "start": "npm start --prefix back-end",
+    "dev:api": "npm run dev --prefix back-end",
+    "dev:web": "npm start --prefix front-end",
+    "db:migrate": "npm run db:migrate --prefix back-end",
+    "db:deploy": "npm run db:deploy --prefix back-end",
+    "test": "npm run test:unit --prefix back-end",
+    "test:integration": "npm run test:integration --prefix back-end",
+    "test:e2e": "npm run test:e2e --prefix front-end"
+  }
+}
