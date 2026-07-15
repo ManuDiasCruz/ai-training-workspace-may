@@ -13,6 +13,10 @@ describe("INTEGRATION TESTS SUITE", () => {
         await prisma.$executeRaw`TRUNCATE TABLE recommendations RESTART IDENTITY`;
     });
 
+    afterAll(async () => {
+        await prisma.$disconnect();
+    });
+
     describe("POST /recommendations", () => {
         beforeEach(async () => {
             await prisma.recommendation.deleteMany({});
@@ -62,14 +66,14 @@ describe("INTEGRATION TESTS SUITE", () => {
             expect(response.status).toBe(200);
             expect(response.body).toHaveLength(3);
         
-            expect(response.body[0].name).toBe(recommendation2.name);
-            expect(response.body[0].youtubeLink).toBe(recommendation2.youtubeLink);
+            expect(response.body[0].name).toBe(recommendation3.name);
+            expect(response.body[0].youtubeLink).toBe(recommendation3.youtubeLink);
         
-            expect(response.body[1].name).toBe(recommendation1.name);
-            expect(response.body[1].youtubeLink).toBe(recommendation1.youtubeLink);
+            expect(response.body[1].name).toBe(recommendation2.name);
+            expect(response.body[1].youtubeLink).toBe(recommendation2.youtubeLink);
 
-            expect(response.body[2].name).toBe(recommendation3.name);
-            expect(response.body[2].youtubeLink).toBe(recommendation3.youtubeLink);
+            expect(response.body[2].name).toBe(recommendation1.name);
+            expect(response.body[2].youtubeLink).toBe(recommendation1.youtubeLink);
         });
     
         it("Show empty recommendations list", async () => {
@@ -130,6 +134,14 @@ describe("INTEGRATION TESTS SUITE", () => {
             expect(response.status).toBe(200);
             expect(response.body.name).toBe(recommendation.name);
             expect(response.body.youtubeLink).toBe(recommendation.youtubeLink);
+        });
+
+        it("Rejects invalid recommendation and top identifiers", async () => {
+            const invalidId = await agent.get("/recommendations/not-a-number");
+            const invalidAmount = await agent.get("/recommendations/top/0");
+
+            expect(invalidId.status).toBe(422);
+            expect(invalidAmount.status).toBe(422);
         });
     });
     
