@@ -8,7 +8,7 @@ async function createRandomSongPostWithNegativeScore(song: Song) {
     });
     return { ...newSong };
 }
-  
+
 async function createTwoSongsScenario() {
     const songs: Song[] = [];
     for (let i = 0; i < 3; i++) {
@@ -19,7 +19,7 @@ async function createTwoSongsScenario() {
     }
     return songs;
 }
-  
+
 async function createMoreThanTenScenario(numberOfPosts: number) {
     let song: Song;
     for (let i = 0; i < numberOfPosts; i++) {
@@ -28,7 +28,7 @@ async function createMoreThanTenScenario(numberOfPosts: number) {
     }
     return song;
 }
-  
+
   async function createThreePostWithUpvotesScenario() {
     const upvotes = [14, 22, 31];
     for (let i = 0; i < upvotes.length; i++) {

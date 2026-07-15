@@ -52,21 +52,21 @@ describe("UNIT TESTS SUITE", () => {
             jest
                 .spyOn(recommendationRepository, "find")
                 .mockResolvedValueOnce(recommendation2);
-        
+
             jest
                 .spyOn(recommendationRepository, "updateScore")
                 .mockResolvedValueOnce(recommendation2);
-            
+
             await recommendationService.upvote(1);
             expect(recommendationRepository.find).toHaveBeenCalledWith(1);
-            expect(recommendationRepository.updateScore).toHaveBeenLastCalledWith(1, "increment"); 
+            expect(recommendationRepository.updateScore).toHaveBeenLastCalledWith(1, "increment");
         });
 
         it("Fail", async () => {
             jest
                 .spyOn(recommendationRepository, "find")
                 .mockResolvedValueOnce(null);
-        
+
             await expect(recommendationService.upvote(1)).rejects.toEqual(
                 { message: "", type: "not_found" }
             );
@@ -78,21 +78,21 @@ describe("UNIT TESTS SUITE", () => {
             jest
                 .spyOn(recommendationRepository, "find")
                 .mockResolvedValueOnce(recommendation2);
-        
+
             jest
                 .spyOn(recommendationRepository, "updateScore")
                 .mockResolvedValueOnce(recommendation2);
-            
+
             await recommendationService.downvote(1);
             expect(recommendationRepository.find).toHaveBeenCalledWith(1);
-            expect(recommendationRepository.updateScore).toHaveBeenLastCalledWith(1, "decrement");   
+            expect(recommendationRepository.updateScore).toHaveBeenLastCalledWith(1, "decrement");
         });
 
         it("Downvote deleting recommendation", async () => {
             jest
                 .spyOn(recommendationRepository, "find")
                 .mockResolvedValueOnce(recommendation2);
-        
+
             jest
                 .spyOn(recommendationRepository, "updateScore")
                 .mockResolvedValueOnce({ ...recommendation2, score: -6 });
@@ -100,7 +100,7 @@ describe("UNIT TESTS SUITE", () => {
             jest
                 .spyOn(recommendationRepository, "remove")
                 .mockResolvedValueOnce(undefined);
-            
+
             await recommendationService.downvote(1);
             expect(recommendationRepository.find).toHaveBeenCalledWith(1);
             expect(recommendationRepository.updateScore).toHaveBeenLastCalledWith(1, "decrement");
@@ -111,7 +111,7 @@ describe("UNIT TESTS SUITE", () => {
             jest
                 .spyOn(recommendationRepository, "find")
                 .mockResolvedValueOnce(null);
-        
+
             await expect(recommendationService.downvote(1)).rejects.toEqual(
                 { message: "", type: "not_found" }
             );

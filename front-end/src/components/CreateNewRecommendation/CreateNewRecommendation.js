@@ -19,7 +19,7 @@ export default function CreateNewRecommendation({ onCreateNewRecommendation = ()
     setLink("");
     setName("");
   }
-  
+
   return (
     <Container onSubmit={handleCreateRecommendation}>
       <Input type="text" placeholder="Name" value={name} onChange={e => setName(e.target.value)} disabled={disabled} />
