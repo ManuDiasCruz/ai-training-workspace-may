@@ -5,13 +5,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/index.js",
-    "dev": "nodemon src/server.ts",
+    "build": "prisma generate && tsc",
+    "start": "node dist/server.js",
+    "dev": "nodemon --watch src --ext ts --exec \"node --loader ts-node/esm src/server.ts\"",
     "dev:test": "dotenv -e .env.test prisma migrate dev --skip-seed && dotenv -e .env.test nodemon src/server.ts",
-    "test:integration": "dotenv -e .env.test jest -- -i ./tests/integration",
-    "test:unit": "dotenv -e .env.test jest -- -i ./tests/unit",
+    "test:integration": "cross-env NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test -- jest --runInBand tests/integration",
+    "test:unit": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand tests/unit",
     "prisma-test": "dotenv -e .env.test prisma migrate reset --skip-seed",
-    "test": "npm run prisma-test && NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test jest -- -i"
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "test": "npm run test:unit"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
