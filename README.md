@@ -102,14 +102,14 @@ For an E2E run, start the backend with the test environment and the frontend in 
 
 ## Deployment
 
-The included Render Blueprint provisions one Node web service and one PostgreSQL database:
+The included Render Blueprint provisions one Node web service and connects it to the existing `sing-me-a-song-red-db` Render PostgreSQL database in this workspace. Reusing the database avoids creating a paid resource because Render permits only one free PostgreSQL instance per workspace.
 
 1. Push the branch to GitHub.
 2. In Render, create a new Blueprint from this repository and select `cy-eh-sing-me-a-song`.
-3. Confirm `render.yaml`. Render installs both lockfiles, builds both applications, applies `prisma migrate deploy`, and starts the combined server.
+3. Confirm `render.yaml`. Render installs both lockfiles, builds both applications, applies `prisma migrate deploy`, and starts the combined server. In another Render workspace, create PostgreSQL first and update the `fromDatabase.name` value in `render.yaml`.
 4. Verify `/health`, create/vote/list flows, `/top`, and `/random` on the assigned `onrender.com` URL.
 
-The Blueprint uses Render's free instances for demonstration. Free web services spin down after 15 minutes without traffic and can take about a minute to wake. Free PostgreSQL databases expire after 30 days and have no backups; upgrade the database before that deadline for persistent use.
+The Blueprint uses Render's free instances for demonstration. Free web services spin down after 15 minutes without traffic and can take about a minute to wake. The shared free PostgreSQL database expires on August 1, 2026 and has no backups; upgrade the database before that deadline for persistent use.
 
 ## Repairs and improvements
 
