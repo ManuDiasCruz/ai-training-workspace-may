@@ -1,0 +1,42 @@
+# Render.com Blueprint — provisions Postgres + API + static front-end.
+# Deploy: push this branch, then in Render click "New +" -> "Blueprint" and
+# point it at this repository. Review the generated resources and apply.
+#
+# NOTE: Create React App bakes REACT_APP_API_BASE_URL in at build time, so after
+# the first deploy set the web service's REACT_APP_API_BASE_URL to the API's
+# public URL (shown in the Render dashboard) and trigger a redeploy.
+databases:
+  - name: singmeasong-db
+    plan: free
+    databaseName: singmeasong
+    user: singmeasong
+
+services:
+  - type: web
+    name: singmeasong-api
+    runtime: node
+    plan: free
+    rootDir: back-end
+    buildCommand: npm ci && npm run build
+    startCommand: npx prisma migrate deploy && npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: singmeasong-db
+          property: connectionString
+      - key: PORT
+        value: "10000"
+
+  - type: web
+    name: singmeasong-web
+    runtime: static
+    rootDir: front-end
+    buildCommand: npm ci && npm run build
+    staticPublishPath: build
+    envVars:
+      - key: REACT_APP_API_BASE_URL
+        sync: false # set to the singmeasong-api public URL after first deploy
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
