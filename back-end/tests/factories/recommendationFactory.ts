@@ -7,11 +7,12 @@ export interface Song {
 };
 
 export function createRandomSong() {
-  const randomUrlGen = require("random-youtube-music-video");
-  const youtubeUrl = randomUrlGen.getRandomMusicVideoUrl();
-
-  const name = faker.name.findName();
-  const youtubeLink = youtubeUrl;
+  // Generate a deterministic, offline, unique song using faker only.
+  // (The previous implementation used `require("random-youtube-music-video")`,
+  // which is a CommonJS require in an ESM project and an undeclared dependency,
+  // so the whole test suite failed to load.)
+  const name = `${faker.music.songName()} - ${faker.name.findName()} (${faker.datatype.uuid()})`;
+  const youtubeLink = `https://www.youtube.com/watch?v=${faker.random.alphaNumeric(11)}`;
 
   return { name, youtubeLink };
 };
