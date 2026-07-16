@@ -1,0 +1,11 @@
+.DS_Store
+**/.DS_Store
+node_modules/
+**/node_modules/
+back-end/dist/
+front-end/build/
+**/coverage/
+front-end/cypress/screenshots/
+front-end/cypress/videos/
+.env*
+!.env*.example
