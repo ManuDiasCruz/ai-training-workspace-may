@@ -1,124 +1,210 @@
-# 🦜 Parrot Memory Card Game
+# Shopping Customer API
 
-A small browser memory game: flip the cards two at a time and find every
-matching pair of parrots in as few moves as possible. Built with plain
-**HTML, CSS and JavaScript** — no build step and no dependencies.
+A small production-style Python REST API for exploring the customer shopping
+dataset stored in Google Drive. The project validates the source CSV, persists
+its 200 records in a local SQLite database, and exposes paginated listing,
+field filters, sorting, basic search, single-record lookup, and health checks.
 
-![Desktop preview](img/desktop.png)
+Source dataset: [Shopping_data.csv](https://drive.google.com/file/d/1-4dSFNppilPVbHeoTeuVS5-CSFMlREFm/view?usp=sharing)
 
-## How to play
+## Dataset profile
 
-1. On load you're asked **how many cards** to play with — an even number
-   between **4 and 14**.
-2. Click a card to flip it, then flip a second card:
-   - if the two match, they stay revealed;
-   - if not, they flip back after a moment.
-3. The header tracks your number of moves (**Jogadas**) and the elapsed time
-   (**relógio**).
-4. Match every pair to win — you can then start a new game.
+The source contains one row per customer and five columns:
 
-> ℹ️ The in-game text is in Brazilian Portuguese (the original author's language).
+| Source column | Stored field | Observed values |
+| --- | --- | --- |
+| `CustomerID` | `customer_id` | `0001`–`0200` |
+| `Genre` | `genre` | `Female`, `Male` |
+| `Age` | `age` | 18–70 |
+| `Annual Income (k$)` | `annual_income_k` | 15–137 |
+| `Spending Score (1-100)` | `spending_score` | 1–99 |
+
+Customer IDs are stored as text to preserve leading zeros. The API retains the
+source label `genre` for traceability, although the values represent a binary
+gender field in this dataset.
+
+## Database design
+
+SQLite keeps local setup lightweight while still providing transactions,
+constraints, indexes, and durable persistence. The generated database is
+`data/shopping.db` and is intentionally ignored by Git because it can be
+recreated deterministically from the committed source CSV.
+
+### `customers`
+
+| Column | Type | Rules |
+| --- | --- | --- |
+| `customer_id` | `TEXT` | Primary key; preserves four-digit IDs |
+| `genre` | `TEXT` | Required; `Male` or `Female` |
+| `age` | `INTEGER` | Required; 0–120 |
+| `annual_income_k` | `INTEGER` | Required; non-negative, in k$ |
+| `spending_score` | `INTEGER` | Required; 1–100 |
+| `imported_at` | `TEXT` | UTC timestamp supplied by SQLite |
+
+Indexes support the available filters on genre, age, annual income, and
+spending score. Imports use an upsert keyed by `customer_id`, so rerunning the
+command safely refreshes existing rows instead of duplicating them.
+
+### `dataset_imports`
+
+Each successful import records the source filename, SHA-256 checksum, row
+count, and import time. This small audit table makes the local database's source
+and refresh history inspectable.
 
 ## Project structure
 
 ```text
-.
-├── index.html        # markup, meta tags and asset links
-├── css/
-│   └── style.css     # colour palette + responsive layout
-├── src/
-│   └── script.js     # game logic (shuffle, flip, match, timer)
-└── img/              # parrot artwork + preview screenshots
+app/
+├── database.py       # connection settings and SQLite schema
+├── import_data.py    # CSV validation and idempotent import CLI
+├── main.py           # FastAPI application and HTTP validation
+├── models.py         # response models
+└── repository.py     # parameterized read queries
+data/
+└── Shopping_data.csv # source snapshot downloaded from Google Drive
+tests/
+└── test_api.py       # automated API tests using an isolated database
+requirements.txt
 ```
 
-## Running locally
+The repository's earlier static-game files remain in this branch for history,
+but they are not used by the API.
 
-This is a static site, so all you need is a browser.
+## Local setup
 
-**Option A — open directly**
-
-Double-click `index.html`, or open it in your browser.
-
-**Option B — local server (recommended)**
-
-A tiny static server avoids any path/caching quirks:
+Python 3.11 or newer is recommended.
 
 ```bash
-# from the project root
-python3 -m http.server 8000
-# then open http://localhost:8000/ in your browser
+python -m venv .venv
 ```
 
-Any static server works (`npx serve`, the VS Code *Live Server* extension,
-etc.). An internet connection is used only to load the Google Fonts.
+Activate the virtual environment:
 
-## UI / responsiveness improvements
+```bash
+# macOS/Linux
+source .venv/bin/activate
 
-This round of work delivered the client's two requests — a mobile-friendly
-layout and a **white / light-green / black** colour scheme — plus a few small
-correctness fixes.
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+```
 
-### Colour palette
+Install dependencies:
 
-Colours are centralised as CSS variables in `css/style.css`:
+```bash
+python -m pip install -r requirements.txt
+```
 
-| Token             | Value     | Use                                            |
-| ----------------- | --------- | ---------------------------------------------- |
-| `--color-bg`      | `#ffffff` | page background (was pale-lime `#EEF9BF`)      |
-| `--color-surface` | `#a7e9af` | cards / faces — light green                    |
-| `--color-border`  | `#8ed29a` | card edges — same green family                 |
-| `--color-text`    | `#000000` | all text (was teal `#75B79E` and gray)         |
+## Import and run
 
-The old teal title, lime background and gray counters are gone — the UI now
-uses only white, light green and a black font, as requested.
+From the repository root, validate the CSV and build the local database:
 
-### Responsiveness
+```bash
+python -m app.import_data
+```
 
-- `box-sizing: border-box` applied globally.
-- Replaced the fixed `main { margin: auto 116px }` with a centred max-width
-  container and fluid `clamp()` padding.
-- Cards now size with `clamp()` widths + `aspect-ratio: 117/146` and lay out
-  using `gap`, so they **scale and wrap on any screen** instead of overflowing.
-- Fluid `clamp()` typography for the title, header counters and end message.
-- Removed the lone `@media (max-width: 335px)` rule — it left typical phones
-  (~360–430px) stuck on the desktop layout. The fluid system now covers
-  everything from small phones to large desktops.
-- `@media (hover: hover)` card-lift effect, so touch devices don't get
-  "sticky" hover states.
+Expected output:
 
-Verified at **1280px** (desktop), **390px** and **360px** (mobile):
+```text
+Imported 200 rows into .../data/shopping.db (200 rows total).
+```
 
-| Desktop                     | Mobile                    |
-| --------------------------- | ------------------------- |
-| ![Desktop](img/desktop.png) | ![Mobile](img/mobile.png) |
+Start the development server:
 
-### Small fixes
+```bash
+python -m uvicorn app.main:app --reload
+```
 
-- `index.html` linked `css\style.css` with a backslash; corrected to
-  `css/style.css` (browsers tolerate it, but stricter static servers 404).
-- Removed a stray `print(...)` debug call in `script.js` that resolved to
-  `window.print()` and opened the browser print dialog on invalid input.
-- Added an inline parrot-emoji favicon (removes the `/favicon.ico` 404) and a
-  `theme-color` meta tag matching the palette.
+The API is available at `http://127.0.0.1:8000`. Interactive OpenAPI
+documentation is available at:
 
-## Known limitations & future improvements
+- Swagger UI: `http://127.0.0.1:8000/docs`
+- ReDoc: `http://127.0.0.1:8000/redoc`
 
-- **Card count via `prompt()`** — the game still asks for the number of cards
-  through a native `prompt()` on load. It works on mobile, but an in-page
-  start screen / selector would be friendlier. Left as-is to keep the change
-  scoped to the requested UI work.
-- **Parrot artwork is intentionally unchanged** — the colourful parrot images
-  are game *content*, so the white/light-green/black palette applies to the UI
-  chrome, not the artwork.
-- **Win / replay dialogs** use native `alert()` / `prompt()`; these could
-  become styled in-page modals.
-- **No persistence** — moves and elapsed time reset on every reload; there is
-  no high-score / best-time tracking.
-- **UI copy is Portuguese only** — no internationalisation yet.
+Set `SHOP_API_DB_PATH` to point the running API at a different SQLite file.
+The importer also accepts explicit paths:
 
-## Credits
+```bash
+python -m app.import_data --csv data/Shopping_data.csv --database data/custom.db
+```
 
-Original game by
-[@ManuDiasCruz](https://github.com/ManuDiasCruz/parrots-memory-card-game).
-Parrot GIFs come from the community "Party Parrot" set. This branch adds the
-responsive layout and the white/light-green/black palette.
+## API endpoints
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/health` | Confirm database availability and row count |
+| `GET` | `/customers` | List, paginate, filter, search, and sort records |
+| `GET` | `/customers/{customer_id}` | Fetch one four-digit customer ID |
+
+### Listing and pagination
+
+```bash
+curl "http://127.0.0.1:8000/customers?page=2&page_size=10"
+```
+
+The response includes `items`, `page`, `page_size`, `total`, and `pages`.
+`page` must be at least 1 and `page_size` must be between 1 and 100.
+
+### Filtering
+
+`GET /customers` supports these optional filters:
+
+| Parameter | Validation |
+| --- | --- |
+| `genre` | `Male` or `Female`, case-insensitive |
+| `min_age`, `max_age` | 0–120; minimum cannot exceed maximum |
+| `min_annual_income`, `max_annual_income` | Non-negative k$ values |
+| `min_spending_score`, `max_spending_score` | 1–100 |
+
+Example:
+
+```bash
+curl "http://127.0.0.1:8000/customers?genre=Female&min_age=30&max_age=40&min_spending_score=70&page_size=20"
+```
+
+### Search and sorting
+
+`q` performs a case-insensitive partial search on customer ID and genre.
+Wildcard characters are treated literally. Results can be sorted by
+`customer_id`, `age`, `annual_income_k`, or `spending_score` in `asc` or `desc`
+order.
+
+```bash
+curl "http://127.0.0.1:8000/customers?q=019&sort_by=annual_income_k&sort_order=desc"
+```
+
+### Single record
+
+```bash
+curl "http://127.0.0.1:8000/customers/0001"
+```
+
+Unknown customers return `404`. Invalid paths, pagination values, filter
+ranges, and field values return structured `422` responses. Unexpected SQLite
+errors return a generic `500` response without exposing database details.
+
+## Tests
+
+Run the automated suite from the repository root:
+
+```bash
+python -m pytest -q
+```
+
+The tests create an isolated temporary SQLite database and cover combined
+pagination/filter/search behavior, sorting, single-record lookup, not-found
+handling, range validation, and health reporting.
+
+## Known limitations and future improvements
+
+- SQLite is appropriate for local exploration, but there are no migrations or
+  production PostgreSQL configuration yet.
+- The API is read-only and has no authentication, authorization, or rate
+  limiting.
+- Search is intentionally basic and limited to customer ID and genre; there is
+  no full-text or fuzzy search.
+- There are no analytical aggregation or customer-segmentation endpoints.
+- Packaging currently targets local execution; containerization, CI checks,
+  deployment configuration, metrics, and structured request logging are not
+  included.
+- The source offers only a small, static, binary demographic sample. Its field
+  taxonomy and representation should not be generalized to other datasets.
