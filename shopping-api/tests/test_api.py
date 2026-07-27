@@ -54,4 +54,3 @@ def test_missing_database_returns_actionable_error(tmp_path: Path, monkeypatch: 
         response = client.get("/customers")
     assert response.status_code == 503
     assert "import command" in response.json()["detail"]
-

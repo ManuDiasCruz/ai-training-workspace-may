@@ -199,4 +199,3 @@ missing-database error.
   this snapshot; future source categories would require an intentional contract
   update. The demographic data should be handled under appropriate privacy and
   governance policies before any real deployment.
-

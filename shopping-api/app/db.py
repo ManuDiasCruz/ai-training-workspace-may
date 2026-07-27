@@ -49,4 +49,3 @@ def open_readonly_database(path: Path) -> sqlite3.Connection:
     connection = sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True, check_same_thread=False)
     connection.row_factory = sqlite3.Row
     return connection
-

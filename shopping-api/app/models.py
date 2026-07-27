@@ -26,4 +26,3 @@ class CustomerPage(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     records: int
-
