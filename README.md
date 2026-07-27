@@ -1,3 +1,10 @@
+# Branch project: Shopping Customer API
+
+The production-style Python/SQLite API added on branch `723-rh-shop-api` is in
+[`shopping-api/`](shopping-api/). See its [setup, database design, API examples,
+and limitations](shopping-api/README.md). The original repository project is
+preserved below.
+
 # 🦜 Parrot Memory Card Game
 
 A small browser memory game: flip the cards two at a time and find every
