@@ -1,0 +1,11 @@
+# Generated database - rebuild it with `python -m app.importer`
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
