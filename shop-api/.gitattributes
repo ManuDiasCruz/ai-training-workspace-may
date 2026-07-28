@@ -1,0 +1,4 @@
+# The dataset is source data: keep it byte-identical to the file exported from
+# Drive on every platform. Without this, core.autocrlf would rewrite its CRLF
+# line endings and change the file's checksum between checkouts.
+data/*.csv -text

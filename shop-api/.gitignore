@@ -1,0 +1,12 @@
+# Generated database (rebuild with: python scripts/import_data.py)
+*.db
+*.db-wal
+*.db-shm
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.pytest-tmp-*/
