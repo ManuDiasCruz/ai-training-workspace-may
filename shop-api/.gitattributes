@@ -1,0 +1,3 @@
+# Keep the source dataset byte-for-byte identical to the Drive download so the
+# sha256 recorded in import_runs stays reproducible on every platform.
+data/Shopping_data.csv -text
