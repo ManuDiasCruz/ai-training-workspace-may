@@ -76,8 +76,9 @@ async def validation_error_handler(_: Request, exc: RequestValidationError) -> J
         }
         for error in exc.errors()
     ]
+    # Literal 422: the Starlette constant for it was renamed across versions.
     return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=422,
         content=_envelope("validation_error", "One or more query parameters are invalid.", details),
     )
 
