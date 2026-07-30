@@ -35,13 +35,13 @@ export default function Recommendation({ name, youtubeLink, score, id, onUpvote 
   }, [errorDownvotingRecommendation]);
 
   return (
-    <Container>
-      <Row>{name}</Row>
+    <Container data-identifier="recommendation">
+      <Row data-identifier="recommendation-name">{name}</Row>
       <ReactPlayer url={youtubeLink} width="100%" height="100%" />
-      <Row>
-        <GoArrowUp size="24px" onClick={handleUpvote} />
-        {score}
-        <GoArrowDown size="24px" onClick={handleDownvote} />
+      <Row data-identifier="vote-menu">
+        <GoArrowUp data-identifier="upvote" size="24px" onClick={handleUpvote} />
+        <span data-identifier="score">{score}</span>
+        <GoArrowDown data-identifier="downvote" size="24px" onClick={handleDownvote} />
       </Row>
     </Container>
   );
