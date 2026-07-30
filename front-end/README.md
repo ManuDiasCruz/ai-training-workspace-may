@@ -1,3 +1,21 @@
+# Sing me a Song - front-end
+
+> Project-wide setup, environment variables and deployment instructions live in
+> the [repository README](../README.md). The original Create React App notes are
+> preserved below.
+
+| Command                | What it does                          |
+| ---------------------- | ------------------------------------- |
+| `npm start`            | Dev server on http://localhost:3000   |
+| `npm run build`        | Production bundle into `build/`       |
+| `npm run cypress:open` | Cypress in interactive mode           |
+| `npm run cypress:run`  | Cypress headless                      |
+
+`REACT_APP_API_BASE_URL` must point at the API - see [`.env.example`](.env.example).
+Create React App inlines it at **build** time, so changing it requires a rebuild.
+
+---
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
