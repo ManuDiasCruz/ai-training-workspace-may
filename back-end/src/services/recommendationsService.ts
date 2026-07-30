@@ -1,6 +1,10 @@
 import { Recommendation } from "@prisma/client";
 import { recommendationRepository } from "../repositories/recommendationRepository.js";
-import { conflictError, notFoundError } from "../utils/errorUtils.js";
+import {
+  conflictError,
+  notFoundError,
+  wrongSchemaError,
+} from "../utils/errorUtils.js";
 
 export type CreateRecommendationData = Omit<Recommendation, "id" | "score">;
 
@@ -34,6 +38,10 @@ async function downvote(id: number) {
 }
 
 async function getByIdOrFail(id: number) {
+  // A non-numeric route param becomes NaN, which Prisma rejects with an
+  // internal error (HTTP 500). Treat it as "no such recommendation" instead.
+  if (!Number.isInteger(id)) throw notFoundError();
+
   const recommendation = await recommendationRepository.find(id);
   if (!recommendation) throw notFoundError();
 
@@ -45,6 +53,9 @@ async function get() {
 }
 
 async function getTop(amount: number) {
+  // Same reasoning as getByIdOrFail: `take: NaN` makes Prisma throw a 500.
+  if (!Number.isInteger(amount) || amount < 1) throw wrongSchemaError();
+
   return recommendationRepository.getAmountByScore(amount);
 }
 
