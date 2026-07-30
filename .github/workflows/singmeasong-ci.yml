@@ -1,0 +1,97 @@
+name: sing-me-a-song CI
+
+on:
+  push:
+    branches:
+      - 723-oh-singmeasong
+    paths:
+      - "back-end/**"
+      - "front-end/**"
+      - ".github/workflows/singmeasong-ci.yml"
+  pull_request:
+    paths:
+      - "back-end/**"
+      - "front-end/**"
+      - ".github/workflows/singmeasong-ci.yml"
+  workflow_dispatch:
+
+jobs:
+  back-end:
+    name: API - jest (unit + integration)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: singmeasong_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    defaults:
+      run:
+        working-directory: back-end
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: back-end/package-lock.json
+
+      - run: npm ci
+
+      # The suite reads .env.test through dotenv-cli, so it has to exist. These
+      # are throwaway values for the ephemeral CI database, not secrets.
+      - name: Write .env.test
+        run: |
+          {
+            echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/singmeasong_test?schema=public"
+            echo "PORT=5000"
+            echo "MODE=TEST"
+          } > .env.test
+
+      - run: npx prisma generate
+      - run: npm test
+
+      - name: Type-check and build
+        run: npm run build
+
+  front-end:
+    name: Web - production build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: front-end
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: front-end/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          # The build job does not run Cypress, so skip the ~300 MB download.
+          CYPRESS_INSTALL_BINARY: 0
+
+      # CI=true makes react-scripts treat warnings as errors, which is exactly
+      # the failure mode this pipeline needs to catch before a deploy does.
+      - run: npm run build
+        env:
+          CI: true
+          REACT_APP_API_BASE_URL: http://localhost:5000
