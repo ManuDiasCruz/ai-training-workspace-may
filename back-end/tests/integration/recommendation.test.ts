@@ -61,15 +61,17 @@ describe("INTEGRATION TESTS SUITE", () => {
             const response = await agent.get("/recommendations");
             expect(response.status).toBe(200);
             expect(response.body).toHaveLength(3);
-        
-            expect(response.body[0].name).toBe(recommendation2.name);
-            expect(response.body[0].youtubeLink).toBe(recommendation2.youtubeLink);
-        
-            expect(response.body[1].name).toBe(recommendation1.name);
-            expect(response.body[1].youtubeLink).toBe(recommendation1.youtubeLink);
 
-            expect(response.body[2].name).toBe(recommendation3.name);
-            expect(response.body[2].youtubeLink).toBe(recommendation3.youtubeLink);
+            // The repository orders by `id: "desc"`, so the most recently
+            // created recommendation comes first.
+            expect(response.body[0].name).toBe(recommendation3.name);
+            expect(response.body[0].youtubeLink).toBe(recommendation3.youtubeLink);
+
+            expect(response.body[1].name).toBe(recommendation2.name);
+            expect(response.body[1].youtubeLink).toBe(recommendation2.youtubeLink);
+
+            expect(response.body[2].name).toBe(recommendation1.name);
+            expect(response.body[2].youtubeLink).toBe(recommendation1.youtubeLink);
         });
     
         it("Show empty recommendations list", async () => {
@@ -98,22 +100,30 @@ describe("INTEGRATION TESTS SUITE", () => {
             const recommendation2 = createRandomSong();
             const recommendation3 = createRandomSong();
         
-            const { body } = await agent.post("/recommendations").send(recommendation1);
+            await agent.post("/recommendations").send(recommendation1);
             await agent.post("/recommendations").send(recommendation2);
             await agent.post("/recommendations").send(recommendation3);
-        
-            await agent.post(`/recommendations/${body.id}/upvote`);
-        
+
+            // POST /recommendations answers with 201 and an empty body, so the
+            // id has to be read back from the database. Using `body.id` here
+            // upvoted /recommendations/undefined/upvote, which 404s silently
+            // and left this test asserting an accidental tie-break order.
+            const created = await prisma.recommendation.findUnique({
+                where: { name: recommendation2.name },
+            });
+
+            await agent.post(`/recommendations/${created.id}/upvote`);
+
             const response = await agent.get("/recommendations/top/2");
-        
+
             expect(response.status).toBe(200);
             expect(response.body).toHaveLength(2);
-        
-            expect(response.body[0].name).toBe(recommendation1.name);
-            expect(response.body[0].youtubeLink).toBe(recommendation1.youtubeLink);
-        
-            expect(response.body[1].name).toBe(recommendation2.name);
-            expect(response.body[1].youtubeLink).toBe(recommendation2.youtubeLink);
+
+            expect(response.body[0].name).toBe(recommendation2.name);
+            expect(response.body[0].youtubeLink).toBe(recommendation2.youtubeLink);
+            expect(response.body[0].score).toBe(1);
+
+            expect(response.body[1].score).toBe(0);
         });
     
         it("Show a recommendation by id", async () => {

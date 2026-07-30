@@ -1,5 +1,4 @@
-import { jest } from "@jest/globals";
-import { response } from "express";
+﻿import { jest } from "@jest/globals";
 
 import { recommendationService } from "../../src/services/recommendationsService.js";
 import { recommendationRepository } from "../../src/repositories/recommendationRepository.js";
@@ -15,6 +14,12 @@ describe("UNIT TESTS SUITE", () => {
         youtubeLink: recommendation1.youtubeLink,
         score: 2
     }
+
+    // Without this the spies leak between tests and a `...Once` mock that was
+    // not consumed by its own test silently satisfies the next one.
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
 
     describe("Create recommendation", () => {
         it("Success", async () => {
@@ -38,7 +43,7 @@ describe("UNIT TESTS SUITE", () => {
                 .spyOn(recommendationRepository, "findByName")
                 .mockResolvedValueOnce(recommendation2);
 
-            expect(recommendationService.insert(recommendation1)).rejects.toEqual(
+            await expect(recommendationService.insert(recommendation1)).rejects.toEqual(
                 { message: "Recommendations names must be unique", type: "conflict" }
             );
         });
@@ -64,7 +69,7 @@ describe("UNIT TESTS SUITE", () => {
                 .spyOn(recommendationRepository, "find")
                 .mockResolvedValueOnce(null);
         
-            expect(recommendationService.upvote(1)).rejects.toEqual(
+            await expect(recommendationService.upvote(1)).rejects.toEqual(
                 { message: "", type: "not_found" }
             );
         });
@@ -109,7 +114,7 @@ describe("UNIT TESTS SUITE", () => {
                 .spyOn(recommendationRepository, "find")
                 .mockResolvedValueOnce(null);
         
-            expect(recommendationService.downvote(1)).rejects.toEqual(
+            await expect(recommendationService.downvote(1)).rejects.toEqual(
                 { message: "", type: "not_found" }
             );
         });
@@ -131,7 +136,7 @@ describe("UNIT TESTS SUITE", () => {
                 .spyOn(recommendationRepository, "find")
                 .mockResolvedValueOnce(null);
 
-            expect(recommendationService.getById(1)).rejects.toEqual({
+            await expect(recommendationService.getById(1)).rejects.toEqual({
                 message: "",
                 type: "not_found",
             });
@@ -190,11 +195,14 @@ describe("UNIT TESTS SUITE", () => {
         it("Error notfound in get random", async () => {
             jest.spyOn(Math, "random").mockReturnValueOnce(0.5);
 
+            // getRandom -> getByScore calls findAll twice: once with the score
+            // filter and, when that comes back empty, once with no filter.
+            // Mocking it only Once let the second call reach the real database.
             jest
                 .spyOn(recommendationRepository, "findAll")
-                .mockResolvedValueOnce([]);
+                .mockResolvedValue([]);
 
-            expect(recommendationService.getRandom()).rejects.toEqual({
+            await expect(recommendationService.getRandom()).rejects.toEqual({
                 message: "",
                 type: "not_found",
             });

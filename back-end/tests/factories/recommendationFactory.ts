@@ -6,22 +6,28 @@ export interface Song {
     youtubeLink: string;
 };
 
-export function createRandomSong() {
-  const randomUrlGen = require("random-youtube-music-video");
-  const youtubeUrl = randomUrlGen.getRandomMusicVideoUrl();
+// `name` is a unique column, so a bare faker name eventually collides once a
+// scenario creates more than a handful of songs. The counter keeps generated
+// songs distinct while leaving the rest of the value random.
+let songCounter = 0;
 
-  const name = faker.name.findName();
-  const youtubeLink = youtubeUrl;
+export function createRandomSong(): Song {
+  songCounter += 1;
+
+  const name = `${faker.name.findName()} #${songCounter}`;
+  const youtubeLink = `https://www.youtube.com/watch?v=${faker.random.alphaNumeric(11)}`;
 
   return { name, youtubeLink };
 };
 
-// export function createSong() {
-//     const name = faker.name.findName();
-//     const youtubeLink = `https://www.youtube.com/${faker.random.alphaNumeric(10)}`;    
-    
-//     return { name: name, youtubeLink: youtubeLink };
-// };
+export function createWrongLinkSong(): Song {
+  songCounter += 1;
+
+  return {
+    name: `${faker.name.findName()} #${songCounter}`,
+    youtubeLink: faker.lorem.words(3),
+  };
+};
 
 export async function createRecommendation(song: Song) {
     return prisma.recommendation.create({ data: song });
