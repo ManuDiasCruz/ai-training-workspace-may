@@ -1,0 +1,51 @@
+# Render blueprint for Sing me a Song.
+#
+# Deploy with: Render dashboard -> New -> Blueprint -> point at this repository
+# and select the branch. Render provisions the database, the API and the static
+# front-end, and wires DATABASE_URL in automatically.
+#
+# After the first deploy, set the front-end's REACT_APP_API_BASE_URL to the API
+# URL Render assigns, then trigger a rebuild - Create React App inlines that
+# value at build time, so it cannot be changed without rebuilding.
+services:
+  - type: web
+    name: singmeasong-api
+    runtime: node
+    plan: free
+    rootDir: back-end
+    buildCommand: npm ci && npm run build
+    startCommand: npx prisma migrate deploy && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: singmeasong-db
+          property: connectionString
+      - key: NODE_VERSION
+        value: "18"
+      # Restrict this to the deployed front-end origin once its URL is known.
+      - key: CORS_ORIGIN
+        sync: false
+
+  - type: web
+    name: singmeasong-web
+    runtime: static
+    rootDir: front-end
+    buildCommand: npm ci && npm run build
+    staticPublishPath: build
+    envVars:
+      # Set to the singmeasong-api URL, e.g. https://singmeasong-api.onrender.com
+      - key: REACT_APP_API_BASE_URL
+        sync: false
+    routes:
+      # Single page app: every unknown path must fall through to index.html,
+      # otherwise a refresh on /top or /random returns 404.
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+databases:
+  - name: singmeasong-db
+    plan: free
+    databaseName: singmeasong
+    user: singmeasong
