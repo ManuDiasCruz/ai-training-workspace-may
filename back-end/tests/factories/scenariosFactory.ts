@@ -2,14 +2,14 @@ import { prisma } from "../../src/database.js";
 
 import { Song, createRandomSong, createRecommendation } from "./recommendationFactory.js"
 
-async function createRandomSongPostWithNegativeScore(song: Song) {
+export async function createRandomSongPostWithNegativeScore(song: Song) {
     const newSong = await prisma.recommendation.create({
       data: { ...song, score: -5 },
     });
     return { ...newSong };
 }
   
-async function createTwoSongsScenario() {
+export async function createTwoSongsScenario() {
     const songs: Song[] = [];
     for (let i = 0; i < 3; i++) {
       const isWrongLink = false;
@@ -20,7 +20,7 @@ async function createTwoSongsScenario() {
     return songs;
 }
   
-async function createMoreThanTenScenario(numberOfPosts: number) {
+export async function createMoreThanTenScenario(numberOfPosts: number) {
     let song: Song;
     for (let i = 0; i < numberOfPosts; i++) {
       song = createRandomSong();
@@ -29,7 +29,7 @@ async function createMoreThanTenScenario(numberOfPosts: number) {
     return song;
 }
   
-  async function createThreePostWithUpvotesScenario() {
+export async function createThreePostWithUpvotesScenario() {
     const upvotes = [14, 22, 31];
     for (let i = 0; i < upvotes.length; i++) {
       const newSong = createRandomSong();

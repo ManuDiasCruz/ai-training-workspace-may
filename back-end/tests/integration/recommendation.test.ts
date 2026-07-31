@@ -61,15 +61,16 @@ describe("INTEGRATION TESTS SUITE", () => {
             const response = await agent.get("/recommendations");
             expect(response.status).toBe(200);
             expect(response.body).toHaveLength(3);
-        
-            expect(response.body[0].name).toBe(recommendation2.name);
-            expect(response.body[0].youtubeLink).toBe(recommendation2.youtubeLink);
-        
-            expect(response.body[1].name).toBe(recommendation1.name);
-            expect(response.body[1].youtubeLink).toBe(recommendation1.youtubeLink);
 
-            expect(response.body[2].name).toBe(recommendation3.name);
-            expect(response.body[2].youtubeLink).toBe(recommendation3.youtubeLink);
+            // the repository lists newest first (ordered by id desc)
+            expect(response.body[0].name).toBe(recommendation3.name);
+            expect(response.body[0].youtubeLink).toBe(recommendation3.youtubeLink);
+
+            expect(response.body[1].name).toBe(recommendation2.name);
+            expect(response.body[1].youtubeLink).toBe(recommendation2.youtubeLink);
+
+            expect(response.body[2].name).toBe(recommendation1.name);
+            expect(response.body[2].youtubeLink).toBe(recommendation1.youtubeLink);
         });
     
         it("Show empty recommendations list", async () => {
@@ -97,21 +98,32 @@ describe("INTEGRATION TESTS SUITE", () => {
             const recommendation1 = createRandomSong();
             const recommendation2 = createRandomSong();
             const recommendation3 = createRandomSong();
-        
-            const { body } = await agent.post("/recommendations").send(recommendation1);
+
+            // a 201 response has no body - the created rows must be read back
+            await agent.post("/recommendations").send(recommendation1);
             await agent.post("/recommendations").send(recommendation2);
             await agent.post("/recommendations").send(recommendation3);
-        
-            await agent.post(`/recommendations/${body.id}/upvote`);
-        
+
+            const created1 = await prisma.recommendation.findUnique({
+                where: { name: recommendation1.name },
+            });
+            const created2 = await prisma.recommendation.findUnique({
+                where: { name: recommendation2.name },
+            });
+
+            // distinct scores make the expected order deterministic
+            await agent.post(`/recommendations/${created1.id}/upvote`);
+            await agent.post(`/recommendations/${created1.id}/upvote`);
+            await agent.post(`/recommendations/${created2.id}/upvote`);
+
             const response = await agent.get("/recommendations/top/2");
-        
+
             expect(response.status).toBe(200);
             expect(response.body).toHaveLength(2);
-        
+
             expect(response.body[0].name).toBe(recommendation1.name);
             expect(response.body[0].youtubeLink).toBe(recommendation1.youtubeLink);
-        
+
             expect(response.body[1].name).toBe(recommendation2.name);
             expect(response.body[1].youtubeLink).toBe(recommendation2.youtubeLink);
         });
