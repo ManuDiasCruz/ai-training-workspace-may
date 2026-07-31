@@ -3,10 +3,14 @@ import useRecommendation from "../../../hooks/api/useRecommendation";
 import Recommendation from "../../../components/Recommendation";
 
 export default function Random() {
-  const { recommendation, updateRecommendation } = useRecommendation();
+  const { recommendation, recommendationError, updateRecommendation } = useRecommendation();
 
   const handleUpdate = () => {
     updateRecommendation(recommendation.id);
+  }
+
+  if (recommendationError) {
+    return <div>No recommendations yet! Create your own :)</div>;
   }
 
   if (!recommendation) {
