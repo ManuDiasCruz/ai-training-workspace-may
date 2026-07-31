@@ -1,0 +1,29 @@
+{
+  "files": {
+    "main.css": "/ai-training-workspace-may/723-oeh-singmeasong/static/css/main.7bade542.css",
+    "main.js": "/ai-training-workspace-may/723-oeh-singmeasong/static/js/main.c23c2eeb.js",
+    "static/js/942.f20b510e.chunk.js": "/ai-training-workspace-may/723-oeh-singmeasong/static/js/942.f20b510e.chunk.js",
+    "static/js/932.f799589b.chunk.js": "/ai-training-workspace-may/723-oeh-singmeasong/static/js/932.f799589b.chunk.js",
+    "static/js/984.ac686135.chunk.js": "/ai-training-workspace-may/723-oeh-singmeasong/static/js/984.ac686135.chunk.js",
+    "static/js/128.f2621e2c.chunk.js": "/ai-training-workspace-may/723-oeh-singmeasong/static/js/128.f2621e2c.chunk.js",
+    "static/js/957.33ef2c89.chunk.js": "/ai-training-workspace-may/723-oeh-singmeasong/static/js/957.33ef2c89.chunk.js",
+    "static/js/948.0169beeb.chunk.js": "/ai-training-workspace-may/723-oeh-singmeasong/static/js/948.0169beeb.chunk.js",
+    "static/js/478.634357ae.chunk.js": "/ai-training-workspace-may/723-oeh-singmeasong/static/js/478.634357ae.chunk.js",
+    "static/js/71.dc97c4a8.chunk.js": "/ai-training-workspace-may/723-oeh-singmeasong/static/js/71.dc97c4a8.chunk.js",
+    "index.html": "/ai-training-workspace-may/723-oeh-singmeasong/index.html",
+    "main.7bade542.css.map": "/ai-training-workspace-may/723-oeh-singmeasong/static/css/main.7bade542.css.map",
+    "main.c23c2eeb.js.map": "/ai-training-workspace-may/723-oeh-singmeasong/static/js/main.c23c2eeb.js.map",
+    "942.f20b510e.chunk.js.map": "/ai-training-workspace-may/723-oeh-singmeasong/static/js/942.f20b510e.chunk.js.map",
+    "932.f799589b.chunk.js.map": "/ai-training-workspace-may/723-oeh-singmeasong/static/js/932.f799589b.chunk.js.map",
+    "984.ac686135.chunk.js.map": "/ai-training-workspace-may/723-oeh-singmeasong/static/js/984.ac686135.chunk.js.map",
+    "128.f2621e2c.chunk.js.map": "/ai-training-workspace-may/723-oeh-singmeasong/static/js/128.f2621e2c.chunk.js.map",
+    "957.33ef2c89.chunk.js.map": "/ai-training-workspace-may/723-oeh-singmeasong/static/js/957.33ef2c89.chunk.js.map",
+    "948.0169beeb.chunk.js.map": "/ai-training-workspace-may/723-oeh-singmeasong/static/js/948.0169beeb.chunk.js.map",
+    "478.634357ae.chunk.js.map": "/ai-training-workspace-may/723-oeh-singmeasong/static/js/478.634357ae.chunk.js.map",
+    "71.dc97c4a8.chunk.js.map": "/ai-training-workspace-may/723-oeh-singmeasong/static/js/71.dc97c4a8.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.7bade542.css",
+    "static/js/main.c23c2eeb.js"
+  ]
+}

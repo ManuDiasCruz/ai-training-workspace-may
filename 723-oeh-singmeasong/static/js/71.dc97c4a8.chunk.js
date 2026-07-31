@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunksing_me_a_song_front=self.webpackChunksing_me_a_song_front||[]).push([[71],{71:function(n,t,e){e.d(t,{LTT:function(){return r}});var o=e(9983);function r(n){return(0,o.w_)({tag:"svg",attr:{viewBox:"0 0 512 512"},child:[{tag:"path",attr:{fill:"none",strokeLinecap:"round",strokeLinejoin:"round",strokeWidth:"32",d:"M400 160l64 64-64 64"}},{tag:"path",attr:{fill:"none",strokeLinecap:"round",strokeLinejoin:"round",strokeWidth:"32",d:"M448 224H154c-58.76 0-106 49.33-106 108v20"}}]})(n)}}}]);
+//# sourceMappingURL=71.dc97c4a8.chunk.js.map
