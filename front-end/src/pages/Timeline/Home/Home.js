@@ -4,10 +4,11 @@ import useRecommendations from "../../../hooks/api/useRecommendations";
 import useCreateRecommendation from "../../../hooks/api/useCreateRecommendation";
 
 import CreateNewRecommendation from "../../../components/CreateNewRecommendation";
+import LoadError from "../../../components/LoadError";
 import Recommendation from "../../../components/Recommendation";
 
 export default function Home() {
-  const { recommendations, loadingRecommendations, listRecommendations } = useRecommendations();
+  const { recommendations, loadingRecommendations, recommendationsError, listRecommendations } = useRecommendations();
   const { loadingCreatingRecommendation, createRecommendation, creatingRecommendationError } = useCreateRecommendation();
 
   const handleCreateRecommendation = async (recommendation) => {
@@ -24,6 +25,10 @@ export default function Home() {
       alert("Error creating recommendation!");
     }
   }, [creatingRecommendationError]);
+
+  if (recommendationsError && !recommendations) {
+    return <LoadError error={recommendationsError} />;
+  }
 
   if ((loadingRecommendations && !recommendations) || !recommendations) {
     return <div>Loading...</div>;

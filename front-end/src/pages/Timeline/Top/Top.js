@@ -1,9 +1,14 @@
 import useTopRecommendations from "../../../hooks/api/useTopRecommendations";
 
+import LoadError from "../../../components/LoadError";
 import Recommendation from "../../../components/Recommendation";
 
 export default function Home() {
-  const { recommendations, loadingRecommendations, listRecommendations } = useTopRecommendations();
+  const { recommendations, loadingRecommendations, recommendationsError, listRecommendations } = useTopRecommendations();
+
+  if (recommendationsError && !recommendations) {
+    return <LoadError error={recommendationsError} />;
+  }
 
   if ((loadingRecommendations && !recommendations) || !recommendations) {
     return <div>Loading...</div>;
