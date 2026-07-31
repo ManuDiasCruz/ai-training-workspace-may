@@ -1,0 +1,34 @@
+# Local PostgreSQL for Sing me a Song, for developers who do not want to
+# install Postgres on the host. Start it with:
+#
+#   docker compose up -d
+#
+# then point back-end/.env at:
+#   DATABASE_URL="postgresql://singmeasong:singmeasong@localhost:5432/singmeasong?schema=public"
+# and back-end/.env.test at the singmeasong_test database.
+#
+# The credentials below are throw-away local development values. Do not reuse
+# them anywhere that is reachable from outside your machine.
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: singmeasong-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: singmeasong
+      POSTGRES_PASSWORD: singmeasong
+      POSTGRES_DB: singmeasong
+    ports:
+      - "5432:5432"
+    volumes:
+      - singmeasong-data:/var/lib/postgresql/data
+      - ./scripts/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U singmeasong"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  singmeasong-data:

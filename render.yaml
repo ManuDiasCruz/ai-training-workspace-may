@@ -1,0 +1,34 @@
+# Render blueprint for the Sing me a Song API.
+#
+# Deploy with: Render dashboard -> New -> Blueprint -> point it at this repo
+# and the 723-oeh-singmeasong branch. Render provisions the database, injects
+# DATABASE_URL from it, and never stores the connection string in this file.
+#
+# After the first deploy, rebuild the front-end with
+#   REACT_APP_API_BASE_URL=https://<your-service>.onrender.com
+# so the published site talks to it.
+
+databases:
+  - name: singmeasong-db
+    databaseName: singmeasong
+    plan: free
+
+services:
+  - type: web
+    name: singmeasong-api
+    runtime: node
+    plan: free
+    branch: 723-oeh-singmeasong
+    rootDir: back-end
+    buildCommand: npm ci && npm run build && npx prisma migrate deploy
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: singmeasong-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      # MODE is deliberately unset: setting it to TEST would expose
+      # DELETE /tests/reset, which truncates the recommendations table.
