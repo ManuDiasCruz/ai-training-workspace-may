@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: singmeasong-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
