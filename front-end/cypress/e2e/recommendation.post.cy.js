@@ -1,52 +1,33 @@
-/// <reference types="cypress" />
-
-import { faker } from "@faker-js/faker";
-
-async function createRecommendation() {
-  const name = "Mundo Bita - O Circo chegou";
-
-  const youtubeLink = "https://www.youtube.com/watch?v=qmUQr3zrqXM";    
-
-  return { name, youtubeLink };
-}
-
-function createWrongLink() {
-  const name = faker.name.findName();
-  const youtubeLink = name;    
-
-  return { name, youtubeLink };
-}
-
-
+import * as setup from "./utils/setup.js";
 
 describe("E2E tests: POST /recommendations", () => {
     beforeEach(() => {
-        cy.resetData();
+        cy.resetPosts();
     });
 
     it("Add a song", () => {
-        const song = createRecommendation();
+        const {name, youtubeLink} = setup.createRecommendation();
 
-        cy.visit("http://localhost:3000/");
-        
-        cy.get("input[placeholder='Name']").type(name);
-        cy.get("input[placeholder='https://youtu.be/...']").type(youtubeLink);
+        cy.visit("/");
+
+        cy.get("input").first().type(name);
+        cy.get("input").last().type(youtubeLink);
 
         cy.intercept("POST", "/recommendations").as("createRecommendation");
         cy.get("button").click();
 
         cy.wait("@createRecommendation").then((res) => {
             expect(res.response.statusCode).to.equals(201);
-        });      
+        });
     });
 
     it("Add a wrong link song", () => {
-        const {name, youtubeLink} = createWrongLink();
+        const {name, youtubeLink} = setup.createWrongLink();
 
-        cy.visit("http://localhost:3000/");
+        cy.visit("/");
         cy.get("input").first().type(name);
         cy.get("input").last().type(youtubeLink);
-    
+
         cy.intercept("POST", "/recommendations").as("createRecommendation");
         cy.get("button").click();
 
@@ -56,41 +37,41 @@ describe("E2E tests: POST /recommendations", () => {
     });
 
     it("Add a empty infos song", () => {
-        cy.visit("http://localhost:3000/");
-    
+        cy.visit("/");
+
         cy.intercept("POST", "/recommendations").as("createRecommendation");
         cy.get("button").click();
 
         cy.wait("@createRecommendation").then((res) => {
             expect(res.response.statusCode).to.equals(422);
         });
-    });  
+    });
 
     it("Add a duplicated song", () => {
-        const song = createRecommendation();
-  
+        const song = setup.createRecommendation();
+
         cy.addSong(song);
-  
-        cy.visit("http://localhost:3000/");
+
+        cy.visit("/");
         cy.get("input").first().type(song.name);
         cy.get("input").last().type(song.youtubeLink);
-  
+
         cy.intercept("POST", "/recommendations").as("createRecommendation");
         cy.get("button").click();
-  
+
         cy.wait("@createRecommendation").then((res) => {
             expect(res.response.statusCode).to.equals(409);
         });
     });
-    
+
     it("Add >= 10 posts => Show only 10 posts", () => {
-        cy.visit("http://localhost:3000/");
-    
-        for (let i = 0; i < 15; i++) {
-            const {name, youtubeLink} = createWrongLink();
+        cy.visit("/");
+
+        for (let i = 0; i < 12; i++) {
+            const {name, youtubeLink} = setup.createRecommendation();
             cy.get("input").first().type(name);
             cy.get("input").last().type(youtubeLink);
-        
+
             cy.intercept("POST", "/recommendations").as("createRecommendation");
             cy.get("button").click();
             cy.wait("@createRecommendation");
