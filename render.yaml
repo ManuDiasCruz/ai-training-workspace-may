@@ -1,0 +1,48 @@
+# Render blueprint for permanent hosting of sing-me-a-song.
+# Render dashboard -> New -> Blueprint -> select this repository/branch.
+#
+# Provisions:
+#   - singmeasong-db   free PostgreSQL instance
+#   - singmeasong-api  Node web service (back-end/, runs prisma migrate deploy on boot)
+#   - singmeasong-web  static site (front-end/build with SPA rewrite)
+#
+# After the first deploy, set REACT_APP_API_BASE_URL on singmeasong-web to the
+# singmeasong-api public URL and trigger a rebuild (the value is baked into the
+# bundle at build time).
+
+databases:
+  - name: singmeasong-db
+    plan: free
+    databaseName: singmeasong
+    user: singmeasong
+
+services:
+  - type: web
+    name: singmeasong-api
+    runtime: node
+    plan: free
+    rootDir: back-end
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: singmeasong-db
+          property: connectionString
+
+  - type: web
+    name: singmeasong-web
+    runtime: static
+    rootDir: front-end
+    buildCommand: npm ci && npm run build
+    staticPublishPath: build
+    routes:
+      # SPA fallback: /top and /random only exist client-side
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      # Set to the singmeasong-api URL in the dashboard, then rebuild
+      - key: REACT_APP_API_BASE_URL
+        sync: false
