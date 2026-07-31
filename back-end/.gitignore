@@ -1,0 +1,7 @@
+dist
+node_modules
+
+# Never commit real credentials - only the placeholder templates below.
+.env*
+!.env.example
+!.env.test.example
