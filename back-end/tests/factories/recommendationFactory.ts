@@ -6,22 +6,19 @@ export interface Song {
     youtubeLink: string;
 };
 
-export function createRandomSong() {
-  const randomUrlGen = require("random-youtube-music-video");
-  const youtubeUrl = randomUrlGen.getRandomMusicVideoUrl();
+let sequence = 0;
 
-  const name = faker.name.findName();
-  const youtubeLink = youtubeUrl;
+// Builds a song whose youtubeLink satisfies the joi pattern enforced by
+// recommendationsSchemas.ts. The name carries a counter because the column is
+// UNIQUE and faker repeats names often enough to make suites flaky.
+export function createRandomSong(): Song {
+  sequence += 1;
+
+  const name = `${faker.name.findName()} #${sequence}`;
+  const youtubeLink = `https://www.youtube.com/watch?v=${faker.random.alphaNumeric(11)}`;
 
   return { name, youtubeLink };
 };
-
-// export function createSong() {
-//     const name = faker.name.findName();
-//     const youtubeLink = `https://www.youtube.com/${faker.random.alphaNumeric(10)}`;    
-    
-//     return { name: name, youtubeLink: youtubeLink };
-// };
 
 export async function createRecommendation(song: Song) {
     return prisma.recommendation.create({ data: song });

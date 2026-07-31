@@ -16,9 +16,10 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "prisma db seed",
     "prisma-test": "dotenv -e .env.test -- prisma migrate reset --force --skip-seed",
-    "test": "npm run prisma-test && dotenv -e .env.test -- jest -i",
-    "test:unit": "dotenv -e .env.test -- jest -i tests/unit",
-    "test:integration": "npm run prisma-test && dotenv -e .env.test -- jest -i tests/integration"
+    "jest": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "test": "npm run prisma-test && dotenv -e .env.test -- npm run jest -- -i",
+    "test:unit": "dotenv -e .env.test -- npm run jest -- -i tests/unit",
+    "test:integration": "npm run prisma-test && dotenv -e .env.test -- npm run jest -- -i tests/integration"
   },
   "prisma": {
     "seed": "node --no-warnings=ExperimentalWarning --loader ts-node/esm prisma/seed.ts"
