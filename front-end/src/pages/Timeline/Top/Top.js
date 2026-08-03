@@ -1,9 +1,14 @@
 import useTopRecommendations from "../../../hooks/api/useTopRecommendations";
 
+import ApiError from "../../../components/ApiError";
 import Recommendation from "../../../components/Recommendation";
 
-export default function Home() {
-  const { recommendations, loadingRecommendations, listRecommendations } = useTopRecommendations();
+export default function Top() {
+  const { recommendations, loadingRecommendations, recommendationsError, listRecommendations } = useTopRecommendations();
+
+  if (recommendationsError && !recommendations) {
+    return <ApiError onRetry={() => listRecommendations()} />;
+  }
 
   if ((loadingRecommendations && !recommendations) || !recommendations) {
     return <div>Loading...</div>;
@@ -24,7 +29,7 @@ export default function Home() {
 
       {
         recommendations.length === 0 && (
-          <div>No recommendations yet! Create your own :)</div>
+          <div data-identifier="empty-state">No recommendations yet! Create your own :)</div>
         )
       }
     </>

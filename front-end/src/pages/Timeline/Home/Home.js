@@ -3,11 +3,12 @@ import { useEffect } from "react";
 import useRecommendations from "../../../hooks/api/useRecommendations";
 import useCreateRecommendation from "../../../hooks/api/useCreateRecommendation";
 
+import ApiError from "../../../components/ApiError";
 import CreateNewRecommendation from "../../../components/CreateNewRecommendation";
 import Recommendation from "../../../components/Recommendation";
 
 export default function Home() {
-  const { recommendations, loadingRecommendations, listRecommendations } = useRecommendations();
+  const { recommendations, loadingRecommendations, recommendationsError, listRecommendations } = useRecommendations();
   const { loadingCreatingRecommendation, createRecommendation, creatingRecommendationError } = useCreateRecommendation();
 
   const handleCreateRecommendation = async (recommendation) => {
@@ -24,6 +25,10 @@ export default function Home() {
       alert("Error creating recommendation!");
     }
   }, [creatingRecommendationError]);
+
+  if (recommendationsError && !recommendations) {
+    return <ApiError onRetry={() => listRecommendations()} />;
+  }
 
   if ((loadingRecommendations && !recommendations) || !recommendations) {
     return <div>Loading...</div>;
@@ -45,7 +50,7 @@ export default function Home() {
 
       {
         recommendations.length === 0 && (
-          <div>No recommendations yet! Create your own :)</div>
+          <div data-identifier="empty-state">No recommendations yet! Create your own :)</div>
         )
       }
     </>
