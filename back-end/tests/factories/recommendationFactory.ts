@@ -1,5 +1,6 @@
-import { faker } from "@faker-js/faker";
 import { prisma } from "../../src/database.js";
+
+let recommendationSequence = 0;
 
 export interface Song {
     name: string;
@@ -7,11 +8,11 @@ export interface Song {
 };
 
 export function createRandomSong() {
-  const randomUrlGen = require("random-youtube-music-video");
-  const youtubeUrl = randomUrlGen.getRandomMusicVideoUrl();
-
-  const name = faker.name.findName();
-  const youtubeLink = youtubeUrl;
+  recommendationSequence += 1;
+  const suffix = `${Date.now()}-${recommendationSequence}`;
+  const videoId = recommendationSequence.toString(36).padStart(11, "0");
+  const name = `Test song ${suffix}`;
+  const youtubeLink = `https://www.youtube.com/watch?v=${videoId}`;
 
   return { name, youtubeLink };
 };

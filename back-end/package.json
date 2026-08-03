@@ -1,17 +1,18 @@
 {
-  "name": "typescript-back-template",
+  "name": "sing-me-a-song-api",
   "version": "1.0.0",
   "type": "module",
-  "description": "",
-  "main": "index.js",
+  "description": "REST API for the Sing me a Song recommendation app",
+  "main": "dist/server.js",
   "scripts": {
-    "start": "node dist/index.js",
-    "dev": "nodemon src/server.ts",
-    "dev:test": "dotenv -e .env.test prisma migrate dev --skip-seed && dotenv -e .env.test nodemon src/server.ts",
-    "test:integration": "dotenv -e .env.test jest -- -i ./tests/integration",
-    "test:unit": "dotenv -e .env.test jest -- -i ./tests/unit",
-    "prisma-test": "dotenv -e .env.test prisma migrate reset --skip-seed",
-    "test": "npm run prisma-test && NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test jest -- -i"
+    "build": "prisma generate && tsc",
+    "start": "node dist/server.js",
+    "dev": "nodemon --watch src --ext ts --exec \"node --loader ts-node/esm src/server.ts\"",
+    "dev:test": "dotenv -e .env.test -- nodemon --watch src --ext ts --exec \"node --loader ts-node/esm src/server.ts\"",
+    "test:integration": "cross-env NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test -- jest --runInBand tests/integration",
+    "test:unit": "cross-env NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test -- jest --runInBand tests/unit",
+    "prisma-test": "dotenv -e .env.test -- prisma migrate deploy",
+    "test": "npm run test:unit && npm run prisma-test && npm run test:integration"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
@@ -20,7 +21,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@faker-js/faker": "^7.3.0",
     "@types/cors": "^2.8.12",
     "@types/dotenv": "^8.2.0",
     "@types/express": "^4.17.13",
@@ -44,7 +44,9 @@
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "express-async-errors": "^3.1.1",
-    "joi": "^17.4.1",
-    "react-player": "^2.10.0"
+    "joi": "^17.4.1"
+  },
+  "engines": {
+    "node": ">=18 <21"
   }
 }

@@ -7,15 +7,16 @@ import {
 
 export function errorHandlerMiddleware(
   err: Error | AppError,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) {
-  console.log(err);
-
   if (isAppError(err)) {
-    return res.status(errorTypeToStatusCode(err.type)).send(err.message);
+    return res
+      .status(errorTypeToStatusCode(err.type))
+      .send({ error: err.message || "Request failed" });
   }
 
-  return res.sendStatus(500);
+  console.error(err);
+  return res.status(500).send({ error: "Internal server error" });
 }

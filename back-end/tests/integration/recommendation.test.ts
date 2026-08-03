@@ -1,4 +1,3 @@
-import { faker } from "@faker-js/faker";
 import supertest from "supertest";
 
 import app from "./../../src/app.js";
@@ -8,6 +7,10 @@ import { prisma } from "../../src/database.js";
 const agent = supertest(app);
 
 describe("INTEGRATION TESTS SUITE", () => {
+
+    afterAll(async () => {
+        await prisma.$disconnect();
+    });
 
     beforeEach(async () => {
         await prisma.$executeRaw`TRUNCATE TABLE recommendations RESTART IDENTITY`;
@@ -62,14 +65,14 @@ describe("INTEGRATION TESTS SUITE", () => {
             expect(response.status).toBe(200);
             expect(response.body).toHaveLength(3);
         
-            expect(response.body[0].name).toBe(recommendation2.name);
-            expect(response.body[0].youtubeLink).toBe(recommendation2.youtubeLink);
-        
-            expect(response.body[1].name).toBe(recommendation1.name);
-            expect(response.body[1].youtubeLink).toBe(recommendation1.youtubeLink);
+            expect(response.body[0].name).toBe(recommendation3.name);
+            expect(response.body[0].youtubeLink).toBe(recommendation3.youtubeLink);
 
-            expect(response.body[2].name).toBe(recommendation3.name);
-            expect(response.body[2].youtubeLink).toBe(recommendation3.youtubeLink);
+            expect(response.body[1].name).toBe(recommendation2.name);
+            expect(response.body[1].youtubeLink).toBe(recommendation2.youtubeLink);
+
+            expect(response.body[2].name).toBe(recommendation1.name);
+            expect(response.body[2].youtubeLink).toBe(recommendation1.youtubeLink);
         });
     
         it("Show empty recommendations list", async () => {
@@ -98,11 +101,15 @@ describe("INTEGRATION TESTS SUITE", () => {
             const recommendation2 = createRandomSong();
             const recommendation3 = createRandomSong();
         
-            const { body } = await agent.post("/recommendations").send(recommendation1);
+            await agent.post("/recommendations").send(recommendation1);
             await agent.post("/recommendations").send(recommendation2);
             await agent.post("/recommendations").send(recommendation3);
+
+            const createdRecommendation = await prisma.recommendation.findUnique({
+                where: { name: recommendation1.name },
+            });
         
-            await agent.post(`/recommendations/${body.id}/upvote`);
+            await agent.post(`/recommendations/${createdRecommendation.id}/upvote`);
         
             const response = await agent.get("/recommendations/top/2");
         
@@ -130,6 +137,21 @@ describe("INTEGRATION TESTS SUITE", () => {
             expect(response.status).toBe(200);
             expect(response.body.name).toBe(recommendation.name);
             expect(response.body.youtubeLink).toBe(recommendation.youtubeLink);
+        });
+
+        it("Rejects invalid route parameters", async () => {
+            const invalidId = await agent.get("/recommendations/not-a-number");
+            const invalidAmount = await agent.get("/recommendations/top/0");
+
+            expect(invalidId.status).toBe(422);
+            expect(invalidAmount.status).toBe(422);
+        });
+
+        it("Reports database health", async () => {
+            const response = await agent.get("/health");
+
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual({ status: "ok" });
         });
     });
     

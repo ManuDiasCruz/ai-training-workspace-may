@@ -1,4 +1,4 @@
-import { Recommendation } from "@prisma/client";
+import type { Recommendation } from "@prisma/client";
 import { recommendationRepository } from "../repositories/recommendationRepository.js";
 import { conflictError, notFoundError } from "../utils/errorUtils.js";
 
@@ -11,7 +11,15 @@ async function insert(createRecommendationData: CreateRecommendationData) {
   if (existingRecommendation)
     throw conflictError("Recommendations names must be unique");
 
-  await recommendationRepository.create(createRecommendationData);
+  try {
+    await recommendationRepository.create(createRecommendationData);
+  } catch (error) {
+    if ((error as { code?: string }).code === "P2002") {
+      throw conflictError("Recommendations names must be unique");
+    }
+
+    throw error;
+  }
 }
 
 async function upvote(id: number) {
@@ -35,7 +43,7 @@ async function downvote(id: number) {
 
 async function getByIdOrFail(id: number) {
   const recommendation = await recommendationRepository.find(id);
-  if (!recommendation) throw notFoundError();
+  if (!recommendation) throw notFoundError("Recommendation not found");
 
   return recommendation;
 }
@@ -54,7 +62,7 @@ async function getRandom() {
 
   const recommendations = await getByScore(scoreFilter);
   if (recommendations.length === 0) {
-    throw notFoundError();
+    throw notFoundError("No recommendations found");
   }
 
   const randomIndex = Math.floor(Math.random() * recommendations.length);

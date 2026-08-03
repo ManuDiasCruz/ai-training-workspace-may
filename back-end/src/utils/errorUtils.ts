@@ -6,7 +6,12 @@ export interface AppError {
 }
 
 export function isAppError(error: object): error is AppError {
-  return (error as AppError).type !== undefined;
+  return Boolean(
+    error &&
+      typeof error === "object" &&
+      "type" in error &&
+      typeof (error as AppError).type === "string"
+  );
 }
 
 export function errorTypeToStatusCode(type: AppErrorTypes) {
