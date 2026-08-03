@@ -22,7 +22,10 @@ const Random = LazyWrapper(lazy(() => import("./pages/Timeline/Random")));
 
 export default function App() {
   return (
-    <Router>
+    // basename keeps client-side routing working when the app is served from a
+    // subdirectory (GitHub Pages project sites). PUBLIC_URL is "" in
+    // development and for root deployments, so this is a no-op there.
+    <Router basename={process.env.PUBLIC_URL}>
       <Routes>
         <Route path="/" element={<Timeline />}>
           <Route path="/" element={<Home />} />
