@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Sing Me a Song",
+  "name": "Sing Me a Song - Music Recommendations",
   "icons": [
     {
       "src": "favicon.ico",

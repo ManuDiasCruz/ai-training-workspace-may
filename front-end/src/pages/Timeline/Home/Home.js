@@ -7,16 +7,25 @@ import CreateNewRecommendation from "../../../components/CreateNewRecommendation
 import Recommendation from "../../../components/Recommendation";
 
 export default function Home() {
-  const { recommendations, loadingRecommendations, listRecommendations } = useRecommendations();
+  const {
+    recommendations,
+    loadingRecommendations,
+    recommendationsError,
+    listRecommendations
+  } = useRecommendations();
   const { loadingCreatingRecommendation, createRecommendation, creatingRecommendationError } = useCreateRecommendation();
 
   const handleCreateRecommendation = async (recommendation) => {
-    await createRecommendation({
-      name: recommendation.name,
-      youtubeLink: recommendation.link,
-    });
+    try {
+      await createRecommendation({
+        name: recommendation.name,
+        youtubeLink: recommendation.link,
+      });
 
-    listRecommendations();
+      await listRecommendations();
+    } catch (_error) {
+      // The request hook exposes the error to the existing notification effect.
+    }
   };
 
   useEffect(() => {
@@ -24,6 +33,10 @@ export default function Home() {
       alert("Error creating recommendation!");
     }
   }, [creatingRecommendationError]);
+
+  if (recommendationsError && !recommendations) {
+    return <div role="alert">Could not load recommendations. Please try again.</div>;
+  }
 
   if ((loadingRecommendations && !recommendations) || !recommendations) {
     return <div>Loading...</div>;

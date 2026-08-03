@@ -12,13 +12,21 @@ export default function Recommendation({ name, youtubeLink, score, id, onUpvote 
   const { downvoteRecommendation, errorDownvotingRecommendation } = useDownvoteRecommendation();
 
   const handleUpvote = async () => {
-    await upvoteRecommendation(id);
-    onUpvote();
+    try {
+      await upvoteRecommendation(id);
+      await onUpvote();
+    } catch (_error) {
+      // The request hook exposes the error to the existing notification effect.
+    }
   };
 
   const handleDownvote = async () => {
-    await downvoteRecommendation(id);
-    onDownvote();
+    try {
+      await downvoteRecommendation(id);
+      await onDownvote();
+    } catch (_error) {
+      // The request hook exposes the error to the existing notification effect.
+    }
   };
 
   useEffect(() => {
@@ -39,9 +47,21 @@ export default function Recommendation({ name, youtubeLink, score, id, onUpvote 
       <Row>{name}</Row>
       <ReactPlayer url={youtubeLink} width="100%" height="100%" />
       <Row>
-        <GoArrowUp size="24px" onClick={handleUpvote} />
+        <GoArrowUp
+          aria-label={`Upvote ${name}`}
+          data-identifier="upvote"
+          role="button"
+          size="24px"
+          onClick={handleUpvote}
+        />
         {score}
-        <GoArrowDown size="24px" onClick={handleDownvote} />
+        <GoArrowDown
+          aria-label={`Downvote ${name}`}
+          data-identifier="downvote"
+          role="button"
+          size="24px"
+          onClick={handleDownvote}
+        />
       </Row>
     </Container>
   );
