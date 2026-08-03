@@ -4,7 +4,7 @@
   "private": true,
   "description": "Full-stack music recommendation and voting application",
   "scripts": {
-    "install:all": "npm --prefix back-end ci && npm --prefix front-end ci",
+    "install:all": "npm --prefix back-end ci --include=dev && npm --prefix front-end ci --include=dev",
     "build": "npm --prefix back-end run build && npm --prefix front-end run build",
     "start": "npm --prefix back-end start",
     "dev:api": "npm --prefix back-end run dev",
