@@ -3,6 +3,19 @@ import { recommendationSchema } from "../schemas/recommendationsSchemas.js";
 import { recommendationService } from "../services/recommendationsService.js";
 import { wrongSchemaError } from "../utils/errorUtils.js";
 
+// `+id` on a non-numeric route param yields NaN, which Prisma rejects with an
+// opaque error that the error handler turns into a 500. Validating here keeps
+// bad input in the 4xx range where it belongs.
+function parsePositiveInt(raw: string, field: string) {
+  const parsed = Number(raw);
+
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw wrongSchemaError(`"${field}" must be a positive integer`);
+  }
+
+  return parsed;
+}
+
 async function insert(req: Request, res: Response) {
   const validation = recommendationSchema.validate(req.body);
   if (validation.error) {
@@ -17,7 +30,7 @@ async function insert(req: Request, res: Response) {
 async function upvote(req: Request, res: Response) {
   const { id } = req.params;
 
-  await recommendationService.upvote(+id);
+  await recommendationService.upvote(parsePositiveInt(id, "id"));
 
   res.sendStatus(200);
 }
@@ -25,7 +38,7 @@ async function upvote(req: Request, res: Response) {
 async function downvote(req: Request, res: Response) {
   const { id } = req.params;
 
-  await recommendationService.downvote(+id);
+  await recommendationService.downvote(parsePositiveInt(id, "id"));
 
   res.sendStatus(200);
 }
@@ -44,14 +57,18 @@ async function get(req: Request, res: Response) {
 async function getTop(req: Request, res: Response) {
   const { amount } = req.params;
 
-  const recommendations = await recommendationService.getTop(+amount);
+  const recommendations = await recommendationService.getTop(
+    parsePositiveInt(amount, "amount")
+  );
   res.send(recommendations);
 }
 
 async function getById(req: Request, res: Response) {
   const { id } = req.params;
 
-  const recommendation = await recommendationService.getById(+id);
+  const recommendation = await recommendationService.getById(
+    parsePositiveInt(id, "id")
+  );
   res.send(recommendation);
 }
 
