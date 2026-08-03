@@ -1,0 +1,62 @@
+name: Continuous integration
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - 731-feh-singmeasong
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sing_me_a_song_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      CYPRESS_INSTALL_BINARY: 0
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sing_me_a_song_test?schema=public
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install backend dependencies
+        run: npm --prefix back-end ci
+
+      - name: Install frontend dependencies
+        run: npm --prefix front-end ci
+
+      - name: Configure test environment
+        run: cp back-end/.env.test.example back-end/.env.test
+
+      - name: Compile backend
+        run: npm --prefix back-end run build
+
+      - name: Run backend unit and PostgreSQL integration tests
+        run: npm --prefix back-end test
+
+      - name: Run frontend tests
+        run: npm --prefix front-end test -- --watchAll=false
+
+      - name: Verify the hosted recommendation API adapter
+        run: npm run test:site
+
+      - name: Build frontend
+        run: npm --prefix front-end run build
