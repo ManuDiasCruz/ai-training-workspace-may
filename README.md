@@ -1,124 +1,115 @@
-# 🦜 Parrot Memory Card Game
+# Sing me a Song
 
-A small browser memory game: flip the cards two at a time and find every
-matching pair of parrots in as few moves as possible. Built with plain
-**HTML, CSS and JavaScript** — no build step and no dependencies.
+Sing me a Song is a full-stack music recommendation app. Visitors can submit YouTube links, browse the ten newest recommendations, upvote or downvote songs, view the top ten, and request a weighted random recommendation.
 
-![Desktop preview](img/desktop.png)
+The project keeps the original React, Express, TypeScript, Prisma, and PostgreSQL architecture. In development, React and the API run separately. In production, Express serves the compiled React app and API from one origin, which removes deployment-time CORS coupling.
 
-## How to play
+## Application flow
 
-1. On load you're asked **how many cards** to play with — an even number
-   between **4 and 14**.
-2. Click a card to flip it, then flip a second card:
-   - if the two match, they stay revealed;
-   - if not, they flip back after a moment.
-3. The header tracks your number of moves (**Jogadas**) and the elapsed time
-   (**relógio**).
-4. Match every pair to win — you can then start a new game.
+1. The React client calls the recommendation API.
+2. Express validates the request and delegates to the recommendation service.
+3. Prisma reads or updates PostgreSQL.
+4. The API returns the current recommendation data and the UI refreshes the relevant view.
 
-> ℹ️ The in-game text is in Brazilian Portuguese (the original author's language).
+API routes:
 
-## Project structure
+- `GET /health`
+- `GET|POST /recommendations`
+- `GET /recommendations/random`
+- `GET /recommendations/top/:amount`
+- `GET /recommendations/:id`
+- `POST /recommendations/:id/upvote`
+- `POST /recommendations/:id/downvote`
 
-```text
-.
-├── index.html        # markup, meta tags and asset links
-├── css/
-│   └── style.css     # colour palette + responsive layout
-├── src/
-│   └── script.js     # game logic (shuffle, flip, match, timer)
-└── img/              # parrot artwork + preview screenshots
-```
+## Requirements
 
-## Running locally
+- Node.js 18–20 (Node 20.18.0 is used in CI and deployment)
+- npm 9 or newer
+- PostgreSQL 14 or newer
 
-This is a static site, so all you need is a browser.
+## Local setup
 
-**Option A — open directly**
+1. Install the locked frontend and backend dependencies:
 
-Double-click `index.html`, or open it in your browser.
+   ```bash
+   npm run install:all
+   ```
 
-**Option B — local server (recommended)**
+2. Copy `back-end/.env.example` to `back-end/.env` and update `DATABASE_URL` for your local PostgreSQL instance.
 
-A tiny static server avoids any path/caching quirks:
+3. Create the database named in `DATABASE_URL`, then apply its migration:
+
+   ```bash
+   npm --prefix back-end run db:deploy
+   ```
+
+4. Start the API and frontend in separate terminals:
+
+   ```bash
+   npm run dev:api
+   npm run dev:web
+   ```
+
+5. Open `http://localhost:3000`. The API defaults to `http://localhost:5000`.
+
+To run the backend test suite, copy `back-end/.env.test.example` to `back-end/.env.test`, create the test database in that connection string, and run `npm test`. The integration tests truncate only the configured test database.
+
+## Environment variables
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | Backend | PostgreSQL connection string used by Prisma. |
+| `PORT` | No | API port; defaults to `5000` locally and is supplied by the host. |
+| `MODE` | No | Set to `TEST` only to expose the test reset route. |
+| `SERVE_FRONTEND` | No | Set to `true` in production so Express serves `front-end/build`. |
+| `CORS_ORIGIN` | No | Comma-separated origin allowlist. If omitted, the API permits all origins. |
+| `REACT_APP_API_BASE_URL` | No | Frontend API URL. Defaults to `http://localhost:5000` in development and the current origin in production. |
+| `CYPRESS_BASE_URL` | No | Cypress frontend URL; defaults to `http://localhost:3000`. |
+| `CYPRESS_API_URL` | No | Cypress API URL; defaults to `http://localhost:5000`. |
+
+Real `.env` files are ignored. Commit only the provided examples, never credentials or tokens.
+
+## Validation commands
 
 ```bash
-# from the project root
-python3 -m http.server 8000
-# then open http://localhost:8000/ in your browser
+npm run build
+npm run test:unit
+npm test
+npm run test:e2e
 ```
 
-Any static server works (`npx serve`, the VS Code *Live Server* extension,
-etc.). An internet connection is used only to load the Google Fonts.
+`npm test` and `npm run test:e2e` require the test PostgreSQL database. Cypress also requires the API to run with `MODE=TEST` and the frontend development server to be running.
 
-## UI / responsiveness improvements
+## Deployment
 
-This round of work delivered the client's two requests — a mobile-friendly
-layout and a **white / light-green / black** colour scheme — plus a few small
-correctness fixes.
+The included `render.yaml` defines a Render Blueprint with one Node web service and one private PostgreSQL database. The web service installs from both lockfiles, builds the API and React client, applies Prisma migrations before deployment, serves both layers from one HTTPS origin, and checks `/health` before it is marked healthy.
 
-### Colour palette
+To deploy:
 
-Colours are centralised as CSS variables in `css/style.css`:
+1. Push branch `731-ceh-singmeasong` to GitHub.
+2. In Render, create a new Blueprint from this repository and select `render.yaml`.
+3. Review the two free resources and apply the Blueprint.
+4. Wait for `/health` to pass, then verify create, vote, top, and random flows at the generated `onrender.com` URL.
 
-| Token             | Value     | Use                                            |
-| ----------------- | --------- | ---------------------------------------------- |
-| `--color-bg`      | `#ffffff` | page background (was pale-lime `#EEF9BF`)      |
-| `--color-surface` | `#a7e9af` | cards / faces — light green                    |
-| `--color-border`  | `#8ed29a` | card edges — same green family                 |
-| `--color-text`    | `#000000` | all text (was teal `#75B79E` and gray)         |
+Render's free web service can cold-start after inactivity, and a free Render PostgreSQL database expires after 30 days. Use paid resources or another managed PostgreSQL provider for a durable production deployment.
 
-The old teal title, lime background and gray counters are gone — the UI now
-uses only white, light green and a black font, as requested.
+## Repairs and improvements
 
-### Responsiveness
+- Corrected the nonexistent backend production entrypoint and added a deterministic production build.
+- Added environment loading, safe example configuration, graceful shutdown, database-backed health checks, request size limits, and optional CORS allowlisting.
+- Repaired ESM runtime imports, invalid route parameter handling, structured API errors, and duplicate-insert race handling.
+- Fixed broken unit/integration fixtures and assertions, added teardown, and added health/validation coverage.
+- Made failed frontend requests observable and retryable instead of silently continuing.
+- Preserved form values on failed submissions and made create/vote controls accessible and state-aware.
+- Replaced the disconnected Cypress specs with a bounded main-flow suite.
+- Added repeatable root scripts, CI with PostgreSQL, and infrastructure-as-code deployment.
 
-- `box-sizing: border-box` applied globally.
-- Replaced the fixed `main { margin: auto 116px }` with a centred max-width
-  container and fluid `clamp()` padding.
-- Cards now size with `clamp()` widths + `aspect-ratio: 117/146` and lay out
-  using `gap`, so they **scale and wrap on any screen** instead of overflowing.
-- Fluid `clamp()` typography for the title, header counters and end message.
-- Removed the lone `@media (max-width: 335px)` rule — it left typical phones
-  (~360–430px) stuck on the desktop layout. The fluid system now covers
-  everything from small phones to large desktops.
-- `@media (hover: hover)` card-lift effect, so touch devices don't get
-  "sticky" hover states.
+## Known limitations and future improvements
 
-Verified at **1280px** (desktop), **390px** and **360px** (mobile):
+- Create React App, Prisma 3, Jest 28, Cypress 10, and several transitive dependencies are old. Upgrade them in a dedicated change with regression testing rather than mixing a broad migration into this repair.
+- The app has no authentication, moderation, abuse controls, or rate limiting.
+- Free hosting is suitable for demonstration, not durable production data.
+- YouTube availability and embedding policies are controlled externally, so individual videos can become unavailable.
+- The random selection algorithm intentionally favors recommendations with scores above 10 but is not statistically tested.
 
-| Desktop                     | Mobile                    |
-| --------------------------- | ------------------------- |
-| ![Desktop](img/desktop.png) | ![Mobile](img/mobile.png) |
-
-### Small fixes
-
-- `index.html` linked `css\style.css` with a backslash; corrected to
-  `css/style.css` (browsers tolerate it, but stricter static servers 404).
-- Removed a stray `print(...)` debug call in `script.js` that resolved to
-  `window.print()` and opened the browser print dialog on invalid input.
-- Added an inline parrot-emoji favicon (removes the `/favicon.ico` 404) and a
-  `theme-color` meta tag matching the palette.
-
-## Known limitations & future improvements
-
-- **Card count via `prompt()`** — the game still asks for the number of cards
-  through a native `prompt()` on load. It works on mobile, but an in-page
-  start screen / selector would be friendlier. Left as-is to keep the change
-  scoped to the requested UI work.
-- **Parrot artwork is intentionally unchanged** — the colourful parrot images
-  are game *content*, so the white/light-green/black palette applies to the UI
-  chrome, not the artwork.
-- **Win / replay dialogs** use native `alert()` / `prompt()`; these could
-  become styled in-page modals.
-- **No persistence** — moves and elapsed time reset on every reload; there is
-  no high-score / best-time tracking.
-- **UI copy is Portuguese only** — no internationalisation yet.
-
-## Credits
-
-Original game by
-[@ManuDiasCruz](https://github.com/ManuDiasCruz/parrots-memory-card-game).
-Parrot GIFs come from the community "Party Parrot" set. This branch adds the
-responsive layout and the white/light-green/black palette.
+The original Create React App documentation remains preserved in [`front-end/README.md`](front-end/README.md).

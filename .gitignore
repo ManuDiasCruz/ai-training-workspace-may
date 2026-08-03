@@ -1,0 +1,6 @@
+.appdata/
+.localappdata/
+.pnpm-home/
+.DS_Store
+node_modules/
+*.log
