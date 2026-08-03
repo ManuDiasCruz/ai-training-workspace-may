@@ -1,5 +1,8 @@
 # 🎵 Sing me a Song
 
+**Live front-end:** https://manudiascruz.github.io/sing-me-a-song-demo/
+(front-end only — see [Deployment](#deployment) for what that means)
+
 Share YouTube song recommendations and let people vote them up or down. Songs
 that drop below **-5** are removed automatically.
 
@@ -262,24 +265,56 @@ docker build -t sing-me-a-song-api .
 docker run -p 5000:5000 -e DATABASE_URL="postgresql://..." sing-me-a-song-api
 ```
 
-### Front-end — GitHub Pages
+### Front-end — live on GitHub Pages ✅
+
+**https://manudiascruz.github.io/sing-me-a-song-demo/**
+
+GitHub Pages is *not* available for this repository — it is private on the
+GitHub Free plan, and `POST /repos/.../pages` is rejected with *"Your current
+plan does not support GitHub Pages for this repository."* (Which is also why the
+`gh-pages` folders left behind by other branches were never actually served.)
+Rather than make this workspace repository public, the compiled bundle is
+published to a separate public repository,
+[**ManuDiasCruz/sing-me-a-song-demo**](https://github.com/ManuDiasCruz/sing-me-a-song-demo),
+which contains nothing but the build output.
+
+Rebuild and republish it with:
+
+```bash
+cd front-end
+CI=true \
+PUBLIC_URL=/sing-me-a-song-demo \
+REACT_APP_API_BASE_URL=<api-url> \
+GENERATE_SOURCEMAP=false \
+npm run build
+cp build/index.html build/404.html   # Pages has no rewrite rules
+# then commit build/ to the demo repository's main branch
+```
+
+`PUBLIC_URL` is required: it prefixes the asset URLs *and* becomes the React
+Router `basename`, without which every route 404s under a subdirectory.
+
+> ⚠️ **The deployed front-end has no hosted API behind it yet.** It is built
+> with `REACT_APP_API_BASE_URL=http://localhost:5000`, so it works fully for
+> anyone running the back-end locally (browsers treat `http://localhost` as a
+> trustworthy origin, and the API's CORS headers are permissive). Without one,
+> every page shows the *"Could not reach the API"* panel — which is itself one
+> of the fixes here; before it, the pages hung on "Loading..." forever.
+> Deploying the API is tracked in the issues; point the build at it and
+> republish.
 
 [`.github/workflows/sing-me-a-song-pages.yml`](.github/workflows/sing-me-a-song-pages.yml)
-(manual dispatch) builds with the right `PUBLIC_URL`, adds a `404.html` SPA
-fallback and publishes into `gh-pages/731-o-eh-singmeasong/` without touching
-the other folders on that branch.
+also publishes into `gh-pages/731-o-eh-singmeasong/` on this repository, ready
+for the day Pages becomes available here.
 
-> ⚠️ **Not currently live.** GitHub Pages is unavailable for this repository:
-> it is **private on the GitHub Free plan**, and the API rejects
-> `POST /repos/.../pages` with *"Your current plan does not support GitHub Pages
-> for this repository."* Enabling it needs the repository to be made public or
-> moved to a paid plan — an owner decision, so it was not changed here. Once
-> Pages is enabled, set the repository variable `API_BASE_URL` to the deployed
-> API URL and run the workflow.
+#### Verified on the live deployment
 
-Any static host works in the meantime — the build in `front-end/build/` is
-self-contained. Whatever serves it must rewrite unknown paths to `index.html`,
-or `/top` and `/random` will 404 on a hard refresh.
+- Page loads over HTTPS, assets resolve under the `/sing-me-a-song-demo/` prefix
+- Client-side navigation to `/top` and `/random` works
+- **Hard refresh** on `/sing-me-a-song-demo/top` renders the Top page (the
+  `404.html` fallback and the router `basename` working together)
+- Cross-origin requests to a locally running API succeed, list and render
+- With no API reachable, the `ApiError` panel appears naming the attempted URL
 
 ### Verified locally against the production artifacts
 
@@ -355,11 +390,14 @@ CORS preflight succeeds cross-origin.
 
 Tracked as GitHub issues against branch `731-o-eh-singmeasong`.
 
-1. **The front-end is not publicly deployed.** GitHub Pages is unavailable for a
-   private repository on the Free plan (see [Deployment](#deployment)). The
-   workflow is ready; enabling Pages is an owner decision.
-2. **The API has no public deployment either.** `render.yaml` and the Dockerfile
-   are ready, but creating the hosting account is the owner's call.
+1. **The API has no public deployment.** The front-end is live, but it points at
+   `http://localhost:5000`, so a visitor without the back-end running locally
+   only sees the "Could not reach the API" panel. `render.yaml` and the
+   Dockerfile are ready; creating the hosting account is the owner's call, and
+   the bundle must be rebuilt afterwards because CRA inlines the URL.
+2. **Pages is unavailable on this repository itself.** The bundle therefore
+   lives in a separate public repository. Publishing is currently a manual
+   rebuild-and-commit rather than an automatic push-to-deploy.
 3. **CORS is fully open** (`app.use(cors())`). Fine for an open read/write demo,
    but a real deployment should allow-list its own origin.
 4. **No authentication or rate limiting.** Anyone can create recommendations and
