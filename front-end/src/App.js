@@ -20,9 +20,13 @@ const Home = LazyWrapper(lazy(() => import("./pages/Timeline/Home")));
 const Top = LazyWrapper(lazy(() => import("./pages/Timeline/Top")));
 const Random = LazyWrapper(lazy(() => import("./pages/Timeline/Random")));
 
+// PUBLIC_URL may be empty, a path ("/my-app") or a full URL — the router only
+// needs its path part so the app also works when hosted under a sub-path.
+const basename = new URL(process.env.PUBLIC_URL || "/", window.location.origin).pathname;
+
 export default function App() {
   return (
-    <Router>
+    <Router basename={basename}>
       <Routes>
         <Route path="/" element={<Timeline />}>
           <Route path="/" element={<Home />} />
