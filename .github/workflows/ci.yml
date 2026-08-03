@@ -7,9 +7,14 @@ on:
       - main
       - 731-feh-singmeasong
 
+concurrency:
+  group: sing-me-a-song-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     services:
       postgres:
@@ -50,13 +55,16 @@ jobs:
         run: npm --prefix back-end run build
 
       - name: Run backend unit and PostgreSQL integration tests
+        timeout-minutes: 5
         run: npm --prefix back-end test
 
       - name: Run frontend tests
+        timeout-minutes: 3
         run: npm --prefix front-end test -- --watchAll=false
 
       - name: Verify the hosted recommendation API adapter
         run: npm run test:site
 
       - name: Build frontend
+        timeout-minutes: 5
         run: npm --prefix front-end run build

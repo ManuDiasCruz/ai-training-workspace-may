@@ -7,7 +7,7 @@ export interface Song {
 };
 
 export function createRandomSong() {
-  const name = faker.name.fullName();
+  const name = faker.random.alphaNumeric(16);
   const youtubeLink = `https://www.youtube.com/watch?v=${faker.random.alphaNumeric(11)}`;
 
   return { name, youtubeLink };
