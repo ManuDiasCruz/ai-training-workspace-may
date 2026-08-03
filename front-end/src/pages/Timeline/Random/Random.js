@@ -3,10 +3,25 @@ import useRecommendation from "../../../hooks/api/useRecommendation";
 import Recommendation from "../../../components/Recommendation";
 
 export default function Random() {
-  const { recommendation, updateRecommendation } = useRecommendation();
+  const {
+    recommendation,
+    recommendationError,
+    getRecommendation,
+  } = useRecommendation();
 
   const handleUpdate = () => {
-    updateRecommendation(recommendation.id);
+    return getRecommendation();
+  }
+
+  if (recommendationError && !recommendation) {
+    return (
+      <div role="alert">
+        Could not load a random recommendation.{" "}
+        <button type="button" onClick={() => getRecommendation().catch(() => undefined)}>
+          Retry
+        </button>
+      </div>
+    );
   }
 
   if (!recommendation) {

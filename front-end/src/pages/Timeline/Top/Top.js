@@ -3,7 +3,23 @@ import useTopRecommendations from "../../../hooks/api/useTopRecommendations";
 import Recommendation from "../../../components/Recommendation";
 
 export default function Home() {
-  const { recommendations, loadingRecommendations, listRecommendations } = useTopRecommendations();
+  const {
+    recommendations,
+    loadingRecommendations,
+    recommendationsError,
+    listRecommendations,
+  } = useTopRecommendations();
+
+  if (recommendationsError && !recommendations) {
+    return (
+      <div role="alert">
+        Could not load top recommendations.{" "}
+        <button type="button" onClick={() => listRecommendations().catch(() => undefined)}>
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   if ((loadingRecommendations && !recommendations) || !recommendations) {
     return <div>Loading...</div>;
@@ -16,8 +32,8 @@ export default function Home() {
           <Recommendation
             key={recommendation.id}
             {...recommendation}
-            onUpvote={() => listRecommendations()}
-            onDownvote={() => listRecommendations()}
+            onUpvote={listRecommendations}
+            onDownvote={listRecommendations}
           />
         ))
       }

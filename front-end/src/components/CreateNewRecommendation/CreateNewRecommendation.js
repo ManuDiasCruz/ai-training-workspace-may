@@ -7,27 +7,51 @@ export default function CreateNewRecommendation({ onCreateNewRecommendation = ()
   const [name, setName] = useState("");
   const [link, setLink] = useState("");
 
-  const handleCreateRecommendation = () => {
-    onCreateNewRecommendation({
-      name,
-      link
-    });
-    setLink("");
-    setName("");
+  const handleCreateRecommendation = async (event) => {
+    event.preventDefault();
+
+    try {
+      await onCreateNewRecommendation({
+        name: name.trim(),
+        link: link.trim()
+      });
+      setLink("");
+      setName("");
+    } catch {
+      // The parent keeps the form values and presents the request error.
+    }
   }
   
   return (
-    <Container>
-      <Input type="text" placeholder="Name" value={name} onChange={e => setName(e.target.value)} disabled={disabled} />
-      <Input type="text" placeholder="https://youtu.be/..." value={link} onChange={e => setLink(e.target.value)} disabled={disabled} />
-      <Button onClick={() => handleCreateRecommendation()} disabled={disabled}>
+    <Container onSubmit={handleCreateRecommendation}>
+      <Input
+        aria-label="Song name"
+        type="text"
+        placeholder="Name"
+        value={name}
+        onChange={e => setName(e.target.value)}
+        disabled={disabled}
+        maxLength={100}
+        required
+      />
+      <Input
+        aria-label="YouTube link"
+        type="url"
+        placeholder="https://youtu.be/..."
+        value={link}
+        onChange={e => setLink(e.target.value)}
+        disabled={disabled}
+        maxLength={2048}
+        required
+      />
+      <Button type="submit" aria-label="Add recommendation" disabled={disabled}>
         <IoReturnUpForwardOutline size="24px" color="#fff" />
       </Button>
     </Container>
   );
 }
 
-const Container = styled.div`
+const Container = styled.form`
   display: flex;
   gap: 9px;
   margin-bottom: 15px;
