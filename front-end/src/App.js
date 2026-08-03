@@ -15,6 +15,11 @@ const LazyWrapper = (Component) => (props) => (
   </Suspense>
 )
 
+// PUBLIC_URL may be '', a path ('/my-app') or a full URL; the router only wants the path part
+const basename = process.env.PUBLIC_URL
+  ? new URL(process.env.PUBLIC_URL, window.location.origin).pathname
+  : "/";
+
 const Timeline = LazyWrapper(lazy(() => import("./pages/Timeline")));
 const Home = LazyWrapper(lazy(() => import("./pages/Timeline/Home")));
 const Top = LazyWrapper(lazy(() => import("./pages/Timeline/Top")));
@@ -22,7 +27,7 @@ const Random = LazyWrapper(lazy(() => import("./pages/Timeline/Random")));
 
 export default function App() {
   return (
-    <Router basename={process.env.PUBLIC_URL}>
+    <Router basename={basename}>
       <Routes>
         <Route path="/" element={<Timeline />}>
           <Route path="/" element={<Home />} />
