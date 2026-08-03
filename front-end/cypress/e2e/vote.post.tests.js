@@ -1,64 +1,69 @@
-import { faker } from "@faker-js/faker";
-
 import * as setup from "./utils/setup.js";
 
-before(() => {
+// The suite used a single `before` hook and then leaked score state between
+// tests ("Upvote a song 3x" assumed the previous test had left the score at 1),
+// while its last test reset the database halfway through the run. Each test now
+// starts from a truncated table with exactly one song, whose id is 1 because
+// the reset does TRUNCATE ... RESTART IDENTITY.
+let song;
+
+beforeEach(() => {
     cy.resetPosts();
-    const song = setup.createRecommendation();
+    song = setup.createRecommendation();
     cy.createPost(song);
 });
 
 describe("E2E tests: POST voting", () => {
     it("Upvote a song", () => {
-        cy.visit("http://localhost:3000");
+        cy.visit("/");
+        cy.get('[data-identifier="score"]').should("have.text", "0");
 
-        cy.contains("0").as("votes");
-        cy.intercept("POST", "/recommendations/1/upvote").as("upvoteSong");
+        cy.intercept("POST", "**/recommendations/1/upvote").as("upvoteSong");
         cy.get('[data-identifier="upvote"]').click();
         cy.wait("@upvoteSong");
 
-        cy.get("@votes").should("have.text", "1");
+        cy.get('[data-identifier="score"]').should("have.text", "1");
     });
 
     it("Upvote a song 3x", () => {
-        cy.visit("http://localhost:3000");
-        cy.contains("1").as("votes");
-    
+        cy.visit("/");
+        cy.get('[data-identifier="score"]').should("have.text", "0");
+
         for (let i = 0; i < 3; i++) {
-          cy.intercept("POST", "/recommendations/1/upvote").as("upvoteSong");
-          cy.get('[data-identifier="upvote"]').click();
-          cy.wait("@upvoteSong");
+            cy.intercept("POST", "**/recommendations/1/upvote").as("upvoteSong");
+            cy.get('[data-identifier="upvote"]').click();
+            cy.wait("@upvoteSong");
+            cy.get('[data-identifier="score"]').should("have.text", `${i + 1}`);
         }
-    
-        cy.get("@votes").should("have.text", "4");
+
+        cy.get('[data-identifier="score"]').should("have.text", "3");
     });
 
     it("Downvote a song 3x", () => {
-        cy.visit("http://localhost:3000");
-        cy.contains("4").as("votes");
-    
+        cy.visit("/");
+        cy.get('[data-identifier="score"]').should("have.text", "0");
+
         for (let i = 0; i < 3; i++) {
-            cy.intercept("POST", "/recommendations/1/downvote").as("downvoteSong");
+            cy.intercept("POST", "**/recommendations/1/downvote").as("downvoteSong");
             cy.get('[data-identifier="downvote"]').click();
             cy.wait("@downvoteSong");
-            cy.get("@votes").should("have.text", `${4 - i}`);
+            cy.get('[data-identifier="score"]').should("have.text", `${-1 - i}`);
         }
     });
 
+    // The song is removed once its score drops below -5, i.e. on the 6th
+    // downvote. The original test referenced an undefined `musicData` variable.
     it("Downvote: votes < -5 ? <delete_song> : <downvote>", () => {
-        cy.resetPosts();
-        const song = setup.createRecommendation();
-        cy.addSong(song);
-    
-        cy.visit("http://localhost:3000");
-        cy.contains("0").as("votes");
+        cy.visit("/");
+
         for (let i = 0; i < 6; i++) {
-            cy.get("@votes").should("have.text", `${0 - i}`);
-            cy.intercept("POST", "/recommendations/1/downvote").as("downvoteSong");
+            cy.get('[data-identifier="score"]').should("have.text", `${-i}`);
+            cy.intercept("POST", "**/recommendations/1/downvote").as("downvoteSong");
             cy.get('[data-identifier="downvote"]').click();
             cy.wait("@downvoteSong");
         }
-    
-        cy.contains(musicData.name).should("not.exist");
+
+        cy.contains(song.name).should("not.exist");
+        cy.get('[data-identifier="empty-state"]').should("be.visible");
     });
 });
