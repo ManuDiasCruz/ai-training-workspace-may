@@ -1,9 +1,10 @@
 
 import { Router } from "express";
-import { reset } from "../controllers/testController.js";
+import { reset, seed } from "../controllers/testController.js";
 
 const testRouter = Router();
 
 testRouter.delete("/reset", reset);
+testRouter.post("/seed", seed);
 
 export default testRouter;
