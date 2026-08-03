@@ -1,0 +1,25 @@
+# Render Blueprint — provisions the sing-me-a-song API + PostgreSQL database.
+# Usage: https://dashboard.render.com/blueprints -> New Blueprint Instance ->
+# point it at this repository and the 731-f-eh-singmeasong branch, then apply.
+# The free plans require no credit card.
+
+databases:
+  - name: singmeasong-db-731-f
+    plan: free
+    databaseName: singmeasong
+    user: singmeasong
+
+services:
+  - type: web
+    name: singmeasong-api-731-f
+    runtime: node
+    plan: free
+    rootDir: back-end
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: singmeasong-db-731-f
+          property: connectionString
