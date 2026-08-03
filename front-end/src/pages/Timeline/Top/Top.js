@@ -3,7 +3,11 @@ import useTopRecommendations from "../../../hooks/api/useTopRecommendations";
 import Recommendation from "../../../components/Recommendation";
 
 export default function Home() {
-  const { recommendations, loadingRecommendations, listRecommendations } = useTopRecommendations();
+  const { recommendations, loadingRecommendations, listRecommendations, errorLoadingRecommendations } = useTopRecommendations();
+
+  if (errorLoadingRecommendations && !recommendations) {
+    return <div>Could not load recommendations. Is the API running?</div>;
+  }
 
   if ((loadingRecommendations && !recommendations) || !recommendations) {
     return <div>Loading...</div>;
