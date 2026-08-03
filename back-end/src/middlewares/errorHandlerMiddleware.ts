@@ -16,12 +16,13 @@ export function errorHandlerMiddleware(
   }
 
   console.error(err);
+  const databaseError = err as Error & { code?: string };
 
-  if ("code" in err && err.code === "P2002") {
+  if (databaseError.code === "P2002") {
     return res.status(409).send("Recommendations names must be unique");
   }
 
-  if ("code" in err && err.code === "P2025") {
+  if (databaseError.code === "P2025") {
     return res.sendStatus(404);
   }
 
