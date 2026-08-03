@@ -4,11 +4,9 @@ services:
     runtime: node
     plan: free
     branch: 731-ceh-singmeasong
-    buildCommand: npm run install:all && npm run build
-    preDeployCommand: npm --prefix back-end run db:deploy
+    buildCommand: npm run install:all && npm run build && npm --prefix back-end run db:deploy
     startCommand: npm start
     healthCheckPath: /health
-    maxShutdownDelaySeconds: 30
     envVars:
       - key: DATABASE_URL
         fromDatabase:
