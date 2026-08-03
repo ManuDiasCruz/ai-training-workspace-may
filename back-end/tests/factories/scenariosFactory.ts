@@ -1,41 +1,39 @@
-import { prisma } from "../../src/database.js";
+import {
+  Song,
+  createRandomSong,
+  createRecommendation,
+  createRecommendationWithScore
+} from "./recommendationFactory.js";
 
-import { Song, createRandomSong, createRecommendation } from "./recommendationFactory.js"
+// Every helper here used to be declared without `export`, so the whole module
+// was unreachable dead code. The names also lied about what they did
+// (createTwoSongsScenario inserted three rows) and createMoreThanTenScenario
+// returned only the last song, discarding the rest.
 
-async function createRandomSongPostWithNegativeScore(song: Song) {
-    const newSong = await prisma.recommendation.create({
-      data: { ...song, score: -5 },
-    });
-    return { ...newSong };
+export async function createSongWithNegativeScore(score = -5) {
+  return createRecommendationWithScore(createRandomSong(), score);
 }
-  
-async function createTwoSongsScenario() {
-    const songs: Song[] = [];
-    for (let i = 0; i < 3; i++) {
-      const isWrongLink = false;
-      const newSong = createRandomSong();
-      await createRecommendation(newSong);
-      songs.push(newSong);
-    }
-    return songs;
-}
-  
-async function createMoreThanTenScenario(numberOfPosts: number) {
-    let song: Song;
-    for (let i = 0; i < numberOfPosts; i++) {
-      song = createRandomSong();
-      await createRecommendation(song);
-    }
-    return song;
-}
-  
-  async function createThreePostWithUpvotesScenario() {
-    const upvotes = [14, 22, 31];
-    for (let i = 0; i < upvotes.length; i++) {
-      const newSong = createRandomSong();
-      await prisma.recommendation.create({
-        data: { ...newSong, score: upvotes[i] },
-      });
-    }
-    return upvotes[1];
+
+export async function createManySongsScenario(numberOfPosts: number) {
+  const songs: Song[] = [];
+
+  for (let i = 0; i < numberOfPosts; i++) {
+    const song = createRandomSong();
+    await createRecommendation(song);
+    songs.push(song);
   }
+
+  return songs;
+}
+
+export async function createSongsWithScoresScenario(scores: number[]) {
+  const songs: Song[] = [];
+
+  for (const score of scores) {
+    const song = createRandomSong();
+    await createRecommendationWithScore(song, score);
+    songs.push(song);
+  }
+
+  return songs;
+}
