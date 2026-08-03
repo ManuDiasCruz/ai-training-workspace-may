@@ -1,0 +1,57 @@
+# Render blueprint for Sing me a Song.
+#
+# One-time setup (needs a Render account - no credentials are stored here):
+#   1. Render dashboard -> New -> Blueprint -> pick this repository and branch.
+#   2. Render creates the database, the API and the static site from this file.
+#   3. Set REACT_APP_API_BASE_URL on the static site to the API's public URL,
+#      then trigger a manual redeploy of the static site - create-react-app
+#      inlines that value at build time, so it will not pick up a later change
+#      without a rebuild.
+#
+# MODE is deliberately absent from the API service: DELETE /tests/reset and
+# POST /tests/seed truncate the recommendations table and must not be reachable
+# on a public deployment.
+databases:
+  - name: sing-me-a-song-db
+    databaseName: singmeasong
+    user: singmeasong
+    plan: free
+
+services:
+  - type: web
+    name: sing-me-a-song-api
+    runtime: node
+    plan: free
+    rootDir: back-end
+    buildCommand: npm ci && npm run build
+    startCommand: npx prisma migrate deploy && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sing-me-a-song-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "20"
+
+  - type: web
+    name: sing-me-a-song-web
+    runtime: static
+    rootDir: front-end
+    buildCommand: npm ci && npm run build
+    staticPublishPath: build
+    envVars:
+      - key: CI
+        value: "true"
+      - key: NODE_VERSION
+        value: "20"
+      # Set this to the API's public URL in the Render dashboard, then redeploy.
+      - key: REACT_APP_API_BASE_URL
+        sync: false
+    routes:
+      # Client-side routing: /top and /random must fall through to index.html.
+      - type: rewrite
+        source: /*
+        destination: /index.html

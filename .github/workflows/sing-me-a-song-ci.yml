@@ -1,0 +1,185 @@
+name: sing-me-a-song CI
+
+# Proves the project builds and passes its suites from a clean checkout.
+# Scoped to the branch and to the two project directories so the other
+# unrelated branches in this workspace repository are not affected.
+on:
+  push:
+    branches:
+      - 731-o-eh-singmeasong
+    paths:
+      - "back-end/**"
+      - "front-end/**"
+      - ".github/workflows/sing-me-a-song-ci.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "back-end/**"
+      - "front-end/**"
+      - ".github/workflows/sing-me-a-song-ci.yml"
+  workflow_dispatch:
+
+jobs:
+  api:
+    name: API build and tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: singmeasong_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    defaults:
+      run:
+        working-directory: back-end
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: back-end/package-lock.json
+
+      - run: npm ci
+
+      # Throwaway credentials for the ephemeral service container above -
+      # nothing sensitive, and nothing that exists outside this job.
+      - name: Write .env.test
+        run: |
+          cat > .env.test <<'EOF'
+          DATABASE_URL="postgresql://postgres:postgres@localhost:5432/singmeasong_test?schema=public"
+          PORT=5000
+          NODE_ENV=test
+          MODE=TEST
+          EOF
+
+      - name: Compile TypeScript
+        run: npm run build
+
+      - name: Unit and integration tests
+        run: npm test
+
+  web:
+    name: Front-end build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: front-end
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: front-end/package-lock.json
+
+      - run: npm ci --ignore-scripts
+
+      # CI=true makes create-react-app treat lint warnings as errors, which is
+      # exactly the condition that used to break the build here.
+      - name: Build
+        env:
+          CI: true
+          REACT_APP_API_BASE_URL: http://localhost:5000
+        run: npm run build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: front-end-build
+          path: front-end/build
+          retention-days: 7
+
+  e2e:
+    name: End-to-end (Cypress)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: singmeasong_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/singmeasong_e2e?schema=public
+      PORT: 5000
+      # /tests/reset and /tests/seed are required by the suite and only exist
+      # while MODE=TEST. A production deployment must leave this unset.
+      MODE: TEST
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install API
+        working-directory: back-end
+        run: npm ci
+
+      - name: Migrate and build API
+        working-directory: back-end
+        run: |
+          npx prisma migrate deploy
+          npm run build
+
+      - name: Start API from the compiled output
+        working-directory: back-end
+        run: npm start &
+
+      - name: Install front-end
+        working-directory: front-end
+        run: npm ci
+
+      - name: Build front-end
+        working-directory: front-end
+        env:
+          CI: true
+          REACT_APP_API_BASE_URL: http://localhost:5000
+        run: npm run build
+
+      - name: Serve the production build
+        working-directory: front-end
+        run: npx --yes serve@14 -s build -l 3000 --no-clipboard &
+
+      - name: Wait for both servers
+        run: npx --yes wait-on@7 http://localhost:5000/health http://localhost:3000 --timeout 120000
+
+      - name: Cypress
+        working-directory: front-end
+        env:
+          CYPRESS_BASE_URL: http://localhost:3000
+          CYPRESS_API_URL: http://localhost:5000
+        run: npx cypress run
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: front-end/cypress/screenshots
+          retention-days: 7

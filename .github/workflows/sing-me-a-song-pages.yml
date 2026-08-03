@@ -1,0 +1,84 @@
+name: sing-me-a-song deploy front-end to Pages
+
+# Publishes the production build into gh-pages under /731-o-eh-singmeasong/,
+# leaving the other branches' folders on that branch untouched.
+#
+# REQUIREMENTS (see README "Deployment"):
+#   * GitHub Pages must be enabled for this repository. It currently is not:
+#     Pages is unavailable for private repositories on the Free plan, so the
+#     repository has to be public or on a paid plan first.
+#   * Set the repository variable API_BASE_URL to the deployed API's URL.
+#     Without it the build falls back to http://localhost:5000, which a hosted
+#     page cannot reach.
+on:
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: "Public API base URL (overrides the API_BASE_URL variable)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: front-end/package-lock.json
+
+      - name: Install
+        working-directory: front-end
+        run: npm ci --ignore-scripts
+
+      - name: Build
+        working-directory: front-end
+        env:
+          CI: true
+          # Served from a subdirectory, so asset URLs need that prefix.
+          PUBLIC_URL: /ai-training-workspace-may/731-o-eh-singmeasong
+          REACT_APP_API_BASE_URL: ${{ inputs.api_base_url || vars.API_BASE_URL }}
+        run: npm run build
+
+      - name: Add SPA fallback
+        working-directory: front-end
+        # GitHub Pages has no rewrite rules; serving index.html as 404.html is
+        # the standard way to keep /top and /random working on a hard refresh.
+        run: cp build/index.html build/404.html
+
+      - name: Publish to gh-pages/731-o-eh-singmeasong
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          rm -rf /tmp/pages
+          git worktree add --no-checkout /tmp/pages origin/gh-pages 2>/dev/null \
+            || git worktree add --detach /tmp/pages
+          cd /tmp/pages
+          git checkout gh-pages 2>/dev/null || git checkout --orphan gh-pages
+          git reset --hard "origin/gh-pages" 2>/dev/null || true
+
+          # Only this branch's folder is replaced.
+          rm -rf 731-o-eh-singmeasong
+          mkdir -p 731-o-eh-singmeasong
+          cp -r "$GITHUB_WORKSPACE/front-end/build/." 731-o-eh-singmeasong/
+          touch .nojekyll
+
+          git add -A
+          git commit -m "deploy(web): publish 731-o-eh-singmeasong front-end" || {
+            echo "nothing to publish"; exit 0;
+          }
+          git push origin gh-pages
