@@ -1,0 +1,23 @@
+{
+  "name": "sing-me-a-song",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "install:all": "npm --prefix back-end ci && npm --prefix front-end ci",
+    "dev:backend": "npm --prefix back-end run dev",
+    "dev:frontend": "npm --prefix front-end start",
+    "build": "npm --prefix back-end run build && npm --prefix front-end run build",
+    "build:site": "node scripts/build-site.mjs",
+    "start": "npm --prefix back-end start",
+    "test": "npm --prefix back-end test",
+    "test:unit": "npm --prefix back-end run test:unit",
+    "test:integration": "npm --prefix back-end run test:integration",
+    "test:frontend": "npm --prefix front-end test -- --watchAll=false",
+    "test:smoke": "node scripts/smoke-test.mjs",
+    "test:site": "node --test site/worker.test.mjs"
+  }
+}

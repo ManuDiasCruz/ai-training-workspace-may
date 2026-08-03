@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: sing-me-a-song
+    runtime: node
+    buildCommand: npm --prefix back-end ci && npm --prefix front-end ci && npm run build
+    startCommand: npm --prefix back-end run db:migrate && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sing-me-a-song-db
+          property: connectionString
+
+databases:
+  - name: sing-me-a-song-db
