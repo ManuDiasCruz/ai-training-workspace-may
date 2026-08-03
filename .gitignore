@@ -1,0 +1,5 @@
+.appdata/
+.localappdata/
+.pnpm-home/
+.DS_Store
+*.log

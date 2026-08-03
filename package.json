@@ -1,0 +1,19 @@
+{
+  "name": "sing-me-a-song",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full-stack music recommendation and voting application",
+  "scripts": {
+    "install:all": "npm --prefix back-end ci && npm --prefix front-end ci",
+    "build": "npm --prefix back-end run build && npm --prefix front-end run build",
+    "start": "npm --prefix back-end start",
+    "dev:api": "npm --prefix back-end run dev",
+    "dev:web": "npm --prefix front-end start",
+    "test": "npm --prefix back-end test",
+    "test:unit": "npm --prefix back-end run test:unit",
+    "test:e2e": "npm --prefix front-end exec cypress run"
+  },
+  "engines": {
+    "node": ">=18 <21"
+  }
+}

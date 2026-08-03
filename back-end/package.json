@@ -6,6 +6,7 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "prisma generate && tsc",
+    "db:deploy": "prisma migrate deploy",
     "start": "node dist/server.js",
     "dev": "nodemon --watch src --ext ts --exec \"node --loader ts-node/esm src/server.ts\"",
     "dev:test": "dotenv -e .env.test -- nodemon --watch src --ext ts --exec \"node --loader ts-node/esm src/server.ts\"",
