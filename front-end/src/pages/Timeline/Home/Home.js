@@ -7,7 +7,7 @@ import CreateNewRecommendation from "../../../components/CreateNewRecommendation
 import Recommendation from "../../../components/Recommendation";
 
 export default function Home() {
-  const { recommendations, loadingRecommendations, listRecommendations } = useRecommendations();
+  const { recommendations, loadingRecommendations, listRecommendations, recommendationsError } = useRecommendations();
   const { loadingCreatingRecommendation, createRecommendation, creatingRecommendationError } = useCreateRecommendation();
 
   const handleCreateRecommendation = async (recommendation) => {
@@ -24,6 +24,10 @@ export default function Home() {
       alert("Error creating recommendation!");
     }
   }, [creatingRecommendationError]);
+
+  if (recommendationsError) {
+    return <div>Could not load recommendations — is the API running?</div>;
+  }
 
   if ((loadingRecommendations && !recommendations) || !recommendations) {
     return <div>Loading...</div>;
