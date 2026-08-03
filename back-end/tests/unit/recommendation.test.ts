@@ -1,11 +1,13 @@
 import { jest } from "@jest/globals";
-import { response } from "express";
-
 import { recommendationService } from "../../src/services/recommendationsService.js";
 import { recommendationRepository } from "../../src/repositories/recommendationRepository.js";
 import { createRandomSong } from "../factories/recommendationFactory.js";
 
 describe("UNIT TESTS SUITE", () => {
+
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
 
     const recommendation1 = createRandomSong();
 
@@ -38,7 +40,7 @@ describe("UNIT TESTS SUITE", () => {
                 .spyOn(recommendationRepository, "findByName")
                 .mockResolvedValueOnce(recommendation2);
 
-            expect(recommendationService.insert(recommendation1)).rejects.toEqual(
+            await expect(recommendationService.insert(recommendation1)).rejects.toEqual(
                 { message: "Recommendations names must be unique", type: "conflict" }
             );
         });
@@ -64,7 +66,7 @@ describe("UNIT TESTS SUITE", () => {
                 .spyOn(recommendationRepository, "find")
                 .mockResolvedValueOnce(null);
         
-            expect(recommendationService.upvote(1)).rejects.toEqual(
+            await expect(recommendationService.upvote(1)).rejects.toEqual(
                 { message: "", type: "not_found" }
             );
         });
@@ -109,7 +111,7 @@ describe("UNIT TESTS SUITE", () => {
                 .spyOn(recommendationRepository, "find")
                 .mockResolvedValueOnce(null);
         
-            expect(recommendationService.downvote(1)).rejects.toEqual(
+            await expect(recommendationService.downvote(1)).rejects.toEqual(
                 { message: "", type: "not_found" }
             );
         });
@@ -131,7 +133,7 @@ describe("UNIT TESTS SUITE", () => {
                 .spyOn(recommendationRepository, "find")
                 .mockResolvedValueOnce(null);
 
-            expect(recommendationService.getById(1)).rejects.toEqual({
+            await expect(recommendationService.getById(1)).rejects.toEqual({
                 message: "",
                 type: "not_found",
             });
@@ -194,7 +196,7 @@ describe("UNIT TESTS SUITE", () => {
                 .spyOn(recommendationRepository, "findAll")
                 .mockResolvedValueOnce([]);
 
-            expect(recommendationService.getRandom()).rejects.toEqual({
+            await expect(recommendationService.getRandom()).rejects.toEqual({
                 message: "",
                 type: "not_found",
             });

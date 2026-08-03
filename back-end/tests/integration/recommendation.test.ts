@@ -1,4 +1,3 @@
-import { faker } from "@faker-js/faker";
 import supertest from "supertest";
 
 import app from "./../../src/app.js";
@@ -8,6 +7,10 @@ import { prisma } from "../../src/database.js";
 const agent = supertest(app);
 
 describe("INTEGRATION TESTS SUITE", () => {
+
+    afterAll(async () => {
+        await prisma.$disconnect();
+    });
 
     beforeEach(async () => {
         await prisma.$executeRaw`TRUNCATE TABLE recommendations RESTART IDENTITY`;
@@ -23,6 +26,8 @@ describe("INTEGRATION TESTS SUITE", () => {
         
             const response = await agent.post("/recommendations").send(song);
             expect(response.status).toBe(201);
+            expect(response.body).toMatchObject(song);
+            expect(response.body).toHaveProperty("id");
         
             const { name, youtubeLink } = song;
             const checkUser = await prisma.recommendation.findFirst({
@@ -62,14 +67,14 @@ describe("INTEGRATION TESTS SUITE", () => {
             expect(response.status).toBe(200);
             expect(response.body).toHaveLength(3);
         
-            expect(response.body[0].name).toBe(recommendation2.name);
-            expect(response.body[0].youtubeLink).toBe(recommendation2.youtubeLink);
+            expect(response.body[0].name).toBe(recommendation3.name);
+            expect(response.body[0].youtubeLink).toBe(recommendation3.youtubeLink);
         
-            expect(response.body[1].name).toBe(recommendation1.name);
-            expect(response.body[1].youtubeLink).toBe(recommendation1.youtubeLink);
+            expect(response.body[1].name).toBe(recommendation2.name);
+            expect(response.body[1].youtubeLink).toBe(recommendation2.youtubeLink);
 
-            expect(response.body[2].name).toBe(recommendation3.name);
-            expect(response.body[2].youtubeLink).toBe(recommendation3.youtubeLink);
+            expect(response.body[2].name).toBe(recommendation1.name);
+            expect(response.body[2].youtubeLink).toBe(recommendation1.youtubeLink);
         });
     
         it("Show empty recommendations list", async () => {
@@ -112,8 +117,8 @@ describe("INTEGRATION TESTS SUITE", () => {
             expect(response.body[0].name).toBe(recommendation1.name);
             expect(response.body[0].youtubeLink).toBe(recommendation1.youtubeLink);
         
-            expect(response.body[1].name).toBe(recommendation2.name);
-            expect(response.body[1].youtubeLink).toBe(recommendation2.youtubeLink);
+            expect(response.body[1].name).toBe(recommendation3.name);
+            expect(response.body[1].youtubeLink).toBe(recommendation3.youtubeLink);
         });
     
         it("Show a recommendation by id", async () => {
@@ -179,6 +184,32 @@ describe("INTEGRATION TESTS SUITE", () => {
         it("Downvote non-existent recommendation", async () => {
             const response = await agent.post("/recommendations/1/downvote");
             expect(response.status).toBe(404);
+        });
+
+        it("Deletes a recommendation after its score drops below -5", async () => {
+            const { body } = await agent.post("/recommendations").send(createRandomSong());
+
+            for (let count = 0; count < 6; count++) {
+                const response = await agent.post(`/recommendations/${body.id}/downvote`);
+                expect(response.status).toBe(200);
+            }
+
+            const response = await agent.get(`/recommendations/${body.id}`);
+            expect(response.status).toBe(404);
+        });
+
+        it("Rejects non-numeric recommendation identifiers", async () => {
+            const response = await agent.post("/recommendations/not-a-number/upvote");
+            expect(response.status).toBe(422);
+        });
+    });
+
+    describe("GET /health", () => {
+        it("Confirms that the application can reach PostgreSQL", async () => {
+            const response = await agent.get("/health");
+
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual({ status: "ok" });
         });
     });
 });

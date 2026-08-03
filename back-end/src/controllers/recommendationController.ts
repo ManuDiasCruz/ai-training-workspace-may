@@ -9,23 +9,19 @@ async function insert(req: Request, res: Response) {
     throw wrongSchemaError();
   }
 
-  await recommendationService.insert(req.body);
+  const recommendation = await recommendationService.insert(req.body);
 
-  res.sendStatus(201);
+  res.status(201).json(recommendation);
 }
 
 async function upvote(req: Request, res: Response) {
-  const { id } = req.params;
-
-  await recommendationService.upvote(+id);
+  await recommendationService.upvote(parsePositiveInteger(req.params.id, "id"));
 
   res.sendStatus(200);
 }
 
 async function downvote(req: Request, res: Response) {
-  const { id } = req.params;
-
-  await recommendationService.downvote(+id);
+  await recommendationService.downvote(parsePositiveInteger(req.params.id, "id"));
 
   res.sendStatus(200);
 }
@@ -42,17 +38,26 @@ async function get(req: Request, res: Response) {
 }
 
 async function getTop(req: Request, res: Response) {
-  const { amount } = req.params;
-
-  const recommendations = await recommendationService.getTop(+amount);
+  const amount = parsePositiveInteger(req.params.amount, "amount");
+  const recommendations = await recommendationService.getTop(amount);
   res.send(recommendations);
 }
 
 async function getById(req: Request, res: Response) {
-  const { id } = req.params;
-
-  const recommendation = await recommendationService.getById(+id);
+  const recommendation = await recommendationService.getById(
+    parsePositiveInteger(req.params.id, "id")
+  );
   res.send(recommendation);
+}
+
+function parsePositiveInteger(value: string, field: string) {
+  const number = Number(value);
+
+  if (!Number.isSafeInteger(number) || number < 1) {
+    throw wrongSchemaError(`${field} must be a positive integer`);
+  }
+
+  return number;
 }
 
 export const recommendationController = {
