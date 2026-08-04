@@ -1,29 +1,37 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function useAsync(handler, immediate = true) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const mounted = useRef(true);
+  const latestRequest = useRef(0);
 
-  const act = (...args) => {
+  const act = useCallback(async (...args) => {
+    const request = ++latestRequest.current;
     setLoading(true);
     setError(null);
-    return handler(...args).then((data) => {
-      setData(data);
-      setLoading(false);
-    }).catch((error) => {
-      setError(error);
-      setLoading(false);
-    });
-  };
+    try {
+      const result = await handler(...args);
+      if (mounted.current && request === latestRequest.current) setData(result);
+      return { ok: true, data: result };
+    } catch (requestError) {
+      if (mounted.current && request === latestRequest.current) setError(requestError);
+      return { ok: false, error: requestError };
+    } finally {
+      if (mounted.current && request === latestRequest.current) setLoading(false);
+    }
+  }, [handler]);
 
   useEffect(() => {
+    mounted.current = true;
     if (immediate) {
       act();
     }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => {
+      mounted.current = false;
+    };
+  }, [act, immediate]);
 
   return {
     data,
