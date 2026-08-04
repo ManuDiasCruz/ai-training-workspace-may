@@ -5,8 +5,8 @@ export interface AppError {
   message: string;
 }
 
-export function isAppError(error: object): error is AppError {
-  return (error as AppError).type !== undefined;
+export function isAppError(error: unknown): error is AppError {
+  return typeof error === "object" && error !== null && "type" in error;
 }
 
 export function errorTypeToStatusCode(type: AppErrorTypes) {

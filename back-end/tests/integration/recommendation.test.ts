@@ -1,4 +1,3 @@
-import { faker } from "@faker-js/faker";
 import supertest from "supertest";
 
 import app from "./../../src/app.js";
@@ -8,6 +7,7 @@ import { prisma } from "../../src/database.js";
 const agent = supertest(app);
 
 describe("INTEGRATION TESTS SUITE", () => {
+    afterAll(async () => prisma.$disconnect());
 
     beforeEach(async () => {
         await prisma.$executeRaw`TRUNCATE TABLE recommendations RESTART IDENTITY`;
@@ -62,14 +62,14 @@ describe("INTEGRATION TESTS SUITE", () => {
             expect(response.status).toBe(200);
             expect(response.body).toHaveLength(3);
         
-            expect(response.body[0].name).toBe(recommendation2.name);
-            expect(response.body[0].youtubeLink).toBe(recommendation2.youtubeLink);
+            expect(response.body[0].name).toBe(recommendation3.name);
+            expect(response.body[0].youtubeLink).toBe(recommendation3.youtubeLink);
         
-            expect(response.body[1].name).toBe(recommendation1.name);
-            expect(response.body[1].youtubeLink).toBe(recommendation1.youtubeLink);
+            expect(response.body[1].name).toBe(recommendation2.name);
+            expect(response.body[1].youtubeLink).toBe(recommendation2.youtubeLink);
 
-            expect(response.body[2].name).toBe(recommendation3.name);
-            expect(response.body[2].youtubeLink).toBe(recommendation3.youtubeLink);
+            expect(response.body[2].name).toBe(recommendation1.name);
+            expect(response.body[2].youtubeLink).toBe(recommendation1.youtubeLink);
         });
     
         it("Show empty recommendations list", async () => {
@@ -112,8 +112,8 @@ describe("INTEGRATION TESTS SUITE", () => {
             expect(response.body[0].name).toBe(recommendation1.name);
             expect(response.body[0].youtubeLink).toBe(recommendation1.youtubeLink);
         
-            expect(response.body[1].name).toBe(recommendation2.name);
-            expect(response.body[1].youtubeLink).toBe(recommendation2.youtubeLink);
+            expect(response.body[1].name).toBe(recommendation3.name);
+            expect(response.body[1].youtubeLink).toBe(recommendation3.youtubeLink);
         });
     
         it("Show a recommendation by id", async () => {
