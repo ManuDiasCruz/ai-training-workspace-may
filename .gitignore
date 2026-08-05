@@ -1,0 +1,7 @@
+.DS_Store
+.local-pg/
+.local-pg.log
+.api-out.log
+.api-err.log
+.pnpm-store/
+*.log

@@ -1,0 +1,28 @@
+# Preview/hobby deployment. Review Render's free-instance limitations before use.
+databases:
+  - name: sing-me-a-song-db
+    plan: free
+    region: ohio
+    databaseName: sing_me_a_song
+    ipAllowList: []
+
+services:
+  - type: web
+    name: sing-me-a-song
+    runtime: node
+    plan: free
+    region: ohio
+    branch: 731-d-h-singmeasong
+    buildCommand: npm ci --prefix back-end && npm run build --prefix back-end && npm ci --prefix front-end && npm run build --prefix front-end
+    # Free web services do not have a pre-deploy command. migrate deploy is idempotent.
+    startCommand: npm run migrate:deploy --prefix back-end && npm start --prefix back-end
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sing-me-a-song-db
+          property: connectionString
+      - key: SERVE_FRONTEND
+        value: "true"
+      - key: CYPRESS_INSTALL_BINARY
+        value: "0"

@@ -1,124 +1,134 @@
-# 🦜 Parrot Memory Card Game
+# Sing Me a Song
 
-A small browser memory game: flip the cards two at a time and find every
-matching pair of parrots in as few moves as possible. Built with plain
-**HTML, CSS and JavaScript** — no build step and no dependencies.
+Sing Me a Song is a small full-stack music recommendation app. Users submit a name and an HTTPS YouTube link, browse the ten newest recommendations, upvote or downvote them, view the top ten by score, and ask for a weighted random recommendation. A recommendation is removed after its score drops below -5.
 
-![Desktop preview](img/desktop.png)
+This branch imports the original [`sing-me-a-song`](https://github.com/ManuDiasCruz/sing-me-a-song) project into [`ai-training-workspace-may`](https://github.com/ManuDiasCruz/ai-training-workspace-may). The original Create React App documentation remains in [`front-end/README.md`](front-end/README.md).
 
-## How to play
+## Project layout and flow
 
-1. On load you're asked **how many cards** to play with — an even number
-   between **4 and 14**.
-2. Click a card to flip it, then flip a second card:
-   - if the two match, they stay revealed;
-   - if not, they flip back after a moment.
-3. The header tracks your number of moves (**Jogadas**) and the elapsed time
-   (**relógio**).
-4. Match every pair to win — you can then start a new game.
+| Directory | Responsibility |
+| --- | --- |
+| `front-end/` | React 18, React Router, Axios, styled-components, React Player, and Cypress smoke tests |
+| `back-end/` | Express API, Joi validation, Prisma repository/service layer, Jest unit and integration tests |
+| `back-end/prisma/` | PostgreSQL schema and versioned migration |
 
-> ℹ️ The in-game text is in Brazilian Portuguese (the original author's language).
+The browser calls `/recommendations`. The controller validates input and route parameters, the service applies uniqueness/voting/random rules, and Prisma persists the `Recommendation` model in PostgreSQL. In local development the React server calls the API on port 5000. The supplied production configuration builds the React app and lets Express serve it from the same origin, avoiding a separate frontend/API CORS or build-time URL coupling.
 
-## Project structure
+## Prerequisites
 
-```text
-.
-├── index.html        # markup, meta tags and asset links
-├── css/
-│   └── style.css     # colour palette + responsive layout
-├── src/
-│   └── script.js     # game logic (shuffle, flip, match, timer)
-└── img/              # parrot artwork + preview screenshots
-```
+- Node.js 20.x (`.node-version` pins the deployment family) and npm
+- PostgreSQL 13+ with two separate databases: one for development and one disposable database for tests
+- A browser for the UI; Cypress also requires its platform browser dependencies
 
-## Running locally
+## Local setup
 
-This is a static site, so all you need is a browser.
-
-**Option A — open directly**
-
-Double-click `index.html`, or open it in your browser.
-
-**Option B — local server (recommended)**
-
-A tiny static server avoids any path/caching quirks:
+1. Create PostgreSQL databases, for example `sing_me_a_song` and `sing_me_a_song_test`.
+2. Copy `back-end/.env.example` to `back-end/.env`, and replace the placeholder user/password/database with your local development connection string.
+3. Copy `back-end/.env.test.example` to `back-end/.env.test`, and point it at the **separate disposable test database**. `npm test` resets this database.
+4. Copy `front-end/.env.example` to `front-end/.env` for separate local servers.
+5. Install and migrate:
 
 ```bash
-# from the project root
-python3 -m http.server 8000
-# then open http://localhost:8000/ in your browser
+cd back-end
+npm ci
+npm run migrate:deploy
+npm run dev
 ```
 
-Any static server works (`npx serve`, the VS Code *Live Server* extension,
-etc.). An internet connection is used only to load the Google Fonts.
+In another terminal:
 
-## UI / responsiveness improvements
+```bash
+cd front-end
+npm ci
+npm start
+```
 
-This round of work delivered the client's two requests — a mobile-friendly
-layout and a **white / light-green / black** colour scheme — plus a few small
-correctness fixes.
+Open `http://localhost:3000`. The API listens on `http://localhost:5000` by default. `GET /health` returns `{ "status": "ok" }`.
 
-### Colour palette
+### Environment variables
 
-Colours are centralised as CSS variables in `css/style.css`:
+| Variable | Location | Required | Purpose |
+| --- | --- | --- | --- |
+| `DATABASE_URL` | backend | Yes | PostgreSQL Prisma connection string. Never commit a real value. |
+| `PORT` | backend | No | HTTP port; defaults to 5000 locally and is supplied by a host in production. |
+| `CORS_ORIGIN` | backend | Separate-origin UI only | Comma-separated allowed browser origins, such as `http://localhost:3000`. Omit for same-origin hosting. |
+| `MODE` | backend test only | Test server | Set `TEST` only in `.env.test` to expose `DELETE /tests/reset`. Never set it in production. |
+| `SERVE_FRONTEND` | backend | No | Set `true` to serve `front-end/build` and React Router deep links from Express. |
+| `REACT_APP_API_BASE_URL` | frontend build | Separate-origin UI only | API origin. Local example is `http://localhost:5000`; leave unset for the supplied same-origin production build. CRA embeds `REACT_APP_*` values in the public bundle, so never put secrets there. |
 
-| Token             | Value     | Use                                            |
-| ----------------- | --------- | ---------------------------------------------- |
-| `--color-bg`      | `#ffffff` | page background (was pale-lime `#EEF9BF`)      |
-| `--color-surface` | `#a7e9af` | cards / faces — light green                    |
-| `--color-border`  | `#8ed29a` | card edges — same green family                 |
-| `--color-text`    | `#000000` | all text (was teal `#75B79E` and gray)         |
+Both application `.gitignore` files exclude `.env` values while allowing the safe examples. Do not commit tokens, passwords, database URLs with real credentials, or hosting secrets.
 
-The old teal title, lime background and gray counters are gone — the UI now
-uses only white, light green and a black font, as requested.
+## Validation
 
-### Responsiveness
+```bash
+cd back-end
+npm run build
+npm test
+```
 
-- `box-sizing: border-box` applied globally.
-- Replaced the fixed `main { margin: auto 116px }` with a centred max-width
-  container and fluid `clamp()` padding.
-- Cards now size with `clamp()` widths + `aspect-ratio: 117/146` and lay out
-  using `gap`, so they **scale and wrap on any screen** instead of overflowing.
-- Fluid `clamp()` typography for the title, header counters and end message.
-- Removed the lone `@media (max-width: 335px)` rule — it left typical phones
-  (~360–430px) stuck on the desktop layout. The fluid system now covers
-  everything from small phones to large desktops.
-- `@media (hover: hover)` card-lift effect, so touch devices don't get
-  "sticky" hover states.
+`npm test` force-resets only the database selected by `.env.test`, then runs unit and PostgreSQL-backed integration tests. Check that connection string before running it.
 
-Verified at **1280px** (desktop), **390px** and **360px** (mobile):
+```bash
+cd front-end
+npm run build
+```
 
-| Desktop                     | Mobile                    |
-| --------------------------- | ------------------------- |
-| ![Desktop](img/desktop.png) | ![Mobile](img/mobile.png) |
+For end-to-end tests, start the backend in test mode and the frontend in separate terminals:
 
-### Small fixes
+```bash
+cd back-end && npm run dev:test
+cd front-end && npm start
+cd front-end && npm run test:e2e
+```
 
-- `index.html` linked `css\style.css` with a backslash; corrected to
-  `css/style.css` (browsers tolerate it, but stricter static servers 404).
-- Removed a stray `print(...)` debug call in `script.js` that resolved to
-  `window.print()` and opened the browser print dialog on invalid input.
-- Added an inline parrot-emoji favicon (removes the `/favicon.ico` 404) and a
-  `theme-color` meta tag matching the palette.
+The focused Cypress suite resets `/tests/reset`, creates a recommendation, votes, navigates through Top and Random, checks the empty random state, and checks duplicate-name feedback. Override `baseUrl` or `apiUrl` through Cypress configuration/environment if your local ports differ.
 
-## Known limitations & future improvements
+## API summary
 
-- **Card count via `prompt()`** — the game still asks for the number of cards
-  through a native `prompt()` on load. It works on mobile, but an in-page
-  start screen / selector would be friendlier. Left as-is to keep the change
-  scoped to the requested UI work.
-- **Parrot artwork is intentionally unchanged** — the colourful parrot images
-  are game *content*, so the white/light-green/black palette applies to the UI
-  chrome, not the artwork.
-- **Win / replay dialogs** use native `alert()` / `prompt()`; these could
-  become styled in-page modals.
-- **No persistence** — moves and elapsed time reset on every reload; there is
-  no high-score / best-time tracking.
-- **UI copy is Portuguese only** — no internationalisation yet.
+| Method | Route | Result |
+| --- | --- | --- |
+| `GET` | `/health` | Process liveness |
+| `POST` | `/recommendations` | Validate and create; returns the created record with status 201 |
+| `GET` | `/recommendations` | Ten newest records, newest first |
+| `GET` | `/recommendations/random` | Weighted random recommendation or 404 when empty |
+| `GET` | `/recommendations/top/:amount` | Up to 100 records, score descending with deterministic ID tie-break |
+| `GET` | `/recommendations/:id` | One record or 404 |
+| `POST` | `/recommendations/:id/upvote` | Increment score |
+| `POST` | `/recommendations/:id/downvote` | Decrement; remove below -5 |
+| `DELETE` | `/tests/reset` | Test-mode-only database reset |
 
-## Credits
+Invalid bodies and positive-integer parameters return 422; duplicate names return 409; missing records return 404. Unexpected errors return a generic JSON 500 response without exposing internals.
 
-Original game by
-[@ManuDiasCruz](https://github.com/ManuDiasCruz/parrots-memory-card-game).
-Parrot GIFs come from the community "Party Parrot" set. This branch adds the
-responsive layout and the white/light-green/black palette.
+## Deployment (Render Blueprint)
+
+[`render.yaml`](render.yaml) defines a single Node web service and a managed PostgreSQL database in the same region. The web service builds both packages, runs Prisma's idempotent `migrate deploy` before starting, serves the React build from Express, and uses `/health` for the host check. `DATABASE_URL` is wired from the database resource without a credential in Git.
+
+1. Push `731-d-h-singmeasong` to GitHub.
+2. In Render, create a Blueprint from `ManuDiasCruz/ai-training-workspace-may` and select this branch. Review the proposed resources and costs before applying.
+3. Wait for the database and web service deploy to succeed. Do **not** set `MODE=TEST` in the service.
+4. Open the service's `onrender.com` URL and verify `/health`, the home page, creating an HTTPS YouTube recommendation, upvoting, Top, Random, and a direct `/top` refresh.
+5. Inspect service logs if migration or startup fails; confirm `DATABASE_URL` is the internal connection string and both resources are in the same region.
+
+The Blueprint uses free instance types for a preview/hobby deployment. Render's free web service spins down after inactivity, and its free PostgreSQL database expires after 30 days and has no backups. Upgrade to appropriate paid instances and backup/monitoring policies before using this for durable production data. See [Render's free-instance limitations](https://render.com/docs/free) and [Blueprint reference](https://render.com/docs/blueprint-spec).
+
+For another host, run `npm ci` and `npm run build` in each package, provide a managed `DATABASE_URL`, run `npm run migrate:deploy` from `back-end`, set `SERVE_FRONTEND=true`, and start `back-end/dist/server.js` with the host-provided `PORT`. If frontend and API are hosted separately, build the frontend with its public API origin and set `CORS_ORIGIN` to the exact frontend origin.
+
+## Repairs in this branch
+
+- Corrected the backend build output and production start entry point; added dotenv loading and graceful shutdown.
+- Added safe development/test environment examples and cross-platform test scripts.
+- Repaired ESM test-mode imports and removed the undeclared CommonJS random-video dependency from test factories.
+- Returned created records, validated numeric route parameters and playable HTTPS YouTube URLs, handled Prisma uniqueness/not-found races, and made top-score ties deterministic.
+- Added a health route, explicit JSON 404/500 responses, configurable CORS, and same-origin SPA serving with deep-link fallback.
+- Repaired frontend API defaults, request error propagation, retry/empty states, form retention on failure, and accessible disabled vote controls.
+- Replaced imported Cypress tutorial/stale specs with a focused application smoke suite and corrected the test reset URL.
+- Added a Render Blueprint and deployment/runbook documentation.
+
+## Known limitations and future work
+
+- The Render Blueprint is deployment-ready but requires an authorized Render account/workspace to provision. A live URL cannot be claimed until that deployment is applied and verified.
+- The legacy Create React App and Prisma 3 dependency trees have audit findings and aging tooling. Plan controlled upgrades with regression tests rather than `npm audit fix --force`.
+- Random selection currently samples the repository's limited candidate lists; a database-side weighted/random strategy would scale better.
+- Voting is anonymous and unrestricted. A public deployment should add rate limiting, abuse controls, and an authentication/ownership policy appropriate to the product.
+- `/health` is liveness only. Add a separate database readiness probe and monitoring/alerting for production.
+- Cypress requires a supported browser environment. If browser execution is unavailable, backend integration and production HTTP smoke tests still validate the API, but they do not replace interactive UI QA.
