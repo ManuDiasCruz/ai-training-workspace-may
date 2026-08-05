@@ -1,4 +1,3 @@
-import { faker } from "@faker-js/faker";
 import supertest from "supertest";
 
 import app from "./../../src/app.js";
@@ -8,6 +7,10 @@ import { prisma } from "../../src/database.js";
 const agent = supertest(app);
 
 describe("INTEGRATION TESTS SUITE", () => {
+
+    afterAll(async () => {
+        await prisma.$disconnect();
+    });
 
     beforeEach(async () => {
         await prisma.$executeRaw`TRUNCATE TABLE recommendations RESTART IDENTITY`;
@@ -62,14 +65,14 @@ describe("INTEGRATION TESTS SUITE", () => {
             expect(response.status).toBe(200);
             expect(response.body).toHaveLength(3);
         
-            expect(response.body[0].name).toBe(recommendation2.name);
-            expect(response.body[0].youtubeLink).toBe(recommendation2.youtubeLink);
+            expect(response.body[0].name).toBe(recommendation3.name);
+            expect(response.body[0].youtubeLink).toBe(recommendation3.youtubeLink);
         
-            expect(response.body[1].name).toBe(recommendation1.name);
-            expect(response.body[1].youtubeLink).toBe(recommendation1.youtubeLink);
+            expect(response.body[1].name).toBe(recommendation2.name);
+            expect(response.body[1].youtubeLink).toBe(recommendation2.youtubeLink);
 
-            expect(response.body[2].name).toBe(recommendation3.name);
-            expect(response.body[2].youtubeLink).toBe(recommendation3.youtubeLink);
+            expect(response.body[2].name).toBe(recommendation1.name);
+            expect(response.body[2].youtubeLink).toBe(recommendation1.youtubeLink);
         });
     
         it("Show empty recommendations list", async () => {
@@ -112,8 +115,8 @@ describe("INTEGRATION TESTS SUITE", () => {
             expect(response.body[0].name).toBe(recommendation1.name);
             expect(response.body[0].youtubeLink).toBe(recommendation1.youtubeLink);
         
-            expect(response.body[1].name).toBe(recommendation2.name);
-            expect(response.body[1].youtubeLink).toBe(recommendation2.youtubeLink);
+            expect(response.body[1].name).toBe(recommendation3.name);
+            expect(response.body[1].youtubeLink).toBe(recommendation3.youtubeLink);
         });
     
         it("Show a recommendation by id", async () => {
@@ -179,6 +182,35 @@ describe("INTEGRATION TESTS SUITE", () => {
         it("Downvote non-existent recommendation", async () => {
             const response = await agent.post("/recommendations/1/downvote");
             expect(response.status).toBe(404);
+        });
+
+        it("Removes a recommendation below -5", async () => {
+            const { body } = await agent.post("/recommendations").send(createRandomSong());
+            for (let i = 0; i < 6; i++) {
+                expect((await agent.post(`/recommendations/${body.id}/downvote`)).status).toBe(200);
+            }
+            expect((await agent.get(`/recommendations/${body.id}`)).status).toBe(404);
+        });
+    });
+
+    describe("validation and operational routes", () => {
+        it("rejects invalid numeric parameters without a server error", async () => {
+            expect((await agent.get("/recommendations/not-a-number")).status).toBe(422);
+            expect((await agent.post("/recommendations/0/upvote")).status).toBe(422);
+            expect((await agent.get("/recommendations/top/101")).status).toBe(422);
+        });
+
+        it("rejects non-YouTube and non-HTTPS links", async () => {
+            const song = createRandomSong();
+            expect((await agent.post("/recommendations").send({ ...song, youtubeLink: "https://youtube.com.evil.example/watch?v=x" })).status).toBe(422);
+            expect((await agent.post("/recommendations").send({ ...song, youtubeLink: "http://youtu.be/example" })).status).toBe(422);
+        });
+
+        it("exposes health and test reset routes", async () => {
+            expect((await agent.get("/health")).body).toEqual({ status: "ok" });
+            await agent.post("/recommendations").send(createRandomSong());
+            expect((await agent.delete("/tests/reset")).status).toBe(200);
+            expect((await agent.get("/recommendations")).body).toHaveLength(0);
         });
     });
 });

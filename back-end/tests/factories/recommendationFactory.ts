@@ -7,13 +7,10 @@ export interface Song {
 };
 
 export function createRandomSong() {
-  const randomUrlGen = require("random-youtube-music-video");
-  const youtubeUrl = randomUrlGen.getRandomMusicVideoUrl();
-
-  const name = faker.name.findName();
-  const youtubeLink = youtubeUrl;
-
-  return { name, youtubeLink };
+  return {
+    name: `${faker.name.findName()}-${faker.datatype.uuid()}`,
+    youtubeLink: `https://www.youtube.com/watch?v=${faker.random.alphaNumeric(11)}`,
+  };
 };
 
 // export function createSong() {

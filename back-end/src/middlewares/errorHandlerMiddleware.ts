@@ -1,21 +1,32 @@
 import { Request, Response, NextFunction } from "express";
 import {
-  AppError,
   errorTypeToStatusCode,
   isAppError
 } from "../utils/errorUtils.js";
 
 export function errorHandlerMiddleware(
-  err: Error | AppError,
-  req: Request,
+  err: unknown,
+  _req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) {
-  console.log(err);
-
   if (isAppError(err)) {
-    return res.status(errorTypeToStatusCode(err.type)).send(err.message);
+    return res.status(errorTypeToStatusCode(err.type)).json({ error: err.message || err.type });
   }
 
-  return res.sendStatus(500);
+  // A concurrent insert can race the service's friendly uniqueness check.
+  if (hasPrismaCode(err, "P2002")) {
+    return res.status(409).json({ error: "Recommendations names must be unique" });
+  }
+  if (hasPrismaCode(err, "P2025")) {
+    return res.status(404).json({ error: "Recommendation not found" });
+  }
+
+  console.error("Unhandled application error", err);
+  return res.status(500).json({ error: "Internal server error" });
+}
+
+function hasPrismaCode(error: unknown, code: string): boolean {
+  return typeof error === "object" && error !== null &&
+    (error as { code?: unknown }).code === code;
 }

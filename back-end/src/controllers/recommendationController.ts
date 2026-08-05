@@ -9,15 +9,14 @@ async function insert(req: Request, res: Response) {
     throw wrongSchemaError();
   }
 
-  await recommendationService.insert(req.body);
-
-  res.sendStatus(201);
+  const recommendation = await recommendationService.insert(validation.value);
+  res.status(201).json(recommendation);
 }
 
 async function upvote(req: Request, res: Response) {
   const { id } = req.params;
 
-  await recommendationService.upvote(+id);
+  await recommendationService.upvote(parsePositiveInteger(id, "id"));
 
   res.sendStatus(200);
 }
@@ -25,7 +24,7 @@ async function upvote(req: Request, res: Response) {
 async function downvote(req: Request, res: Response) {
   const { id } = req.params;
 
-  await recommendationService.downvote(+id);
+  await recommendationService.downvote(parsePositiveInteger(id, "id"));
 
   res.sendStatus(200);
 }
@@ -44,15 +43,28 @@ async function get(req: Request, res: Response) {
 async function getTop(req: Request, res: Response) {
   const { amount } = req.params;
 
-  const recommendations = await recommendationService.getTop(+amount);
+  const recommendations = await recommendationService.getTop(
+    parsePositiveInteger(amount, "amount", 100)
+  );
   res.send(recommendations);
 }
 
 async function getById(req: Request, res: Response) {
   const { id } = req.params;
 
-  const recommendation = await recommendationService.getById(+id);
+  const recommendation = await recommendationService.getById(
+    parsePositiveInteger(id, "id")
+  );
   res.send(recommendation);
+}
+
+function parsePositiveInteger(value: string, name: string, maximum = Number.MAX_SAFE_INTEGER) {
+  if (!/^\d+$/.test(value)) throw wrongSchemaError(`${name} must be a positive integer`);
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > maximum) {
+    throw wrongSchemaError(`${name} must be a positive integer no greater than ${maximum}`);
+  }
+  return parsed;
 }
 
 export const recommendationController = {
