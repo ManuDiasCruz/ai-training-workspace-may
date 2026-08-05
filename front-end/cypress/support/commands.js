@@ -1,10 +1,10 @@
 Cypress.Commands.add("resetData", () => {
-    cy.request("DELETE", "http://localhost:5000/reset");
+    cy.request("DELETE", `${Cypress.env("apiUrl")}/tests/reset`);
 });
 
 //createPost
 Cypress.Commands.add("addSong", (song) => {
-    cy.request("POST", "http://localhost:5000/recommendations", song).then(
+    cy.request("POST", `${Cypress.env("apiUrl")}/recommendations`, song).then(
         (res) => cy.log(res)
     );
 });
