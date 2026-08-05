@@ -39,4 +39,3 @@ def initialize_database(database_path: str | Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with connect(path) as connection:
         connection.executescript(SCHEMA)
-

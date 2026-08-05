@@ -15,4 +15,3 @@ def get_database_path() -> Path:
     """Return the configured SQLite path, defaulting to data/shop.db."""
 
     return Path(os.getenv("SHOP_API_DATABASE", DEFAULT_DATABASE_PATH))
-
