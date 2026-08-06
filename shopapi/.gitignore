@@ -8,3 +8,4 @@ venv/
 # Local database artifacts
 data/*.db
 data/*.db-journal
+tests/.tmp/
