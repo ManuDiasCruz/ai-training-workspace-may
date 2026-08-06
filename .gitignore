@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Generated SQLite database — rebuild it with:
+#   python -m scripts.import_dataset
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Editor / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
