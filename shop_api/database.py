@@ -37,7 +37,7 @@ def connect(database_path: str | Path | None = None) -> sqlite3.Connection:
     """Open a SQLite connection configured for API-friendly access."""
 
     path = Path(database_path) if database_path is not None else get_database_path()
-    connection = sqlite3.connect(path, timeout=30)
+    connection = sqlite3.connect(path, timeout=30, check_same_thread=False)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA foreign_keys = ON")
     connection.execute("PRAGMA busy_timeout = 30000")
@@ -54,4 +54,3 @@ def initialize_database(database_path: str | Path | None = None) -> Path:
         connection.executescript(SCHEMA)
 
     return path
-
