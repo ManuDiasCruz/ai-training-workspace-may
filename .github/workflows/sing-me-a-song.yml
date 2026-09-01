@@ -1,0 +1,60 @@
+name: Sing me a Song
+on:
+  push:
+    branches: [0827-beeh-singasong]
+    paths: ['sing-me-a-song/**', '.github/workflows/sing-me-a-song.yml']
+  pull_request:
+    paths: ['sing-me-a-song/**', '.github/workflows/sing-me-a-song.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: sing-me-a-song
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sing_me_a_song_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      # Ephemeral CI-only database, not a production credential.
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sing_me_a_song_test
+      CORS_ORIGIN: http://localhost:3000
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            sing-me-a-song/back-end/package-lock.json
+            sing-me-a-song/front-end/package-lock.json
+      - run: npm run setup
+      - run: npm test
+      - run: npm run build
+      - name: End-to-end flows with the real API and PostgreSQL
+        run: |
+          npm run dev:test --prefix back-end > "$RUNNER_TEMP/song-api.log" 2>&1 &
+          api_pid=$!
+          BROWSER=none npm start --prefix front-end > "$RUNNER_TEMP/song-web.log" 2>&1 &
+          web_pid=$!
+          trap 'kill "$api_pid" "$web_pid" 2>/dev/null || true' EXIT
+          node scripts/wait-for.mjs http://localhost:5000/health http://localhost:3000
+          npm run test:e2e --prefix front-end
+      - name: Production same-origin smoke test
+        run: |
+          NODE_ENV=production PORT=5002 npm run start:deploy > "$RUNNER_TEMP/song-production.log" 2>&1 &
+          production_pid=$!
+          trap 'kill "$production_pid" 2>/dev/null || true' EXIT
+          node scripts/wait-for.mjs http://localhost:5002/health
+          SMOKE_BASE_URL=http://localhost:5002 npm run test:smoke

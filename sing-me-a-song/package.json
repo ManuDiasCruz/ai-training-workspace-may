@@ -1,0 +1,14 @@
+{
+  "name": "sing-me-a-song",
+  "private": true,
+  "version": "1.0.0",
+  "engines": { "node": "22.x" },
+  "scripts": {
+    "setup": "npm ci --include=dev --prefix back-end && npm ci --include=dev --prefix front-end",
+    "build": "npm run build --prefix front-end && npm run build --prefix back-end",
+    "start": "npm start --prefix back-end",
+    "start:deploy": "npm run db:migrate --prefix back-end && npm start --prefix back-end",
+    "test": "npm test --prefix back-end && npm test --prefix front-end",
+    "test:smoke": "node scripts/smoke.mjs"
+  }
+}
