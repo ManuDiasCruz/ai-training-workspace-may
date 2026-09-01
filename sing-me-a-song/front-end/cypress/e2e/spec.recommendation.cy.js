@@ -38,7 +38,7 @@ describe("Recommendation flows against the real API", () => {
     cy.get('[role="alert"]').should("contain", "valid YouTube");
   });
   it("shows a retry after an API failure", () => {
-    cy.intercept("GET", "**/api/recommendations", {times: 1, statusCode: 503, body: "Unavailable"});
+    cy.intercept({method: "GET", url: "**/api/recommendations", times: 1}, {statusCode: 503, body: "Unavailable"});
     cy.visit("/");
     cy.contains("Could not load recommendations");
     cy.contains("button", "Retry").click();

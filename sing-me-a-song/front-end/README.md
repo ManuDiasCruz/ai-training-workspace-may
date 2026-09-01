@@ -1,3 +1,9 @@
+# Sing Me a Song frontend
+
+Start with the [full-stack setup guide](../README.md). The original Create React App documentation is preserved below. API requests default to `/api`; development proxies to port 5000, and production is served by Express. `npm run test:ci` runs regression tests and `npm run test:e2e` runs the repaired Cypress spec against an explicitly enabled disposable test API. Historical Cypress examples/specs are retained but excluded from the active spec pattern.
+
+---
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
