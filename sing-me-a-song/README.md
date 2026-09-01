@@ -59,6 +59,8 @@ npm start --prefix front-end
 
 Open [localhost:3000](http://localhost:3000). No frontend `.env` is needed for the default proxy.
 
+`npm run setup` explicitly generates the Prisma client after installing backend dependencies. This is required for clean installs invoked with npm's `--prefix`; do not rely on Prisma's dependency postinstall hook finding the nested schema. If installing only the backend, also run `npm run db:generate --prefix back-end` before starting it or running tests.
+
 ## Environment variables
 
 | Variable | Where | Purpose |

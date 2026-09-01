@@ -11,6 +11,7 @@
     "dev": "tsx watch src/server.ts",
     "dev:test": "node scripts/test.mjs serve",
     "db:migrate": "prisma migrate deploy",
+    "db:generate": "prisma generate",
     "test:integration": "node scripts/test.mjs integration",
     "test:unit": "node scripts/test.mjs unit",
     "test": "npm run test:unit && npm run test:integration"

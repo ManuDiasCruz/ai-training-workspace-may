@@ -30,6 +30,8 @@ The YouTube iframe and controls loaded. This is not a guarantee of playback for 
 
 The production smoke script creates and cleans up its own uniquely named record. The synthetic manual-browser record was also removed. Cypress initially exceeded its 30-second first-start verification timeout; retrying with `CYPRESS_VERIFY_TIMEOUT=120000` verified the browser and all four specs passed. Verification was not skipped. Total passing tests: **60**. The Linux CI workflow is additional verification and its remote status should be checked separately.
 
+The first clean Linux CI run exposed missing generated Prisma model types: the dependency postinstall hook did not find the nested schema when installation used `npm --prefix`. Setup now explicitly runs the backend's `db:generate` script before tests or development startup. This fixes the actual clean-install path, not just the order of CI checks.
+
 ## Dependency audits
 
 The final frontend production-only audit (`npm audit --omit=dev`) reports **zero findings**. The full frontend tree still reports **35 findings: 10 low, 7 moderate, 16 high, 2 critical**, in retained build/test tooling. Do not confuse a production-only audit with an audit of the whole repository.
