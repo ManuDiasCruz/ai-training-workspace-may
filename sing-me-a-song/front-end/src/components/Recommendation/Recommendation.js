@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import { useEffect } from "react";
 
 import ReactPlayer from "react-player";
 import { GoArrowUp, GoArrowDown } from "react-icons/go";
@@ -8,41 +7,28 @@ import useUpvoteRecommendation from "../../hooks/api/useUpvoteRecommendation";
 import useDownvoteRecommendation from "../../hooks/api/useDownvoteRecommendation";
 
 export default function Recommendation({ name, youtubeLink, score, id, onUpvote = () => 0, onDownvote = () => 0 }) {
-  const { upvoteRecommendation, errorUpvotingRecommendation } = useUpvoteRecommendation();
-  const { downvoteRecommendation, errorDownvotingRecommendation } = useDownvoteRecommendation();
+  const { upvoteRecommendation, errorUpvotingRecommendation, loadingUpvoteRecommendations } = useUpvoteRecommendation();
+  const { downvoteRecommendation, errorDownvotingRecommendation, loadingDownvoteRecommendations } = useDownvoteRecommendation();
+  const pending = loadingUpvoteRecommendations || loadingDownvoteRecommendations;
 
   const handleUpvote = async () => {
-    await upvoteRecommendation(id);
-    onUpvote();
+    try { await upvoteRecommendation(id); await onUpvote(); } catch { /* shown below or by the parent */ }
   };
 
   const handleDownvote = async () => {
-    await downvoteRecommendation(id);
-    onDownvote();
+    try { await downvoteRecommendation(id); await onDownvote(); } catch { /* shown below or by the parent */ }
   };
-
-  useEffect(() => {
-    if (errorUpvotingRecommendation) {
-      alert("Error upvoting recommendation!");
-    }
-  }, [errorUpvotingRecommendation]);
-
-  useEffect(() => {
-    if (errorDownvotingRecommendation) {
-      alert("Error downvoting recommendation!");
-    }
-
-  }, [errorDownvotingRecommendation]);
 
   return (
     <Container>
       <Row>{name}</Row>
-      <ReactPlayer url={youtubeLink} width="100%" height="100%" />
-      <Row>
-        <GoArrowUp size="24px" onClick={handleUpvote} />
-        {score}
-        <GoArrowDown size="24px" onClick={handleDownvote} />
+      <ReactPlayer url={youtubeLink} width="100%" height="300px" controls />
+      <Row data-identifier="vote-menu">
+        <VoteButton aria-label={`Upvote ${name}`} data-identifier="upvote" disabled={pending} onClick={handleUpvote}><GoArrowUp size="24px" /></VoteButton>
+        <span aria-label="Score">{score}</span>
+        <VoteButton aria-label={`Downvote ${name}`} data-identifier="downvote" disabled={pending} onClick={handleDownvote}><GoArrowDown size="24px" /></VoteButton>
       </Row>
+      {(errorUpvotingRecommendation || errorDownvotingRecommendation) && <p role="alert">Could not save your vote. Please try again.</p>}
     </Container>
   );
 }
@@ -63,4 +49,13 @@ const Row = styled.div`
   align-items: center;
   gap: 6px;
   cursor: pointer;
+`;
+
+const VoteButton = styled.button`
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 3px;
+  cursor: pointer;
+  &:disabled { opacity: .5; cursor: wait; }
 `;

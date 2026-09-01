@@ -7,27 +7,30 @@ export default function CreateNewRecommendation({ onCreateNewRecommendation = ()
   const [name, setName] = useState("");
   const [link, setLink] = useState("");
 
-  const handleCreateRecommendation = () => {
-    onCreateNewRecommendation({
+  const handleCreateRecommendation = async (event) => {
+    event.preventDefault();
+    const created = await onCreateNewRecommendation({
       name,
       link
     });
-    setLink("");
-    setName("");
+    if (created) {
+      setLink("");
+      setName("");
+    }
   }
   
   return (
-    <Container>
-      <Input type="text" placeholder="Name" value={name} onChange={e => setName(e.target.value)} disabled={disabled} />
-      <Input type="text" placeholder="https://youtu.be/..." value={link} onChange={e => setLink(e.target.value)} disabled={disabled} />
-      <Button onClick={() => handleCreateRecommendation()} disabled={disabled}>
+    <Container onSubmit={handleCreateRecommendation}>
+      <Input aria-label="Song name" type="text" placeholder="Name" value={name} onChange={e => setName(e.target.value)} disabled={disabled} maxLength={100} />
+      <Input aria-label="YouTube link" type="text" placeholder="https://youtu.be/..." value={link} onChange={e => setLink(e.target.value)} disabled={disabled} maxLength={2048} />
+      <Button type="submit" aria-label="Add recommendation" disabled={disabled}>
         <IoReturnUpForwardOutline size="24px" color="#fff" />
       </Button>
     </Container>
   );
 }
 
-const Container = styled.div`
+const Container = styled.form`
   display: flex;
   gap: 9px;
   margin-bottom: 15px;
@@ -40,6 +43,7 @@ const Input = styled.input`
   padding: 9px 13px;
   color: #141414;
   width: 100%;
+  min-width: 0;
   font-family: "Lexend Deca", sans-serif;
 
   &:disabled {

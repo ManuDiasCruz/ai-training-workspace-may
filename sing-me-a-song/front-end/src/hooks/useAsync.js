@@ -1,29 +1,35 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 export default function useAsync(handler, immediate = true) {
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(immediate);
   const [error, setError] = useState(null);
+  const mounted = useRef(true);
+  const request = useRef(0);
+  const handlerRef = useRef(handler);
+  handlerRef.current = handler;
 
-  const act = (...args) => {
+  const act = useCallback(async (...args) => {
+    const current = ++request.current;
     setLoading(true);
     setError(null);
-    return handler(...args).then((data) => {
-      setData(data);
-      setLoading(false);
-    }).catch((error) => {
-      setError(error);
-      setLoading(false);
-    });
-  };
+    try {
+      const result = await handlerRef.current(...args);
+      if (mounted.current && current === request.current) setData(result);
+      return result;
+    } catch (failure) {
+      if (mounted.current && current === request.current) setError(failure);
+      throw failure;
+    } finally {
+      if (mounted.current && current === request.current) setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (immediate) {
-      act();
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    mounted.current = true;
+    if (immediate) act().catch(() => {}); // Error is exposed to the rendering component.
+    return () => { mounted.current = false; };
+  }, [act, immediate]);
 
   return {
     data,

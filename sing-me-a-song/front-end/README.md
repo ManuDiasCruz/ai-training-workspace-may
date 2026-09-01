@@ -1,3 +1,7 @@
+# Frontend documentation
+
+Use the corrected [project setup, environment, test, and deployment instructions](../README.md) first. The original Create React App documentation is preserved below for reference. In this repaired project, `npm test` runs once; use `npm test -- --watchAll` for watch mode. The development server proxies API requests to port 5000 unless an explicit public API origin is configured.
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

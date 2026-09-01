@@ -37,7 +37,11 @@ const StyledMenu = styled.div`
   padding: 10px 14px;
 `;
 
-const MenuItem = styled.div`
+const MenuItem = styled.button`
+  background: none;
+  border: 0;
+  color: inherit;
+  font-family: inherit;
   display: flex;
   align-items: center;
   text-transform: lowercase;
