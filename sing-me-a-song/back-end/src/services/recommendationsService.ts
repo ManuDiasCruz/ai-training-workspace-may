@@ -11,7 +11,7 @@ async function insert(createRecommendationData: CreateRecommendationData) {
   if (existingRecommendation)
     throw conflictError("Recommendations names must be unique");
 
-  await recommendationRepository.create(createRecommendationData);
+  return recommendationRepository.create(createRecommendationData);
 }
 
 async function upvote(id: number) {
@@ -65,13 +65,13 @@ async function getByScore(scoreFilter: "gt" | "lte") {
   const recommendations = await recommendationRepository.findAll({
     score: 10,
     scoreFilter,
-  });
+  }, false);
 
   if (recommendations.length > 0) {
     return recommendations;
   }
 
-  return recommendationRepository.findAll();
+  return recommendationRepository.findAll(undefined, false);
 }
 
 function getScoreFilter(random: number) {

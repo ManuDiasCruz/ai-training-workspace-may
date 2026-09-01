@@ -3,7 +3,7 @@ import { prisma } from "../database.js";
 import { CreateRecommendationData } from "../services/recommendationsService.js";
 
 async function create(createRecommendationData: CreateRecommendationData) {
-  await prisma.recommendation.create({
+  return prisma.recommendation.create({
     data: createRecommendationData,
   });
 }
@@ -13,19 +13,19 @@ interface FindAllWhere {
   scoreFilter: "lte" | "gt";
 }
 
-function findAll(findAllWhere?: FindAllWhere) {
+function findAll(findAllWhere?: FindAllWhere, limit = true) {
   const filter = getFindAllFilter(findAllWhere);
 
   return prisma.recommendation.findMany({
     where: filter,
     orderBy: { id: "desc" },
-    take: 10
+    take: limit ? 10 : undefined
   });
 }
 
 function getAmountByScore(take: number) {
   return prisma.recommendation.findMany({
-    orderBy: { score: "desc" },
+    orderBy: [{ score: "desc" }, { id: "asc" }],
     take,
   });
 }
@@ -64,8 +64,8 @@ async function updateScore(id: number, operation: "increment" | "decrement") {
 }
 
 async function remove(id: number) {
-  await prisma.recommendation.delete({
-    where: { id },
+  await prisma.recommendation.deleteMany({
+    where: { id, score: { lt: -5 } },
   });
 }
 
