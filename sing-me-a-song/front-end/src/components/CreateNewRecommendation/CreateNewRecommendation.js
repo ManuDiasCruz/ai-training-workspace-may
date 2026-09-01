@@ -3,31 +3,33 @@ import styled from "styled-components";
 
 import { IoReturnUpForwardOutline } from "react-icons/io5";
 
-export default function CreateNewRecommendation({ onCreateNewRecommendation = () => 0, disabled = false }) {
+export default function CreateNewRecommendation({ onCreateNewRecommendation = () => false, disabled = false }) {
   const [name, setName] = useState("");
   const [link, setLink] = useState("");
 
-  const handleCreateRecommendation = () => {
-    onCreateNewRecommendation({
+  const handleCreateRecommendation = async (event) => {
+    event.preventDefault();
+    const created = await onCreateNewRecommendation({
       name,
       link
     });
+    if (!created) return;
     setLink("");
     setName("");
   }
   
   return (
-    <Container>
-      <Input type="text" placeholder="Name" value={name} onChange={e => setName(e.target.value)} disabled={disabled} />
-      <Input type="text" placeholder="https://youtu.be/..." value={link} onChange={e => setLink(e.target.value)} disabled={disabled} />
-      <Button onClick={() => handleCreateRecommendation()} disabled={disabled}>
+    <Container onSubmit={handleCreateRecommendation}>
+      <Input aria-label="Name" required maxLength={200} type="text" placeholder="Name" value={name} onChange={e => setName(e.target.value)} disabled={disabled} />
+      <Input aria-label="YouTube link" required type="url" placeholder="https://youtu.be/..." value={link} onChange={e => setLink(e.target.value)} disabled={disabled} />
+      <Button type="submit" aria-label="Create recommendation" disabled={disabled}>
         <IoReturnUpForwardOutline size="24px" color="#fff" />
       </Button>
     </Container>
   );
 }
 
-const Container = styled.div`
+const Container = styled.form`
   display: flex;
   gap: 9px;
   margin-bottom: 15px;

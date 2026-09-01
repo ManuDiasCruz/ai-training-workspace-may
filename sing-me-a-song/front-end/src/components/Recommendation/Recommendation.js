@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { useEffect } from "react";
+
 
 import ReactPlayer from "react-player";
 import { GoArrowUp, GoArrowDown } from "react-icons/go";
@@ -8,41 +8,31 @@ import useUpvoteRecommendation from "../../hooks/api/useUpvoteRecommendation";
 import useDownvoteRecommendation from "../../hooks/api/useDownvoteRecommendation";
 
 export default function Recommendation({ name, youtubeLink, score, id, onUpvote = () => 0, onDownvote = () => 0 }) {
-  const { upvoteRecommendation, errorUpvotingRecommendation } = useUpvoteRecommendation();
-  const { downvoteRecommendation, errorDownvotingRecommendation } = useDownvoteRecommendation();
+  const { upvoteRecommendation, errorUpvotingRecommendation, loadingUpvoteRecommendations } = useUpvoteRecommendation();
+  const { downvoteRecommendation, errorDownvotingRecommendation, loadingDownvoteRecommendations } = useDownvoteRecommendation();
 
   const handleUpvote = async () => {
-    await upvoteRecommendation(id);
-    onUpvote();
+    const result = await upvoteRecommendation(id);
+    if (result.success) onUpvote();
   };
 
   const handleDownvote = async () => {
-    await downvoteRecommendation(id);
-    onDownvote();
+    const result = await downvoteRecommendation(id);
+    if (result.success) onDownvote();
   };
 
-  useEffect(() => {
-    if (errorUpvotingRecommendation) {
-      alert("Error upvoting recommendation!");
-    }
-  }, [errorUpvotingRecommendation]);
-
-  useEffect(() => {
-    if (errorDownvotingRecommendation) {
-      alert("Error downvoting recommendation!");
-    }
-
-  }, [errorDownvotingRecommendation]);
+  const voting = loadingUpvoteRecommendations || loadingDownvoteRecommendations;
 
   return (
     <Container>
       <Row>{name}</Row>
-      <ReactPlayer url={youtubeLink} width="100%" height="100%" />
+      <ReactPlayer url={youtubeLink} controls width="100%" height="240px" />
       <Row>
-        <GoArrowUp size="24px" onClick={handleUpvote} />
+        <VoteButton aria-label={`Upvote ${name}`} disabled={voting} onClick={handleUpvote}><GoArrowUp size="24px" /></VoteButton>
         {score}
-        <GoArrowDown size="24px" onClick={handleDownvote} />
+        <VoteButton aria-label={`Downvote ${name}`} disabled={voting} onClick={handleDownvote}><GoArrowDown size="24px" /></VoteButton>
       </Row>
+      {(errorUpvotingRecommendation || errorDownvotingRecommendation) && <p role="alert">Could not vote. Please try again.</p>}
     </Container>
   );
 }
@@ -63,4 +53,12 @@ const Row = styled.div`
   align-items: center;
   gap: 6px;
   cursor: pointer;
+`;
+
+const VoteButton = styled.button`
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  &:disabled { opacity: .5; cursor: wait; }
 `;
