@@ -1,5 +1,5 @@
+import { assertTestDatabase } from "../../src/utils/testDatabase.js";
 import { jest } from "@jest/globals";
-import { response } from "express";
 
 import { recommendationService } from "../../src/services/recommendationsService.js";
 import { recommendationRepository } from "../../src/repositories/recommendationRepository.js";
@@ -38,7 +38,7 @@ describe("UNIT TESTS SUITE", () => {
                 .spyOn(recommendationRepository, "findByName")
                 .mockResolvedValueOnce(recommendation2);
 
-            expect(recommendationService.insert(recommendation1)).rejects.toEqual(
+            await expect(recommendationService.insert(recommendation1)).rejects.toEqual(
                 { message: "Recommendations names must be unique", type: "conflict" }
             );
         });
@@ -64,7 +64,7 @@ describe("UNIT TESTS SUITE", () => {
                 .spyOn(recommendationRepository, "find")
                 .mockResolvedValueOnce(null);
         
-            expect(recommendationService.upvote(1)).rejects.toEqual(
+            await expect(recommendationService.upvote(1)).rejects.toEqual(
                 { message: "", type: "not_found" }
             );
         });
@@ -109,7 +109,7 @@ describe("UNIT TESTS SUITE", () => {
                 .spyOn(recommendationRepository, "find")
                 .mockResolvedValueOnce(null);
         
-            expect(recommendationService.downvote(1)).rejects.toEqual(
+            await expect(recommendationService.downvote(1)).rejects.toEqual(
                 { message: "", type: "not_found" }
             );
         });
@@ -131,7 +131,7 @@ describe("UNIT TESTS SUITE", () => {
                 .spyOn(recommendationRepository, "find")
                 .mockResolvedValueOnce(null);
 
-            expect(recommendationService.getById(1)).rejects.toEqual({
+            await expect(recommendationService.getById(1)).rejects.toEqual({
                 message: "",
                 type: "not_found",
             });
@@ -170,7 +170,7 @@ describe("UNIT TESTS SUITE", () => {
             expect(recommendationRepository.findAll).toHaveBeenLastCalledWith({
                 score: 10,
                 scoreFilter: "gt",
-            });
+            }, null);
         });
 
         it("Success in get random lte", async () => {
@@ -184,7 +184,7 @@ describe("UNIT TESTS SUITE", () => {
             expect(recommendationRepository.findAll).toHaveBeenLastCalledWith({
                 score: 10,
                 scoreFilter: "lte",
-            });
+            }, null);
         });
 
         it("Error notfound in get random", async () => {
@@ -192,13 +192,30 @@ describe("UNIT TESTS SUITE", () => {
 
             jest
                 .spyOn(recommendationRepository, "findAll")
-                .mockResolvedValueOnce([]);
+                .mockResolvedValueOnce([]).mockResolvedValueOnce([]);
 
-            expect(recommendationService.getRandom()).rejects.toEqual({
+            await expect(recommendationService.getRandom()).rejects.toEqual({
                 message: "",
                 type: "not_found",
             });
         });
     });
 
+});
+it("random fallback does not use the timeline's ten-song limit", async () => {
+  const song = {id: 1, ...createRandomSong(), score: 1};
+  jest.spyOn(recommendationRepository, "findAll").mockResolvedValueOnce([]).mockResolvedValueOnce([song]);
+  expect(await recommendationService.getRandom()).toEqual(song);
+  expect(recommendationRepository.findAll).toHaveBeenLastCalledWith(undefined, null);
+});
+
+it("refuses destructive test access to a non-test database", () => {
+  const original = process.env.DATABASE_URL;
+  try {
+    process.env.DATABASE_URL = "postgresql://example:example@localhost/sing_me_a_song";
+    expect(() => assertTestDatabase()).toThrow("database name ending in _test");
+  } finally {
+    if (original === undefined) delete process.env.DATABASE_URL;
+    else process.env.DATABASE_URL = original;
+  }
 });

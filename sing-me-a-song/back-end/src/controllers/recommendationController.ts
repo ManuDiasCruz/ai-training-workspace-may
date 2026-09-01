@@ -9,7 +9,7 @@ async function insert(req: Request, res: Response) {
     throw wrongSchemaError();
   }
 
-  await recommendationService.insert(req.body);
+  await recommendationService.insert(validation.value);
 
   res.sendStatus(201);
 }
@@ -17,7 +17,7 @@ async function insert(req: Request, res: Response) {
 async function upvote(req: Request, res: Response) {
   const { id } = req.params;
 
-  await recommendationService.upvote(+id);
+  await recommendationService.upvote(positiveInteger(id));
 
   res.sendStatus(200);
 }
@@ -25,7 +25,7 @@ async function upvote(req: Request, res: Response) {
 async function downvote(req: Request, res: Response) {
   const { id } = req.params;
 
-  await recommendationService.downvote(+id);
+  await recommendationService.downvote(positiveInteger(id));
 
   res.sendStatus(200);
 }
@@ -44,15 +44,23 @@ async function get(req: Request, res: Response) {
 async function getTop(req: Request, res: Response) {
   const { amount } = req.params;
 
-  const recommendations = await recommendationService.getTop(+amount);
+  const recommendations = await recommendationService.getTop(positiveInteger(amount, 100));
   res.send(recommendations);
 }
 
 async function getById(req: Request, res: Response) {
   const { id } = req.params;
 
-  const recommendation = await recommendationService.getById(+id);
+  const recommendation = await recommendationService.getById(positiveInteger(id));
   res.send(recommendation);
+}
+
+function positiveInteger(value: string, maximum = 2147483647) {
+  const number = Number(value);
+  if (!/^\d+$/.test(value) || !Number.isSafeInteger(number) || number < 1 || number > maximum) {
+    throw wrongSchemaError(`Expected an integer between 1 and ${maximum}`);
+  }
+  return number;
 }
 
 export const recommendationController = {

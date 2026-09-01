@@ -65,13 +65,13 @@ async function getByScore(scoreFilter: "gt" | "lte") {
   const recommendations = await recommendationRepository.findAll({
     score: 10,
     scoreFilter,
-  });
+  }, null);
 
   if (recommendations.length > 0) {
     return recommendations;
   }
 
-  return recommendationRepository.findAll();
+  return recommendationRepository.findAll(undefined, null);
 }
 
 function getScoreFilter(random: number) {

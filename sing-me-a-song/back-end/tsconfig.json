@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
     "esModuleInterop": true,
-    "module": "es6",
-    "moduleResolution": "node",
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "skipLibCheck": true,
     "outDir": "dist"
   },
   "ts-node": {

@@ -5,8 +5,9 @@ export interface AppError {
   message: string;
 }
 
-export function isAppError(error: object): error is AppError {
-  return (error as AppError).type !== undefined;
+export function isAppError(error: unknown): error is AppError {
+  return typeof error === "object" && error !== null &&
+    ["conflict", "not_found", "unauthorized", "wrong_schema"].includes((error as AppError).type);
 }
 
 export function errorTypeToStatusCode(type: AppErrorTypes) {

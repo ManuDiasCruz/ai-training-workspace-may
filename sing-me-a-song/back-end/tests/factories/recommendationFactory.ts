@@ -1,28 +1,9 @@
-import { faker } from "@faker-js/faker";
+import { randomUUID } from "node:crypto";
 import { prisma } from "../../src/database.js";
-
-export interface Song {
-    name: string;
-    youtubeLink: string;
-};
-
-export function createRandomSong() {
-  const randomUrlGen = require("random-youtube-music-video");
-  const youtubeUrl = randomUrlGen.getRandomMusicVideoUrl();
-
-  const name = faker.name.findName();
-  const youtubeLink = youtubeUrl;
-
-  return { name, youtubeLink };
-};
-
-// export function createSong() {
-//     const name = faker.name.findName();
-//     const youtubeLink = `https://www.youtube.com/${faker.random.alphaNumeric(10)}`;    
-    
-//     return { name: name, youtubeLink: youtubeLink };
-// };
-
+export interface Song { name: string; youtubeLink: string; }
+export function createRandomSong(): Song {
+  return { name: `Test song ${randomUUID()}`, youtubeLink: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" };
+}
 export async function createRecommendation(song: Song) {
-    return prisma.recommendation.create({ data: song });
-};
+  return prisma.recommendation.create({ data: song });
+}

@@ -13,19 +13,19 @@ interface FindAllWhere {
   scoreFilter: "lte" | "gt";
 }
 
-function findAll(findAllWhere?: FindAllWhere) {
+function findAll(findAllWhere?: FindAllWhere, limit: number | null = 10) {
   const filter = getFindAllFilter(findAllWhere);
 
   return prisma.recommendation.findMany({
     where: filter,
     orderBy: { id: "desc" },
-    take: 10
+    take: limit ?? undefined
   });
 }
 
 function getAmountByScore(take: number) {
   return prisma.recommendation.findMany({
-    orderBy: { score: "desc" },
+    orderBy: [{ score: "desc" }, { id: "desc" }],
     take,
   });
 }
@@ -64,8 +64,8 @@ async function updateScore(id: number, operation: "increment" | "decrement") {
 }
 
 async function remove(id: number) {
-  await prisma.recommendation.delete({
-    where: { id },
+  await prisma.recommendation.deleteMany({
+    where: { id, score: { lt: -5 } },
   });
 }
 
