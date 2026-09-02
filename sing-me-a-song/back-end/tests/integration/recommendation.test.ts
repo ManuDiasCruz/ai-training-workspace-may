@@ -4,11 +4,36 @@ import app from "../../src/app.js";
 import { prisma } from "../../src/database.js";
 import { assertTestDatabase } from "../../src/utils/testDatabase.js";
 import { createRandomSong } from "../factories/recommendationFactory.js";
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import pkg from "@prisma/client";
+import { hostedDatabaseUrl } from "../../scripts/hosted-database.mjs";
 const agent = supertest(app);
 // Runs before any TRUNCATE; a normal DATABASE_URL must fail closed.
 assertTestDatabase();
 beforeEach(async () => { await prisma.$executeRaw`TRUNCATE TABLE recommendations RESTART IDENTITY`; });
 afterAll(async () => { await prisma.$disconnect(); });
+
+it("migrates a separate hosted schema without changing public tables or migration history", async () => {
+  const sentinel = await prisma.recommendation.create({ data: createRandomSong() });
+  const originalHistory = await prisma.$queryRaw`SELECT migration_name FROM public._prisma_migrations ORDER BY migration_name`;
+  const databaseUrl = hostedDatabaseUrl({ ...process.env, DATABASE_SCHEMA: "singasong_isolation_test" });
+  const isolated = new pkg.PrismaClient({ datasources: { db: { url: databaseUrl } } });
+  try {
+    const cli = fileURLToPath(new URL("../../node_modules/prisma/build/index.js", import.meta.url));
+    execFileSync(process.execPath, [cli, "migrate", "deploy"], {
+      env: { ...process.env, DATABASE_URL: databaseUrl }, stdio: "pipe", timeout: 60000,
+    });
+    expect(await isolated.recommendation.count()).toBe(0);
+    await isolated.recommendation.create({ data: { ...createRandomSong(), name: sentinel.name } });
+    expect(await prisma.recommendation.findMany()).toEqual([sentinel]);
+    expect(await prisma.$queryRaw`SELECT migration_name FROM public._prisma_migrations ORDER BY migration_name`).toEqual(originalHistory);
+  } finally {
+    await isolated.$disconnect();
+    // The module-level test-database guard protects this disposable fixture cleanup.
+    await prisma.$executeRawUnsafe('DROP SCHEMA IF EXISTS "singasong_isolation_test" CASCADE');
+  }
+}, 70000);
 
 it("creates, persists and rejects duplicate recommendations", async () => {
   const song = createRandomSong();

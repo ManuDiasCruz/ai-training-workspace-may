@@ -1,4 +1,4 @@
-# Validation record — 2026-09-01
+# Validation record — updated 2026-09-02
 
 ## Observed local results
 
@@ -20,17 +20,25 @@ Environment: Windows, Node 24.19.0, npm 10.9.9 and an isolated PostgreSQL 16.14 
 
 The original start command reproduced `MODULE_NOT_FOUND` for `dist/index.js`. The original tests also depended on an undeclared random-video package and used incorrect ordering/response assumptions. The repaired build/start, fixtures, contracts and test runners are committed.
 
-## Dependency audit
+## Shared-instance deployment regression checks (2026-09-02)
+
+- Re-ran the full `npm test`: **25 backend unit, 29 real-PostgreSQL integration, and 5 frontend tests passed** (59 total). The three previously passed Cypress flows are unchanged; their latest hosted result is available in CI.
+- The new migration isolation test kept a sentinel recommendation and migration history in `public`, migrated a dedicated schema, and verified both remained unchanged. It also created the same recommendation name in the isolated schema without a collision.
+- The exact `start-hosted.mjs` command migrated a separate local schema, started the production server, returned healthy `/health`, and persisted a recommendation through `/api/recommendations`.
+- Hosted startup rejects missing/unsafe schema names before migrations and applies the same scoped URL to migrations and runtime, preserving SSL options and limiting the pool to five connections.
+
+## Dependency audit (unchanged)
 
 Compatible updates were applied without `--force`. The most recent full frontend audit reported **28 findings (9 low, 7 moderate, 12 high; no critical)**. The backend audit reported **3 high findings**, all in the Prisma configuration / deepmerge-ts dependency chain (also reported by production-only audit due to the client/CLI dependency graph). The app is **not audit-clean**. Follow-up [#543](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/543) tracks the tested dependency modernization; do not interpret passing tests as security certification.
 
 ## Deployment and CI
 
 - The production build was run and exercised locally, not on a public hosting service.
-- `render.yaml` defines a free Node service, migrations, runtime configuration and `/health` check, with an external PostgreSQL `DATABASE_URL` supplied privately in Render.
+- `render.yaml` now references the user-authorized existing Render database, with a dedicated `singasong_0827_ben` schema and database-backed health check. The shared instance lifecycle and access rules are not managed by this blueprint.
 - On 2026-09-02, after sign-in and explicit approval, Render attempted the free-plan deployment of `f497e9f9ba3f28168255cde3aea25b4ef143781b`. [Blueprint sync](https://dashboard.render.com/blueprint/exs-dac6unh5efls73fb4neg/sync/exe-dac6unp5efls73fb4o6g) rejected `singasong-0827-db`: `cannot have more than one active free tier database`. Creation of `singasong-0827-ben` was canceled because database creation failed. The blueprint has no managed resources. Existing resources were untouched; no paid resources were selected. Public deployment and remote verification remain **blocked by database quota**, not authentication.
 - A GitHub Actions workflow is supplied to run the checks on Node 22/Linux. Local results above are observed; consult the PR checks for the separate hosted CI result.
-- Following approval to use another free host, the blueprint was changed to accept external PostgreSQL instead of provisioning a second Render database. Neon Free is the selected alternative. Account sign-in, database provisioning, and live deployment checks remain pending; this configuration change is not evidence of a successful deployment.
+- The external-database blueprint created web service `srv-dac77hm10ojc73bcbasg` and built commit `56b04eb`, but startup failed with Prisma P1012 because `DATABASE_URL` was not set. No Neon database was created.
+- The user subsequently requested retrying Render and authorized using an existing database if needed. `beeh-sing-me-a-song-db` is available, free, PostgreSQL 16, Oregon, with external traffic disabled and an October 2, 2026 expiration. The new blueprint uses its internal connection with a separate schema; public deployment verification is pending this change.
 
 ## Follow-up issues
 

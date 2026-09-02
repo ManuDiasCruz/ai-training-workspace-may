@@ -11,7 +11,7 @@ Imported from [ManuDiasCruz/sing-me-a-song](https://github.com/ManuDiasCruz/sing
 - `back-end/prisma/`: original schema and versioned SQL migration.
 - `back-end/tests/`: unit tests and real PostgreSQL integration tests.
 - `front-end/src/App.test.js`: frontend regression coverage; `front-end/cypress/e2e/spec.recommendation.cy.js`: active browser tests.
-- `../render.yaml`: a free Node web service blueprint with an externally supplied PostgreSQL secret.
+- `../render.yaml`: a free Node service blueprint referencing the authorized existing Render PostgreSQL instance.
 - `../.github/workflows/sing-me-a-song.yml`: build, database, component and browser checks.
 
 Production Express serves the React build and `/api/recommendations` from one origin. Original `/recommendations` API URLs remain supported. Development uses React's `/api` proxy to port 5000.
@@ -50,6 +50,7 @@ For development, run `npm run dev --prefix back-end` and, in a second terminal, 
 | Variable | Location | Purpose / default |
 | --- | --- | --- |
 | `DATABASE_URL` | Backend only, required | Private PostgreSQL URL. Use the provider's SSL options if required. Never expose it through React variables. |
+| `DATABASE_SCHEMA` | Hosted launcher only, required | Dedicated `singasong_`-prefixed schema. The blueprint selects `singasong_0827_ben`. The launcher sets this schema on both migration and runtime URLs and caps the connection pool at five. Local commands still use the schema in `DATABASE_URL`. |
 | `PORT` | Backend | HTTP port, default `5000`; hosts may inject it. |
 | `NODE_ENV` | Backend/build | `development`, `test`, or `production`. |
 | `CORS_ORIGINS` | Backend | Optional comma-separated frontend origins for split hosting. Default permits `http://localhost:3000`; production same-origin requests need no CORS configuration. |
@@ -71,18 +72,19 @@ npm test
 
 For Cypress, build the app first, stop any normal API using port 5000, and set `ENABLE_TEST_ROUTES=true` **only in `back-end/.env.test`**. Start `npm run dev:test --prefix back-end`, then run `npm run test:e2e --prefix front-end`. Reset that flag to `false` afterward. Cypress resets all data in that test database. The active spec covers real creation/voting/ranking/random/deletion, duplicate/invalid submissions and recovery from a simulated failed read. Historical tutorial/spec files are retained from upstream but intentionally excluded from the active `specPattern`.
 
-## Deployment (Render + Neon Free PostgreSQL)
+## Deployment (Render with an existing PostgreSQL instance)
 
-**Status (2026-09-02):** The first Render deployment was rejected because its workspace already has one active free-tier PostgreSQL database; web-service creation was canceled. The blueprint now uses an external PostgreSQL URL instead of creating another Render database. Neon Free is the selected alternative, pending account sign-in and provisioning. No existing resources were changed and no paid plan was selected. Public deployment and remote verification are not yet complete.
+**Status (2026-09-02):** The initial all-Render deployment hit the one-free-database quota. A subsequent external-database configuration created the free web service and built successfully, but startup stopped because `DATABASE_URL` was absent. The user then authorized reusing an existing database. The blueprint now references the available `beeh-sing-me-a-song-db` PostgreSQL 16 instance in Oregon, with this app's migrations and data isolated in `singasong_0827_ben`. Deployment verification is still pending; no paid resources were selected.
 
-1. Sign in to [Neon](https://console.neon.tech/) and create a dedicated **Free** project for this app, using PostgreSQL 16 and a region near the Render service. Do not reuse another application's database. Leave optional authentication features off; the app needs only PostgreSQL.
-2. In Neon's connection dialog select the new database and role, disable connection pooling, and copy the **direct** PostgreSQL URL privately. Preserve its SSL parameters. For this single long-running Node service, append `&connection_limit=5&connect_timeout=15` to the existing query string to bound Prisma connections and tolerate database wake-up. The same direct URL supports Prisma migrations and runtime queries without a new driver or schema change.
-3. Sign in to Render, connect this GitHub repository, and create a Blueprint from branch `0827-ben-singasong`, using root `render.yaml`. Select the free web service plan and enter the private URL as `DATABASE_URL` when prompted. The blueprint does not create or alter a Render database. Review the selected resources before confirming.
-4. The service installs both projects, builds them, runs `prisma migrate deploy`, and starts Express. Its root is `sing-me-a-song`. Keep `ENABLE_TEST_ROUTES=false`; do not expose the URL through a frontend variable. Same-origin `/api` avoids hardcoded deployment hostnames.
-5. When updating an existing Blueprint, Render does **not** prompt for new `sync: false` secrets: set `DATABASE_URL` in that service's Environment settings before deploying. The earlier failed blueprint has no resources; do not assume a secret was saved there.
-6. Wait for `/health` to pass. Open the assigned HTTPS URL and repeat the checklist below. If health is 503, check database availability, SSL settings and migrations; if startup exits, check the private connection settings in the provider dashboard. Never use migration reset or test commands on the deployed database.
+1. Sign in to Render and connect this repository. Sync the existing `singasong-0827-ben` blueprint from branch `0827-ben-singasong`, using root `render.yaml`; do not create a duplicate web service.
+2. The referenced `beeh-sing-me-a-song-db` instance must exist in the same workspace and Oregon region. `fromDatabase` injects its internal connection URL without storing credentials in Git or opening external database access. The blueprint deliberately does not manage the shared instance's lifecycle.
+3. Keep the free web plan, `ENABLE_TEST_ROUTES=false`, and `DATABASE_SCHEMA=singasong_0827_ben`. The start command is `node back-end/scripts/start-hosted.mjs`. It validates the dedicated schema, sets the same scoped URL for Prisma migrations and the server, applies `prisma migrate deploy`, and starts Express only after success. Do not replace this command with unscoped migration/start commands when sharing the instance.
+4. The service root is `sing-me-a-song`. It installs and builds both projects. Same-origin `/api` avoids hardcoded hostnames and keeps the database URL out of frontend configuration.
+5. Wait for `/health` to pass, then repeat the checklist below. For startup failures, inspect migration logs and the private connection settings. Never run test resets, `migrate reset`, or `db push --force-reset` against the shared deployment.
 
-Both plans are intended here for a low-traffic demo, not an availability guarantee. Neon Free currently includes 0.5 GB storage and 100 CU-hours per project per month, with no time limit; its compute can sleep. Render's free web service sleeps after 15 idle minutes and shares workspace build, bandwidth and free-instance-hour quotas. External database traffic is allowed but unusually high outgoing traffic can suspend a free service. Database-backed health checks also consume database compute; monitor usage. Do not enable paid upgrades or overages without approval. Review [Neon pricing](https://neon.com/pricing), [Render's free-tier limits](https://render.com/docs/free), and the [Blueprint secret reference](https://render.com/docs/blueprint-spec#setting-environment-variables) before deployment. No paid resources were purchased.
+For another workspace, reference a PostgreSQL instance you own and are authorized to share, or change `DATABASE_URL` to `sync: false` and supply a private external URL (for example Neon Free). Render prompts for `sync: false` values only during initial Blueprint creation; when updating an existing service, add the value in its Environment settings. Keep a unique `DATABASE_SCHEMA` either way.
+
+The shared free database expires on **October 2, 2026**, according to its dashboard. Its 1 GB storage and compute limits are shared with other applications. Separate schemas prevent table/migration collisions but are **not a security boundary** when the same database role is used; use a dedicated database and least-privilege role for a production rollout. Render's free web service sleeps after 15 idle minutes and shares workspace build, bandwidth and instance-hour quotas. Do not change the shared instance's access rules, delete it, or enable paid upgrades without approval. See [Render's free-tier limits](https://render.com/docs/free), [PostgreSQL guide](https://render.com/docs/postgresql-creating-connecting), and [Blueprint secret reference](https://render.com/docs/blueprint-spec#setting-environment-variables). No paid resources were purchased.
 
 ### Post-deployment verification checklist
 

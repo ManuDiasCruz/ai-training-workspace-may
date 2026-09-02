@@ -1,5 +1,5 @@
-# Deploy one free Node service using an external PostgreSQL database (e.g. Neon Free).
-# Supply DATABASE_URL privately in Render; never commit the connection string.
+# Reuse the authorized Render PostgreSQL instance without managing its lifecycle.
+# The hosted launcher isolates this app's migrations and tables in DATABASE_SCHEMA.
 services:
   - type: web
     name: singasong-0827-ben
@@ -8,7 +8,7 @@ services:
     branch: 0827-ben-singasong
     rootDir: sing-me-a-song
     buildCommand: npm ci --include=dev --prefix back-end && npm ci --include=dev --prefix front-end && npm run build
-    startCommand: npm run db:migrate && npm start
+    startCommand: node back-end/scripts/start-hosted.mjs
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
@@ -20,4 +20,8 @@ services:
       - key: CYPRESS_INSTALL_BINARY
         value: "0"
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: beeh-sing-me-a-song-db
+          property: connectionString
+      - key: DATABASE_SCHEMA
+        value: singasong_0827_ben
