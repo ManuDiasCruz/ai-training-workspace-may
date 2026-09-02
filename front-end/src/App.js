@@ -20,9 +20,12 @@ const Home = LazyWrapper(lazy(() => import("./pages/Timeline/Home")));
 const Top = LazyWrapper(lazy(() => import("./pages/Timeline/Top")));
 const Random = LazyWrapper(lazy(() => import("./pages/Timeline/Random")));
 
+// PUBLIC_URL is "" for root-hosted builds and carries the sub-path when the
+// bundle is served from one (e.g. a GitHub Pages project site), so the routes
+// keep working either way.
 export default function App() {
   return (
-    <Router>
+    <Router basename={process.env.PUBLIC_URL}>
       <Routes>
         <Route path="/" element={<Timeline />}>
           <Route path="/" element={<Home />} />
