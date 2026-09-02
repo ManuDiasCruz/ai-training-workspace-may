@@ -1,4 +1,5 @@
-# Deploy this branch as one Node service plus a managed PostgreSQL database.
+# Deploy one free Node service using an external PostgreSQL database (e.g. Neon Free).
+# Supply DATABASE_URL privately in Render; never commit the connection string.
 services:
   - type: web
     name: singasong-0827-ben
@@ -19,13 +20,4 @@ services:
       - key: CYPRESS_INSTALL_BINARY
         value: "0"
       - key: DATABASE_URL
-        fromDatabase:
-          name: singasong-0827-db
-          property: connectionString
-
-databases:
-  - name: singasong-0827-db
-    plan: free
-    databaseName: sing_me_a_song
-    user: singasong
-    postgresMajorVersion: "16"
+        sync: false

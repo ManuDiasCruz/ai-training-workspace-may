@@ -11,7 +11,7 @@ Imported from [ManuDiasCruz/sing-me-a-song](https://github.com/ManuDiasCruz/sing
 - `back-end/prisma/`: original schema and versioned SQL migration.
 - `back-end/tests/`: unit tests and real PostgreSQL integration tests.
 - `front-end/src/App.test.js`: frontend regression coverage; `front-end/cypress/e2e/spec.recommendation.cy.js`: active browser tests.
-- `../render.yaml`: a Node web service and PostgreSQL deployment blueprint.
+- `../render.yaml`: a free Node web service blueprint with an externally supplied PostgreSQL secret.
 - `../.github/workflows/sing-me-a-song.yml`: build, database, component and browser checks.
 
 Production Express serves the React build and `/api/recommendations` from one origin. Original `/recommendations` API URLs remain supported. Development uses React's `/api` proxy to port 5000.
@@ -71,17 +71,18 @@ npm test
 
 For Cypress, build the app first, stop any normal API using port 5000, and set `ENABLE_TEST_ROUTES=true` **only in `back-end/.env.test`**. Start `npm run dev:test --prefix back-end`, then run `npm run test:e2e --prefix front-end`. Reset that flag to `false` afterward. Cypress resets all data in that test database. The active spec covers real creation/voting/ranking/random/deletion, duplicate/invalid submissions and recovery from a simulated failed read. Historical tutorial/spec files are retained from upstream but intentionally excluded from the active `specPattern`.
 
-## Deployment (Render)
+## Deployment (Render + Neon Free PostgreSQL)
 
-**Status (2026-09-02):** Render sign-in and the free-plan deployment were approved. Render rejected PostgreSQL creation because this workspace already has one active free-tier database; web-service creation was canceled. No existing resources were changed and no paid plan was selected. Public deployment and remote verification remain pending an available PostgreSQL database. A locally running production build is not a public deployment.
+**Status (2026-09-02):** The first Render deployment was rejected because its workspace already has one active free-tier PostgreSQL database; web-service creation was canceled. The blueprint now uses an external PostgreSQL URL instead of creating another Render database. Neon Free is the selected alternative, pending account sign-in and provisioning. No existing resources were changed and no paid plan was selected. Public deployment and remote verification are not yet complete.
 
-1. Sign in to Render and connect this GitHub repository.
-2. Create a Blueprint from branch `0827-ben-singasong`, using root `render.yaml`. Review the resources and current pricing before confirming.
-3. The blueprint provisions PostgreSQL, injects its private connection URL as `DATABASE_URL`, installs both projects, builds them, runs `prisma migrate deploy`, and starts Express. The service root is `sing-me-a-song`.
-4. Keep `ENABLE_TEST_ROUTES=false`; do not configure a frontend database variable or commit provider credentials. Same-origin `/api` avoids hardcoded deployment hostnames.
-5. Wait for `/health` to pass. Open the assigned HTTPS URL and repeat the checklist below. If health is 503, check database provisioning and migrations; if startup exits, check the private connection settings in the provider dashboard.
+1. Sign in to [Neon](https://console.neon.tech/) and create a dedicated **Free** project for this app, using PostgreSQL 16 and a region near the Render service. Do not reuse another application's database. Leave optional authentication features off; the app needs only PostgreSQL.
+2. In Neon's connection dialog select the new database and role, disable connection pooling, and copy the **direct** PostgreSQL URL privately. Preserve its SSL parameters. For this single long-running Node service, append `&connection_limit=5&connect_timeout=15` to the existing query string to bound Prisma connections and tolerate database wake-up. The same direct URL supports Prisma migrations and runtime queries without a new driver or schema change.
+3. Sign in to Render, connect this GitHub repository, and create a Blueprint from branch `0827-ben-singasong`, using root `render.yaml`. Select the free web service plan and enter the private URL as `DATABASE_URL` when prompted. The blueprint does not create or alter a Render database. Review the selected resources before confirming.
+4. The service installs both projects, builds them, runs `prisma migrate deploy`, and starts Express. Its root is `sing-me-a-song`. Keep `ENABLE_TEST_ROUTES=false`; do not expose the URL through a frontend variable. Same-origin `/api` avoids hardcoded deployment hostnames.
+5. When updating an existing Blueprint, Render does **not** prompt for new `sync: false` secrets: set `DATABASE_URL` in that service's Environment settings before deploying. The earlier failed blueprint has no resources; do not assume a secret was saved there.
+6. Wait for `/health` to pass. Open the assigned HTTPS URL and repeat the checklist below. If health is 503, check database availability, SSL settings and migrations; if startup exits, check the private connection settings in the provider dashboard. Never use migration reset or test commands on the deployed database.
 
-The blueprint selects free resources as a demo starting point. Render's free database is time-limited and free web services can sleep; choose durable paid database storage/backups before relying on it. No paid resources were purchased. See [Render's Express deployment guide](https://render.com/docs/deploy-node-express-app), [Blueprint reference](https://render.com/docs/blueprint-spec), and [free-tier limitations](https://render.com/docs/free).
+Both plans are intended here for a low-traffic demo, not an availability guarantee. Neon Free currently includes 0.5 GB storage and 100 CU-hours per project per month, with no time limit; its compute can sleep. Render's free web service sleeps after 15 idle minutes and shares workspace build, bandwidth and free-instance-hour quotas. External database traffic is allowed but unusually high outgoing traffic can suspend a free service. Database-backed health checks also consume database compute; monitor usage. Do not enable paid upgrades or overages without approval. Review [Neon pricing](https://neon.com/pricing), [Render's free-tier limits](https://render.com/docs/free), and the [Blueprint secret reference](https://render.com/docs/blueprint-spec#setting-environment-variables) before deployment. No paid resources were purchased.
 
 ### Post-deployment verification checklist
 

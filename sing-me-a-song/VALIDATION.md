@@ -27,9 +27,10 @@ Compatible updates were applied without `--force`. The most recent full frontend
 ## Deployment and CI
 
 - The production build was run and exercised locally, not on a public hosting service.
-- `render.yaml` defines the intended Node/PostgreSQL deployment, migrations, runtime configuration and `/health` check.
+- `render.yaml` defines a free Node service, migrations, runtime configuration and `/health` check, with an external PostgreSQL `DATABASE_URL` supplied privately in Render.
 - On 2026-09-02, after sign-in and explicit approval, Render attempted the free-plan deployment of `f497e9f9ba3f28168255cde3aea25b4ef143781b`. [Blueprint sync](https://dashboard.render.com/blueprint/exs-dac6unh5efls73fb4neg/sync/exe-dac6unp5efls73fb4o6g) rejected `singasong-0827-db`: `cannot have more than one active free tier database`. Creation of `singasong-0827-ben` was canceled because database creation failed. The blueprint has no managed resources. Existing resources were untouched; no paid resources were selected. Public deployment and remote verification remain **blocked by database quota**, not authentication.
 - A GitHub Actions workflow is supplied to run the checks on Node 22/Linux. Local results above are observed; consult the PR checks for the separate hosted CI result.
+- Following approval to use another free host, the blueprint was changed to accept external PostgreSQL instead of provisioning a second Render database. Neon Free is the selected alternative. Account sign-in, database provisioning, and live deployment checks remain pending; this configuration change is not evidence of a successful deployment.
 
 ## Follow-up issues
 
