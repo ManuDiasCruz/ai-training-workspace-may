@@ -268,7 +268,8 @@ What *has* been verified is the exact production artifacts, locally: the
 compiled API (`node dist/server.js`, no `MODE`) behind the static production
 bundle served on a separate origin. Create, upvote, downvote, `/top`, `/random`,
 CORS preflight and deep-link refreshes all behaved correctly, and the `/tests`
-routes correctly returned 404. See the tracking issue for the live deploy.
+routes correctly returned 404. The live deploy is tracked in
+[#560](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/560).
 
 ---
 
@@ -387,31 +388,40 @@ boot and no test suite could execute.
 
 ## Known limitations and future improvements
 
-Tracked as GitHub issues on this branch.
+Each of these has a tracking issue.
 
-- **Not deployed yet.** Needs a hosting account to be connected — see
-  *Deployment status*.
-- **CORS is wide open.** `app.use(cors())` allows every origin. Production
+- [#560](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/560)
+  — **Not deployed yet.** Needs a hosting account to be connected; see
+  *Deployment status* above.
+- [#561](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/561)
+  — **CORS is wide open.** `app.use(cors())` allows every origin. Production
   should restrict it to the front-end origin via an env var.
-- **`POST /recommendations` returns an empty 201.** Clients cannot learn the id
-  of what they just created without a follow-up query — this is what made one
-  integration test silently vote on `undefined`.
-- **`GET /recommendations` hard-codes `take: 10`** in the repository with no
-  pagination, so older recommendations are simply unreachable.
-- **`react-player` is a back-end dependency.** It is a React package and is
-  unused there; it only belongs in the front end.
-- **`tests/factories/scenariosFactory.ts` is dead code** — nothing imports it,
-  and `createTwoSongsScenario` loops three times and declares an unused
-  variable.
-- **The `/random` view re-fetches the same song after voting** rather than
-  drawing a new one, and if a downvote deletes it the stale card stays on
-  screen because the failed request leaves the previous data in place.
-- **Dependencies are from 2022** and `npm audit` reports 31 vulnerabilities in
+- [#562](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/562)
+  — **`POST /recommendations` returns an empty 201.** Clients cannot learn the
+  id of what they just created without a follow-up query — this is what made
+  one integration test silently vote on `undefined`.
+- [#563](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/563)
+  — **`GET /recommendations` hard-codes `take: 10`** with no pagination, so
+  older recommendations are unreachable. It also skews `/random`, which filters
+  through the same query.
+- [#564](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/564)
+  — **Dependencies are from 2022** and `npm audit` reports 31 vulnerabilities in
   the back end. React Scripts 5 / Prisma 3 / Jest 28 all have newer majors, and
   the ESM + `--experimental-vm-modules` Jest setup would get simpler with them.
-- **No CI.** Nothing runs the three suites automatically on push.
-- **The error handler logs raw errors** with `console.log` and returns bare
-  strings rather than structured JSON.
+- [#565](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/565)
+  — **No CI.** Nothing runs the three suites automatically on push, which is how
+  the repository reached a state where none of them could execute.
+- [#566](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/566)
+  — **Dead code.** `react-player` is a back-end dependency despite being a React
+  package used only by the front end, and `tests/factories/scenariosFactory.ts`
+  is imported by nothing.
+- [#567](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/567)
+  — **The `/random` view re-fetches the same song after voting** rather than
+  drawing a new one, and if a downvote deletes it the stale card stays on screen
+  because the failed request leaves the previous data in place.
+
+Not yet tracked: the error handler logs raw errors with `console.log` and
+returns bare strings rather than structured JSON.
 
 ---
 
