@@ -6,8 +6,10 @@ recommendations, browse the newest ones, see the top-scored ones, or get a
 random suggestion. A recommendation whose score drops below **-5** is removed
 automatically.
 
-Live front-end: **https://manudiascruz.github.io/ai-training-workspace-may/0827-faeh-singasong/**
-(see [Deployment](#deployment) for how it pairs with a back-end).
+Front-end deployment: the production build is published on the `gh-pages`
+branch under `0827-faeh-singasong/`. Once GitHub Pages is enabled for this
+repository (one manual step, see [Deployment](#deployment)) it is served at
+**https://manudiascruz.github.io/ai-training-workspace-may/0827-faeh-singasong/**.
 
 ## Project structure
 
@@ -102,10 +104,25 @@ with a query parameter: `?api=https://my-backend.example.com` (persisted in
 
 ## Deployment
 
-### Front-end — GitHub Pages (live)
+### Front-end — GitHub Pages
 
-The front-end is published at
+The production build is committed to the `gh-pages` branch in
+`0827-faeh-singasong/` (following the pattern of earlier deployments on that
+branch). **To make it live**, enable Pages once: repository **Settings →
+Pages → Deploy from a branch → `gh-pages` / root** — or run:
+
+```bash
+gh api -X POST repos/ManuDiasCruz/ai-training-workspace-may/pages -f "source[branch]=gh-pages" -f "source[path]=/"
+```
+
+Note: this repository is currently **private**; GitHub Pages on private
+repositories requires a paid GitHub plan. Making the repository public (or
+mirroring the front-end build to a public repository) also works.
+
+Once enabled it is served at
 **https://manudiascruz.github.io/ai-training-workspace-may/0827-faeh-singasong/**.
+The deployed bundle was verified end-to-end by serving the exact `gh-pages`
+content at the same subpath locally against the production back-end build.
 
 To redeploy:
 
@@ -188,7 +205,10 @@ host (Render, Railway, Fly.io, a VPS…). Two ready-made paths:
 
 ## Known limitations / future improvements
 
-- **Back-end hosting**: the live GitHub Pages front-end defaults to a
+- **GitHub Pages must be enabled once by the repository owner** (see
+  Deployment); automation could not change repository settings, and Pages on
+  a private repository needs a paid plan or a public repository.
+- **Back-end hosting**: the GitHub Pages front-end defaults to a
   locally-run back-end; a durable public back-end (Render/Railway/Fly)
   requires account credentials and is documented above instead of deployed.
 - Prisma 3 and CRA (react-scripts 5) are old; upgrading to Prisma 5+ and
