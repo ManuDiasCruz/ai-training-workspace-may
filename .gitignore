@@ -1,0 +1,21 @@
+# dependencies
+node_modules/
+
+# environment files (examples are kept)
+.env
+.env.*
+!.env.example
+!.env.test.example
+
+# build output
+back-end/dist/
+front-end/build/
+
+# test artifacts
+front-end/cypress/screenshots/
+front-end/cypress/videos/
+coverage/
+
+# OS / editor
+.DS_Store
+Thumbs.db
