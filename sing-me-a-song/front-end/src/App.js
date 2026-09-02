@@ -1,4 +1,4 @@
-import { Suspense, lazy, Component } from "react";
+import { Suspense, lazy } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -22,7 +22,7 @@ const Random = LazyWrapper(lazy(() => import("./pages/Timeline/Random")));
 
 export default function App() {
   return (
-    <Router>
+    <Router basename={process.env.PUBLIC_URL}>
       <Routes>
         <Route path="/" element={<Timeline />}>
           <Route path="/" element={<Home />} />
