@@ -74,7 +74,7 @@ For Cypress, build the app first, stop any normal API using port 5000, and set `
 
 ## Deployment (Render with an existing PostgreSQL instance)
 
-**Status (2026-09-02):** The initial all-Render deployment hit the one-free-database quota. A subsequent external-database configuration created the free web service and built successfully, but startup stopped because `DATABASE_URL` was absent. The user then authorized reusing an existing database. The blueprint now references the available `beeh-sing-me-a-song-db` PostgreSQL 16 instance in Oregon, with this app's migrations and data isolated in `singasong_0827_ben`. Deployment verification is still pending; no paid resources were selected.
+**Live (2026-09-02): [Sing Me a Song](https://singasong-0827-ben.onrender.com).** The initial all-Render deployment hit the one-free-database quota; the external-database attempt then lacked `DATABASE_URL`. With user authorization, the repaired blueprint now references the available `beeh-sing-me-a-song-db` PostgreSQL 16 instance in Oregon, isolating this app's migrations and data in `singasong_0827_ben`. Render applied the migration and reported a live service. Public health, creation, persistence, voting, ranking, random selection, validation errors and disabled test-reset checks passed. No paid resources were selected.
 
 1. Sign in to Render and connect this repository. Sync the existing `singasong-0827-ben` blueprint from branch `0827-ben-singasong`, using root `render.yaml`; do not create a duplicate web service.
 2. The referenced `beeh-sing-me-a-song-db` instance must exist in the same workspace and Oregon region. `fromDatabase` injects its internal connection URL without storing credentials in Git or opening external database access. The blueprint deliberately does not manage the shared instance's lifecycle.
@@ -115,4 +115,4 @@ See [VALIDATION.md](VALIDATION.md) for the final observed test results and deplo
 - Anonymous recommendation/voting APIs have no per-user voting limits, authentication or abuse throttling. CORS is not authorization.
 - Random sampling currently loads the selected score bucket into memory; replace with database-side count/offset sampling when scaling.
 - Syntactically valid YouTube links can still be unavailable, private, region-restricted or disallow embedding. Video availability is controlled by YouTube and is not guaranteed by these tests.
-- Configure durable backups, restore drills and uptime alerts before a production rollout. Hosting completion remains a required follow-up, not a verified result.
+- Configure durable backups, restore drills and uptime alerts before a production rollout. The live demo uses a shared free database expiring October 2, 2026; migrate before then.

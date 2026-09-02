@@ -8,11 +8,24 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import pkg from "@prisma/client";
 import { hostedDatabaseUrl } from "../../scripts/hosted-database.mjs";
-const agent = supertest(app);
+import { createServer } from "node:http";
+const server = createServer(app);
+const agent = supertest(server);
 // Runs before any TRUNCATE; a normal DATABASE_URL must fail closed.
 assertTestDatabase();
+// Own the listener for the whole suite: per-request auto-close can reset
+// sibling requests when concurrent votes share an implicitly started server.
+beforeAll(async () => {
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+});
 beforeEach(async () => { await prisma.$executeRaw`TRUNCATE TABLE recommendations RESTART IDENTITY`; });
-afterAll(async () => { await prisma.$disconnect(); });
+afterAll(async () => {
+  await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+  await prisma.$disconnect();
+});
 
 it("migrates a separate hosted schema without changing public tables or migration history", async () => {
   const sentinel = await prisma.recommendation.create({ data: createRandomSong() });
