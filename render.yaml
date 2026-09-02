@@ -1,0 +1,35 @@
+# Render Blueprint - deploys the back-end API plus a PostgreSQL database.
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Usage: Render dashboard -> New -> Blueprint -> select this repository and the
+# branch below. Render creates both resources and injects DATABASE_URL.
+# After the first deploy, copy the service URL into the front-end build
+# (REACT_APP_API_BASE_URL) - see README.md "Deployment".
+services:
+  - type: web
+    name: sing-me-a-song-feh-api
+    runtime: node
+    plan: free
+    region: oregon
+    branch: 0827-feh-singasong
+    rootDir: back-end
+    buildCommand: npm ci && npm run build
+    # Applies pending Prisma migrations, then starts the compiled server.
+    startCommand: npx prisma migrate deploy && npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sing-me-a-song-feh-db
+          property: connectionString
+      # Never set MODE=TEST in production: it exposes /tests/reset and /tests/seed.
+
+databases:
+  - name: sing-me-a-song-feh-db
+    plan: free
+    region: oregon
+    databaseName: sing_me_a_song
+    user: sing_me_a_song

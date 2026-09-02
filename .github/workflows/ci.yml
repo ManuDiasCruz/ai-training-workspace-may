@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [0827-feh-singasong]
+    paths: [back-end/**, front-end/**, .github/workflows/ci.yml]
+  pull_request:
+    paths: [back-end/**, front-end/**, .github/workflows/ci.yml]
+  workflow_dispatch:
+
+jobs:
+  back-end:
+    name: Back-end build & tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: back-end
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sing_me_a_song_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: back-end/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: Create .env.test
+        run: |
+          cat > .env.test <<'ENV'
+          DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sing_me_a_song_test
+          PORT=5000
+          MODE=TEST
+          ENV
+      - run: npm test
+
+  front-end:
+    name: Front-end production build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: front-end
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: front-end/package-lock.json
+      - run: npm ci
+        env:
+          CYPRESS_INSTALL_BINARY: "0"
+      - run: npm run build
+        env:
+          CI: "true"
+          REACT_APP_API_BASE_URL: http://localhost:5000
