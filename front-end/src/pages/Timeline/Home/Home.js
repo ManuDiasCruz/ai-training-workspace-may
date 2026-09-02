@@ -7,16 +7,23 @@ import CreateNewRecommendation from "../../../components/CreateNewRecommendation
 import Recommendation from "../../../components/Recommendation";
 
 export default function Home() {
-  const { recommendations, loadingRecommendations, listRecommendations } = useRecommendations();
+  const { recommendations, loadingRecommendations, recommendationsError, listRecommendations } = useRecommendations();
   const { loadingCreatingRecommendation, createRecommendation, creatingRecommendationError } = useCreateRecommendation();
 
   const handleCreateRecommendation = async (recommendation) => {
-    await createRecommendation({
-      name: recommendation.name,
-      youtubeLink: recommendation.link,
-    });
+    try {
+      await createRecommendation(recommendation);
+    } catch (error) {
+      return false;
+    }
 
-    listRecommendations();
+    try {
+      await listRecommendations();
+    } catch (error) {
+      // The recommendation was created; the page-level error handles refresh failures.
+    }
+
+    return true;
   };
 
   useEffect(() => {
@@ -25,13 +32,20 @@ export default function Home() {
     }
   }, [creatingRecommendationError]);
 
-  if ((loadingRecommendations && !recommendations) || !recommendations) {
+  if (recommendationsError && !recommendations) {
+    return <div role="alert">Could not load recommendations. Please try again.</div>;
+  }
+
+  if (loadingRecommendations && !recommendations) {
     return <div>Loading...</div>;
   }
 
   return (
     <>
       <CreateNewRecommendation disabled={loadingCreatingRecommendation} onCreateNewRecommendation={handleCreateRecommendation} />
+      {recommendationsError && (
+        <div role="alert">Could not refresh recommendations. Please try again.</div>
+      )}
       {
         recommendations.map(recommendation => (
           <Recommendation

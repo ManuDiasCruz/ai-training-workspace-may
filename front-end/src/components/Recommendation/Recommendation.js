@@ -12,13 +12,21 @@ export default function Recommendation({ name, youtubeLink, score, id, onUpvote 
   const { downvoteRecommendation, errorDownvotingRecommendation } = useDownvoteRecommendation();
 
   const handleUpvote = async () => {
-    await upvoteRecommendation(id);
-    onUpvote();
+    try {
+      await upvoteRecommendation(id);
+      await onUpvote();
+    } catch (error) {
+      // The hook exposes the request error to the effect below.
+    }
   };
 
   const handleDownvote = async () => {
-    await downvoteRecommendation(id);
-    onDownvote();
+    try {
+      await downvoteRecommendation(id);
+      await onDownvote();
+    } catch (error) {
+      // The hook exposes the request error to the effect below.
+    }
   };
 
   useEffect(() => {
@@ -39,9 +47,13 @@ export default function Recommendation({ name, youtubeLink, score, id, onUpvote 
       <Row>{name}</Row>
       <ReactPlayer url={youtubeLink} width="100%" height="100%" />
       <Row>
-        <GoArrowUp size="24px" onClick={handleUpvote} />
-        {score}
-        <GoArrowDown size="24px" onClick={handleDownvote} />
+        <VoteButton type="button" onClick={handleUpvote} aria-label={`Upvote ${name}`} data-identifier="upvote">
+          <GoArrowUp size="24px" />
+        </VoteButton>
+        <span data-identifier="score">{score}</span>
+        <VoteButton type="button" onClick={handleDownvote} aria-label={`Downvote ${name}`} data-identifier="downvote">
+          <GoArrowDown size="24px" />
+        </VoteButton>
       </Row>
     </Container>
   );
@@ -63,4 +75,14 @@ const Row = styled.div`
   align-items: center;
   gap: 6px;
   cursor: pointer;
+`;
+
+const VoteButton = styled.button`
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  padding: 0;
 `;
