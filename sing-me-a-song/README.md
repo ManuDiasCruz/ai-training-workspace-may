@@ -73,7 +73,7 @@ For Cypress, build the app first, stop any normal API using port 5000, and set `
 
 ## Deployment (Render)
 
-**Status:** deployment configuration is prepared; public deployment and remote frontend/backend verification have not been completed because no authenticated hosting session or hosting credentials were available. A locally running production build is not a public deployment.
+**Status (2026-09-02):** Render sign-in and the free-plan deployment were approved. Render rejected PostgreSQL creation because this workspace already has one active free-tier database; web-service creation was canceled. No existing resources were changed and no paid plan was selected. Public deployment and remote verification remain pending an available PostgreSQL database. A locally running production build is not a public deployment.
 
 1. Sign in to Render and connect this GitHub repository.
 2. Create a Blueprint from branch `0827-ben-singasong`, using root `render.yaml`. Review the resources and current pricing before confirming.
