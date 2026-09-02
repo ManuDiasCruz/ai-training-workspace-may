@@ -1,20 +1,19 @@
 {
-  "name": "typescript-back-template",
+  "name": "sing-me-a-song-back",
   "version": "1.0.0",
   "type": "module",
-  "description": "",
-  "main": "index.js",
+  "description": "Sing me a Song REST API (Express + Prisma + PostgreSQL)",
+  "main": "dist/server.js",
   "scripts": {
-    "start": "node dist/index.js",
-    "dev": "nodemon src/server.ts",
-    "dev:test": "dotenv -e .env.test prisma migrate dev --skip-seed && dotenv -e .env.test nodemon src/server.ts",
-    "test:integration": "dotenv -e .env.test jest -- -i ./tests/integration",
-    "test:unit": "dotenv -e .env.test jest -- -i ./tests/unit",
-    "prisma-test": "dotenv -e .env.test prisma migrate reset --skip-seed",
-    "test": "npm run prisma-test && NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test jest -- -i"
-  },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "build": "prisma generate && tsc",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "dev:test": "dotenv -e .env.test -- prisma migrate dev --skip-seed && dotenv -e .env.test -- tsx watch src/server.ts",
+    "migrate:deploy": "prisma migrate deploy",
+    "prisma-test": "dotenv -e .env.test -- prisma migrate reset --force --skip-seed",
+    "test": "npm run prisma-test && cross-env NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test -- jest -i",
+    "test:integration": "cross-env NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test -- jest -i ./tests/integration",
+    "test:unit": "cross-env NODE_OPTIONS=--experimental-vm-modules dotenv -e .env.test -- jest -i ./tests/unit"
   },
   "keywords": [],
   "author": "",
@@ -35,6 +34,7 @@
     "supertest": "^6.1.3",
     "ts-jest": "^28.0.0",
     "ts-node": "^10.7.0",
+    "tsx": "^4.23.13",
     "typescript": "^4.6.4"
   },
   "dependencies": {
@@ -44,7 +44,9 @@
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "express-async-errors": "^3.1.1",
-    "joi": "^17.4.1",
-    "react-player": "^2.10.0"
+    "joi": "^17.4.1"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
