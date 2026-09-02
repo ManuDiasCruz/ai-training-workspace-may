@@ -1,11 +1,14 @@
 import { jest } from "@jest/globals";
-import { response } from "express";
 
 import { recommendationService } from "../../src/services/recommendationsService.js";
 import { recommendationRepository } from "../../src/repositories/recommendationRepository.js";
 import { createRandomSong } from "../factories/recommendationFactory.js";
 
 describe("UNIT TESTS SUITE", () => {
+
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
 
     const recommendation1 = createRandomSong();
 
@@ -192,6 +195,7 @@ describe("UNIT TESTS SUITE", () => {
 
             jest
                 .spyOn(recommendationRepository, "findAll")
+                .mockResolvedValueOnce([])
                 .mockResolvedValueOnce([]);
 
             expect(recommendationService.getRandom()).rejects.toEqual({

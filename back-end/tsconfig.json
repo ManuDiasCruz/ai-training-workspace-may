@@ -1,11 +1,18 @@
 {
   "compilerOptions": {
     "esModuleInterop": true,
-    "module": "es6",
+    "lib": ["es2021"],
+    "module": "es2020",
     "moduleResolution": "node",
-    "outDir": "dist"
+    "noEmitOnError": true,
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "target": "es2021"
   },
   "ts-node": {
     "esm": true
-  }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["dist", "node_modules", "tests"]
 }
