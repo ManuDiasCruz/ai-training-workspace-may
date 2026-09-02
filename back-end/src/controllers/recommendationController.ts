@@ -3,10 +3,19 @@ import { recommendationSchema } from "../schemas/recommendationsSchemas.js";
 import { recommendationService } from "../services/recommendationsService.js";
 import { wrongSchemaError } from "../utils/errorUtils.js";
 
+function parsePositiveInteger(value: string, field: string) {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw wrongSchemaError(`${field} must be a positive integer`);
+  }
+
+  return parsed;
+}
+
 async function insert(req: Request, res: Response) {
   const validation = recommendationSchema.validate(req.body);
   if (validation.error) {
-    throw wrongSchemaError();
+    throw wrongSchemaError(validation.error.message);
   }
 
   await recommendationService.insert(req.body);
@@ -15,17 +24,17 @@ async function insert(req: Request, res: Response) {
 }
 
 async function upvote(req: Request, res: Response) {
-  const { id } = req.params;
+  const id = parsePositiveInteger(req.params.id, "id");
 
-  await recommendationService.upvote(+id);
+  await recommendationService.upvote(id);
 
   res.sendStatus(200);
 }
 
 async function downvote(req: Request, res: Response) {
-  const { id } = req.params;
+  const id = parsePositiveInteger(req.params.id, "id");
 
-  await recommendationService.downvote(+id);
+  await recommendationService.downvote(id);
 
   res.sendStatus(200);
 }
@@ -42,16 +51,16 @@ async function get(req: Request, res: Response) {
 }
 
 async function getTop(req: Request, res: Response) {
-  const { amount } = req.params;
+  const amount = parsePositiveInteger(req.params.amount, "amount");
 
-  const recommendations = await recommendationService.getTop(+amount);
+  const recommendations = await recommendationService.getTop(amount);
   res.send(recommendations);
 }
 
 async function getById(req: Request, res: Response) {
-  const { id } = req.params;
+  const id = parsePositiveInteger(req.params.id, "id");
 
-  const recommendation = await recommendationService.getById(+id);
+  const recommendation = await recommendationService.getById(id);
   res.send(recommendation);
 }
 

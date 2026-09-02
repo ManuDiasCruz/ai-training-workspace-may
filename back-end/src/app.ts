@@ -1,4 +1,3 @@
-
 import cors from "cors";
 import express from "express";
 import "express-async-errors";
@@ -10,6 +9,10 @@ import recommendationRouter from "./routers/recommendationRouter.js";
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+app.get("/health", (_req, res) => {
+  res.send({ status: "ok" });
+});
 
 app.use("/recommendations", recommendationRouter);
 
