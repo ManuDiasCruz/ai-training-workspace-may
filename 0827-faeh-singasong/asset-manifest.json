@@ -1,0 +1,29 @@
+{
+  "files": {
+    "main.css": "/ai-training-workspace-may/0827-faeh-singasong/static/css/main.7bade542.css",
+    "main.js": "/ai-training-workspace-may/0827-faeh-singasong/static/js/main.8d725d5d.js",
+    "static/js/942.f20b510e.chunk.js": "/ai-training-workspace-may/0827-faeh-singasong/static/js/942.f20b510e.chunk.js",
+    "static/js/932.1907d95d.chunk.js": "/ai-training-workspace-may/0827-faeh-singasong/static/js/932.1907d95d.chunk.js",
+    "static/js/984.ba9c9a33.chunk.js": "/ai-training-workspace-may/0827-faeh-singasong/static/js/984.ba9c9a33.chunk.js",
+    "static/js/128.1c1412b8.chunk.js": "/ai-training-workspace-may/0827-faeh-singasong/static/js/128.1c1412b8.chunk.js",
+    "static/js/957.49160c5a.chunk.js": "/ai-training-workspace-may/0827-faeh-singasong/static/js/957.49160c5a.chunk.js",
+    "static/js/948.0169beeb.chunk.js": "/ai-training-workspace-may/0827-faeh-singasong/static/js/948.0169beeb.chunk.js",
+    "static/js/478.634357ae.chunk.js": "/ai-training-workspace-may/0827-faeh-singasong/static/js/478.634357ae.chunk.js",
+    "static/js/71.dc97c4a8.chunk.js": "/ai-training-workspace-may/0827-faeh-singasong/static/js/71.dc97c4a8.chunk.js",
+    "index.html": "/ai-training-workspace-may/0827-faeh-singasong/index.html",
+    "main.7bade542.css.map": "/ai-training-workspace-may/0827-faeh-singasong/static/css/main.7bade542.css.map",
+    "main.8d725d5d.js.map": "/ai-training-workspace-may/0827-faeh-singasong/static/js/main.8d725d5d.js.map",
+    "942.f20b510e.chunk.js.map": "/ai-training-workspace-may/0827-faeh-singasong/static/js/942.f20b510e.chunk.js.map",
+    "932.1907d95d.chunk.js.map": "/ai-training-workspace-may/0827-faeh-singasong/static/js/932.1907d95d.chunk.js.map",
+    "984.ba9c9a33.chunk.js.map": "/ai-training-workspace-may/0827-faeh-singasong/static/js/984.ba9c9a33.chunk.js.map",
+    "128.1c1412b8.chunk.js.map": "/ai-training-workspace-may/0827-faeh-singasong/static/js/128.1c1412b8.chunk.js.map",
+    "957.49160c5a.chunk.js.map": "/ai-training-workspace-may/0827-faeh-singasong/static/js/957.49160c5a.chunk.js.map",
+    "948.0169beeb.chunk.js.map": "/ai-training-workspace-may/0827-faeh-singasong/static/js/948.0169beeb.chunk.js.map",
+    "478.634357ae.chunk.js.map": "/ai-training-workspace-may/0827-faeh-singasong/static/js/478.634357ae.chunk.js.map",
+    "71.dc97c4a8.chunk.js.map": "/ai-training-workspace-may/0827-faeh-singasong/static/js/71.dc97c4a8.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.7bade542.css",
+    "static/js/main.8d725d5d.js"
+  ]
+}
