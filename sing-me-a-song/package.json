@@ -1,0 +1,14 @@
+{
+  "name": "sing-me-a-song",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0 <25"
+  },
+  "scripts": {
+    "setup": "npm ci --prefix back-end && npm ci --prefix front-end",
+    "build": "npm run build --prefix back-end && npm run build --prefix front-end",
+    "start": "npm start --prefix back-end",
+    "db:migrate": "npm run db:migrate --prefix back-end",
+    "test": "npm test --prefix back-end && npm run test:ci --prefix front-end"
+  }
+}

@@ -1,0 +1,62 @@
+name: Sing Me a Song checks
+on:
+  push:
+    branches: [0827-ben-singasong]
+    paths: ["sing-me-a-song/**", ".github/workflows/sing-me-a-song.yml", "render.yaml"]
+  pull_request:
+    paths: ["sing-me-a-song/**", ".github/workflows/sing-me-a-song.yml", "render.yaml"]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: sing_me_a_song_test
+        ports: ["127.0.0.1:5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres@localhost:5432/sing_me_a_song_test
+      NODE_ENV: test
+      ENABLE_TEST_ROUTES: "false"
+      CI: "true"
+    defaults:
+      run:
+        working-directory: sing-me-a-song
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            sing-me-a-song/back-end/package-lock.json
+            sing-me-a-song/front-end/package-lock.json
+      - run: npm run setup
+      - run: npm run build
+      - run: npm run db:migrate:test --prefix back-end
+      - run: npm test
+      - uses: cypress-io/github-action@v6
+        with:
+          working-directory: sing-me-a-song/front-end
+          install: false
+          start: npm start --prefix ../back-end
+          wait-on: http://localhost:5000/health
+          wait-on-timeout: 60
+        env:
+          ENABLE_TEST_ROUTES: "true"
+          CYPRESS_BASE_URL: http://localhost:5000
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-failure-screenshots
+          path: sing-me-a-song/front-end/cypress/screenshots
+          if-no-files-found: ignore

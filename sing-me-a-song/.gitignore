@@ -1,0 +1,11 @@
+node_modules/
+dist/
+build/
+coverage/
+.env*
+!.env.example
+!.env.test.example
+.DS_Store
+*.log
+cypress/screenshots/
+cypress/videos/

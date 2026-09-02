@@ -1,3 +1,13 @@
+# Workspace projects
+
+## Sing Me a Song — branch `0827-ben-singasong`
+
+The repaired full-stack project is in [sing-me-a-song](sing-me-a-song/README.md).
+See that README for setup, environment variables, validation, deployment, and known limitations.
+The original workspace project and its documentation are preserved below.
+
+---
+
 # 🦜 Parrot Memory Card Game
 
 A small browser memory game: flip the cards two at a time and find every
