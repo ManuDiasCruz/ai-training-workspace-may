@@ -1,9 +1,14 @@
+# Publishes the front-end to GitHub Pages.
+#
+# NOTE: GitHub Pages is not available for private repositories on the free
+# plan (the API returns "Your current plan does not support GitHub Pages"),
+# so this workflow is manual-only. Enable Pages (Settings -> Pages -> Source:
+# GitHub Actions) on a public repository or a paid plan, set the repository
+# variable REACT_APP_API_BASE_URL, then run it from the Actions tab.
+# The primary deployment path is the Render Blueprint (render.yaml).
 name: Deploy front-end to GitHub Pages
 
 on:
-  push:
-    branches: [0827-feh-singasong]
-    paths: [front-end/**, .github/workflows/deploy-frontend.yml]
   workflow_dispatch:
 
 permissions:

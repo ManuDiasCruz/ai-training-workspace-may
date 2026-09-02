@@ -1,23 +1,26 @@
-# Render Blueprint - deploys the back-end API plus a PostgreSQL database.
-# Docs: https://render.com/docs/blueprint-spec
+# Render Blueprint - deploys the whole stack: API web service, PostgreSQL
+# database and the static front-end.  Docs: https://render.com/docs/blueprint-spec
 #
 # Usage: Render dashboard -> New -> Blueprint -> select this repository and the
-# branch below. Render creates both resources and injects DATABASE_URL.
-# After the first deploy, copy the service URL into the front-end build
-# (REACT_APP_API_BASE_URL) - see README.md "Deployment".
+# branch below -> Apply. Render creates the three resources and injects
+# DATABASE_URL into the API.
+#
+# The front-end calls the API through a same-origin rewrite (/api/* -> API
+# service), so no CORS or build-time URL is needed. If Render had to rename
+# the API service (name already taken), update the rewrite destination below
+# or in the static site's "Redirects/Rewrites" settings.
 services:
   - type: web
     name: sing-me-a-song-feh-api
     runtime: node
     plan: free
-    region: oregon
     branch: 0827-feh-singasong
     rootDir: back-end
     buildCommand: npm ci && npm run build
     # Applies pending Prisma migrations, then starts the compiled server.
     startCommand: npx prisma migrate deploy && npm start
     healthCheckPath: /health
-    autoDeploy: true
+    autoDeployTrigger: commit
     envVars:
       - key: NODE_VERSION
         value: 20.18.0
@@ -27,9 +30,34 @@ services:
           property: connectionString
       # Never set MODE=TEST in production: it exposes /tests/reset and /tests/seed.
 
+  - type: web
+    name: sing-me-a-song-feh
+    runtime: static
+    branch: 0827-feh-singasong
+    rootDir: front-end
+    buildCommand: npm ci && npm run build
+    staticPublishPath: build
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
+      - key: CYPRESS_INSTALL_BINARY
+        value: "0"
+      # Relative base URL: requests go to /api/... on the same origin and are
+      # rewritten to the API service (see routes).
+      - key: REACT_APP_API_BASE_URL
+        value: /api
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://sing-me-a-song-feh-api.onrender.com/*
+      # SPA fallback so /top and /random work on a hard refresh.
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
 databases:
   - name: sing-me-a-song-feh-db
     plan: free
-    region: oregon
     databaseName: sing_me_a_song
     user: sing_me_a_song
