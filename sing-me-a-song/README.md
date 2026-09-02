@@ -2,6 +2,8 @@
 
 A full-stack YouTube song-recommendation app. Add a song, browse the ten newest recommendations, vote, see the highest scores, or discover a random song. A recommendation is removed when its score falls below -5.
 
+**Live application:** [beeh-sing-me-a-song.onrender.com](https://beeh-sing-me-a-song.onrender.com). Deployed and verified on September 2, 2026. The free database expires on **October 2, 2026**; see the hosting limits below.
+
 Imported from [ManuDiasCruz/sing-me-a-song](https://github.com/ManuDiasCruz/sing-me-a-song), source commit `46e4e117be89041aa1cc492558357d89ddb0306a`, into the `0827-beeh-singasong` branch of `ManuDiasCruz/ai-training-workspace-may`. This subdirectory is self-contained; unrelated target-repository files are unchanged. The original [frontend documentation](front-end/README.md) is retained.
 
 ## Structure and flow
@@ -121,7 +123,9 @@ In another terminal, run `npm run test:smoke`. The smoke script creates a unique
 
 ## Deploy on Render
 
-**Status: deployment configuration is ready; live deployment requires an authenticated hosting account. No hosted URL or successful remote verification is claimed.**
+**Status: deployed and verified at [beeh-sing-me-a-song.onrender.com](https://beeh-sing-me-a-song.onrender.com) on September 2, 2026.** The [existing Blueprint](https://dashboard.render.com/blueprint/exs-dac6u4rm8hqs73a3v0dg) manages a free Node web service and free PostgreSQL 16 database in Oregon. Build, migrations, database health, live API smoke checks, and browser data/navigation checks passed. See [the verification record](docs/verification.md) for the exact scope.
+
+The following steps reproduce the deployment in a new environment; do not create duplicate resources just to update the existing service.
 
 1. Sign in to Render and grant it access to the target GitHub repository.
 2. Create a Blueprint from `ManuDiasCruz/ai-training-workspace-may`, select branch `0827-beeh-singasong`, and set the Blueprint file path to `sing-me-a-song/render.yaml`.
@@ -130,7 +134,9 @@ In another terminal, run `npm run test:smoke`. The smoke script creates a unique
 5. Wait for a successful build and healthy service. Open the actual URL returned by Render; verify creation, voting, Top, Random, and browser reloads. Verify `/tests/reset` returns 404.
 6. Run the smoke check against that actual origin with `SMOKE_BASE_URL`, then record the deployment URL and results in `docs/verification.md` and the PR.
 
-The free plan is for evaluation: web services can sleep and free PostgreSQL databases expire after 30 days. Arrange a durable database and backups before relying on saved recommendations. See [Render's free-tier limits](https://render.com/docs/free), [Node deployment guide](https://render.com/docs/deploy-node-express-app), and [Blueprint reference](https://render.com/docs/blueprint-spec).
+The free plan is for evaluation: web services can sleep, with initial requests delayed by 50 seconds or more, and free PostgreSQL databases expire after 30 days. Render reports **October 2, 2026** as this database's expiry date; it will be deleted unless upgraded. Arrange a durable database and tested backups before relying on saved recommendations; [issue #575](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/575) tracks this decision. No paid plan was enabled. See [Render's free-tier limits](https://render.com/docs/free), [Node deployment guide](https://render.com/docs/deploy-node-express-app), and [Blueprint reference](https://render.com/docs/blueprint-spec).
+
+Before a smoke check against a sleeping service, wait for health with `node scripts/wait-for.mjs https://beeh-sing-me-a-song.onrender.com/health`, then run the smoke script with `SMOKE_BASE_URL=https://beeh-sing-me-a-song.onrender.com`. Its individual requests have a 30-second timeout, so a cold-start timeout alone is not proof of an application failure.
 
 Other Node/PostgreSQL hosts can use root directory `sing-me-a-song`, build command `npm run setup && npm run build`, and start command `npm run start:deploy`. Build and run on the same operating-system family so Prisma generates the correct native engine.
 
@@ -157,6 +163,6 @@ Names are trimmed, nonempty, and at most 100 characters. YouTube links must be H
 - Fixed swallowed request failures, endless loading states, failed-save input loss, stale random records, and inaccessible vote/menu controls.
 - Repaired test factories and assertions; added regression, browser, and production smoke checks.
 
-Limitations: anonymous users can repeatedly vote or submit songs; add abuse controls/moderation before a public launch. Random selection currently reads its eligible pool into memory and should be optimized for large datasets. Third-party YouTube playback depends on availability, region, and embedding permissions. Legacy build/CLI dependency advisories remain a follow-up; audit summaries and scope are recorded in the verification notes. Hosting authentication and actual live verification remain outstanding.
+Limitations: anonymous users can repeatedly vote or submit songs; add abuse controls/moderation before broad public use. Random selection currently reads its eligible pool into memory and should be optimized for large datasets. Third-party YouTube playback depends on availability, region, and embedding permissions. Legacy build/CLI dependency advisories remain a follow-up; audit summaries and scope are recorded in the verification notes. The deployed evaluation instance has free-tier cold starts and a time-limited database; durable hosting and backups remain outstanding.
 
-Tracked follow-ups: [frontend tooling #538](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/538), [Prisma CLI advisories #539](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/539), [abuse controls #540](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/540), and [random-selection scaling #541](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/541).
+Tracked follow-ups: [frontend tooling #538](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/538), [Prisma CLI advisories #539](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/539), [abuse controls #540](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/540), [random-selection scaling #541](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/541), and [durable hosting/backups #575](https://github.com/ManuDiasCruz/ai-training-workspace-may/issues/575).
