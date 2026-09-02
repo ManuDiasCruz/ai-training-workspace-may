@@ -2,7 +2,7 @@ import useTopRecommendations from "../../../hooks/api/useTopRecommendations";
 
 import Recommendation from "../../../components/Recommendation";
 
-export default function Home() {
+export default function Top() {
   const { recommendations, loadingRecommendations, listRecommendations } = useTopRecommendations();
 
   if ((loadingRecommendations && !recommendations) || !recommendations) {
