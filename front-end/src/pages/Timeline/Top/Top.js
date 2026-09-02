@@ -1,0 +1,39 @@
+import useTopRecommendations from "../../../hooks/api/useTopRecommendations";
+
+import Recommendation from "../../../components/Recommendation";
+
+export default function Home() {
+  const { recommendations, loadingRecommendations, recommendationsError, listRecommendations } = useTopRecommendations();
+
+  if (recommendationsError && !recommendations) {
+    return <div role="alert">Could not load top recommendations. Please try again.</div>;
+  }
+
+  if (loadingRecommendations && !recommendations) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <>
+      {recommendationsError && (
+        <div role="alert">Could not refresh top recommendations. Please try again.</div>
+      )}
+      {
+        recommendations.map(recommendation => (
+          <Recommendation
+            key={recommendation.id}
+            {...recommendation}
+            onUpvote={() => listRecommendations()}
+            onDownvote={() => listRecommendations()}
+          />
+        ))
+      }
+
+      {
+        recommendations.length === 0 && (
+          <div>No recommendations yet! Create your own :)</div>
+        )
+      }
+    </>
+  )
+}
