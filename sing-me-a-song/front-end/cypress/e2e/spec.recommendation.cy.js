@@ -2,10 +2,10 @@
 
 import { faker } from "@faker-js/faker";
 
-async function createRecommendation() {
+function createRecommendation() {
   const name = "Mundo Bita - O Circo chegou";
 
-  const youtubeLink = "https://www.youtube.com/watch?v=qmUQr3zrqXM";    
+  const youtubeLink = "https://www.youtube.com/watch?v=qmUQr3zrqXM";
 
   return { name, youtubeLink };
 }
@@ -28,9 +28,9 @@ describe("E2E tests: POST /recommendations", () => {
         const song = createRecommendation();
 
         cy.visit("http://localhost:3000/");
-        
-        cy.get("input[placeholder='Name']").type(name);
-        cy.get("input[placeholder='https://youtu.be/...']").type(youtubeLink);
+
+        cy.get("input[placeholder='Name']").type(song.name);
+        cy.get("input[placeholder='https://youtu.be/...']").type(song.youtubeLink);
 
         cy.intercept("POST", "/recommendations").as("createRecommendation");
         cy.get("button").click();

@@ -1,5 +1,5 @@
 Cypress.Commands.add("resetData", () => {
-    cy.request("DELETE", "http://localhost:5000/reset");
+    cy.request("DELETE", "http://localhost:5000/tests/reset");
 });
 
 //createPost
